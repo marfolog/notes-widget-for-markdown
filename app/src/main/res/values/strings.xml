@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Notes Widget for Markdown</string>
+    <string name="widget_description">Displays your Markdown notes in a grid</string>
+</resources>

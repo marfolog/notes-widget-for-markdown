@@ -1,0 +1,116 @@
+package com.marfolog.noteswidgetformarkdown.data.repository
+
+import android.content.Context
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
+import com.marfolog.noteswidgetformarkdown.domain.repository.FileRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
+class FileRepositoryImpl(
+    private val context: Context
+) : FileRepository {
+
+    private val contentResolver get() = context.contentResolver
+
+    override fun getNotes(folderUri: String): Flow<List<NoteSummary>> = flow {
+        val treeUri = Uri.parse(folderUri)
+
+        // Check if we still hold persistable permission for this URI
+        val hasPermission = contentResolver.persistedUriPermissions.any { perm ->
+            perm.uri == treeUri && perm.isReadPermission
+        }
+        if (!hasPermission) {
+            throw SecurityException("Folder permission was revoked. Please re-select your vault.")
+        }
+
+        val folder = DocumentFile.fromTreeUri(context, treeUri)
+        if (folder == null || !folder.exists()) {
+            throw IllegalStateException("Folder not found. Please re-select your vault.")
+        }
+
+        val notes = folder.listFiles()
+            .filter { it.isFile && it.name?.endsWith(".md", ignoreCase = true) == true }
+            .mapNotNull { docFile -> fileToNoteSummary(docFile) }
+
+        emit(notes)
+    }.flowOn(Dispatchers.IO)
+
+    override suspend fun createNote(
+        folderUri: String,
+        title: String,
+        content: String
+    ): Result<Boolean> = runCatching {
+        val treeUri = Uri.parse(folderUri)
+        val folder = DocumentFile.fromTreeUri(context, treeUri)
+            ?: return@runCatching false
+
+        val fileName = "$title.md"
+        val newFile = folder.createFile("text/markdown", fileName)
+            ?: return@runCatching false
+
+        contentResolver.openOutputStream(newFile.uri)?.use { stream ->
+            stream.write(content.toByteArray(Charsets.UTF_8))
+        } ?: return@runCatching false
+
+        true
+    }
+
+    private fun fileToNoteSummary(docFile: DocumentFile): NoteSummary? {
+        return runCatching {
+            val name = docFile.name ?: return null
+            val title = name.removeSuffix(".md")
+            val preview = readPreview(docFile.uri)
+            val lastModified = docFile.lastModified()
+
+            NoteSummary(
+                id = docFile.uri.toString(),
+                title = title,
+                preview = preview,
+                lastModified = lastModified,
+                fileUri = docFile.uri.toString(),
+                fileName = name
+            )
+        }.getOrNull()
+    }
+
+    private fun readPreview(uri: Uri): String {
+        return runCatching {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
+                    val lines = mutableListOf<String>()
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null && lines.size < PREVIEW_LINE_COUNT) {
+                        val cleaned = stripMarkdown(line!!)
+                        if (cleaned.isNotBlank()) {
+                            lines.add(cleaned)
+                        }
+                    }
+                    lines.joinToString("\n")
+                }
+            } ?: ""
+        }.getOrDefault("")
+    }
+
+    private fun stripMarkdown(line: String): String {
+        return line
+            .replace(Regex("^#{1,6}\\s+"), "")
+            .replace(Regex("^\\s*[*\\-+]\\s+"), "")
+            .replace(Regex("^\\s*\\d+\\.\\s+"), "")
+            .replace(Regex("\\*{1,2}(.+?)\\*{1,2}"), "$1")
+            .replace(Regex("~~(.+?)~~"), "$1")
+            .replace(Regex("`(.+?)`"), "$1")
+            .replace(Regex("\\[(.+?)]\\(.+?\\)"), "$1")
+            .replace(Regex("^>\\s?"), "")
+            .trim()
+    }
+
+    companion object {
+        private const val PREVIEW_LINE_COUNT = 5
+    }
+}
