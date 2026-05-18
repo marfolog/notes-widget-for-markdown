@@ -19,8 +19,8 @@ class MarkdownPreviewFormatterTest {
 
         assertEquals(
             """
-            Todo: Buy milk
-            Done: Pay bills
+            ☐ Buy milk
+            ☑ Pay bills
             """.trimIndent(),
             preview
         )
@@ -91,6 +91,28 @@ class MarkdownPreviewFormatterTest {
             Three
             Four
             Five
+            """.trimIndent(),
+            preview
+        )
+    }
+
+    @Test
+    fun keepsListLineBreaksAndNestedIndentation() {
+        val preview = formatter.format(
+            """
+            - [ ] Parent task
+              - [x] Nested task
+              - Follow up item
+            - Plain item
+            """.trimIndent()
+        )
+
+        assertEquals(
+            """
+            ☐ Parent task
+              ☑ Nested task
+              • Follow up item
+            • Plain item
             """.trimIndent(),
             preview
         )
