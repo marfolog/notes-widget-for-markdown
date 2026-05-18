@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -34,7 +35,11 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import com.marfolog.noteswidgetformarkdown.R
+import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
@@ -50,6 +55,7 @@ class NotesWidget : GlanceAppWidget() {
 
         val vaultName = prefs.getString(SetupActivity.KEY_VAULT_NAME, null)
         val noteFolderPath = prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null)
+        val cardSettings = NoteCardSettingsStore(context).getAll()
 
         val state: WidgetState = if (folderUri.isNullOrEmpty()) {
             WidgetState.Uninitialized
@@ -76,7 +82,7 @@ class NotesWidget : GlanceAppWidget() {
 
         provideContent {
             GlanceTheme {
-                WidgetRoot(state, vaultName, noteFolderPath)
+                WidgetRoot(state, vaultName, noteFolderPath, cardSettings)
             }
         }
     }
@@ -103,7 +109,12 @@ private sealed interface WidgetState {
 // region Root
 
 @Composable
-private fun WidgetRoot(state: WidgetState, vaultName: String?, noteFolderPath: String?) {
+private fun WidgetRoot(
+    state: WidgetState,
+    vaultName: String?,
+    noteFolderPath: String?,
+    cardSettings: Map<String, NoteCardAppearance>
+) {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -113,7 +124,7 @@ private fun WidgetRoot(state: WidgetState, vaultName: String?, noteFolderPath: S
         when (state) {
             is WidgetState.Uninitialized -> UninitializedContent()
             is WidgetState.PermissionLost -> PermissionLostContent()
-            is WidgetState.Success -> ConfiguredContent(state.notes, vaultName, noteFolderPath)
+            is WidgetState.Success -> ConfiguredContent(state.notes, vaultName, noteFolderPath, cardSettings)
             is WidgetState.Empty -> ConfiguredContentEmpty(vaultName, noteFolderPath)
             is WidgetState.Error -> ConfiguredContentError(state.message, vaultName, noteFolderPath)
         }
@@ -223,9 +234,14 @@ private fun PermissionLostContent() {
 // region Configured States (Content + Refresh + FAB layers)
 
 @Composable
-private fun ConfiguredContent(notes: List<NoteSummary>, vaultName: String?, noteFolderPath: String?) {
+private fun ConfiguredContent(
+    notes: List<NoteSummary>,
+    vaultName: String?,
+    noteFolderPath: String?,
+    cardSettings: Map<String, NoteCardAppearance>
+) {
     Box(modifier = GlanceModifier.fillMaxSize()) {
-        NotesList(notes, vaultName)
+        NotesList(notes, vaultName, cardSettings)
         RefreshButton()
         Fab(vaultName, noteFolderPath)
     }
@@ -335,14 +351,18 @@ private fun Fab(vaultName: String?, noteFolderPath: String?) {
 // region Notes List
 
 @Composable
-private fun NotesList(notes: List<NoteSummary>, vaultName: String?) {
+private fun NotesList(
+    notes: List<NoteSummary>,
+    vaultName: String?,
+    cardSettings: Map<String, NoteCardAppearance>
+) {
     LazyColumn(
         modifier = GlanceModifier
             .fillMaxSize()
     ) {
         items(notes, itemId = { it.id.hashCode().toLong() }) { note ->
             Column(modifier = GlanceModifier.fillMaxWidth()) {
-                NoteCard(note, vaultName)
+                NoteCard(note, vaultName, cardSettings[note.fileUri] ?: NoteCardAppearance())
                 Spacer(modifier = GlanceModifier.height(8.dp))
             }
         }
@@ -350,7 +370,7 @@ private fun NotesList(notes: List<NoteSummary>, vaultName: String?) {
 }
 
 @Composable
-private fun NoteCard(note: NoteSummary, vaultName: String?) {
+private fun NoteCard(note: NoteSummary, vaultName: String?, appearance: NoteCardAppearance) {
     val obsidianUri = buildString {
         append("obsidian://open?")
         if (!vaultName.isNullOrEmpty()) {
@@ -363,8 +383,9 @@ private fun NoteCard(note: NoteSummary, vaultName: String?) {
     Column(
         modifier = GlanceModifier
             .fillMaxWidth()
+            .height(appearance.size.heightDp.dp)
             .cornerRadius(16.dp)
-            .background(GlanceTheme.colors.surfaceVariant)
+            .background(appearance.backgroundColor())
             .clickable(actionStartActivity(obsidianIntent))
             .padding(12.dp)
     ) {
@@ -373,7 +394,7 @@ private fun NoteCard(note: NoteSummary, vaultName: String?) {
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = GlanceTheme.colors.onSurfaceVariant
+                color = appearance.contentColor()
             ),
             maxLines = 1
         )
@@ -381,11 +402,35 @@ private fun NoteCard(note: NoteSummary, vaultName: String?) {
             text = note.preview,
             style = TextStyle(
                 fontSize = 12.sp,
-                color = GlanceTheme.colors.onSurfaceVariant
+                color = appearance.contentColor()
             ),
-            maxLines = 4,
+            maxLines = appearance.size.previewMaxLines,
             modifier = GlanceModifier.padding(top = 4.dp)
         )
+    }
+}
+
+@Composable
+private fun NoteCardAppearance.backgroundColor(): ColorProvider {
+    return when (color) {
+        NoteCardColor.Default -> GlanceTheme.colors.surfaceVariant
+        NoteCardColor.Rose -> ColorProvider(Color(0xFFFFDAD6))
+        NoteCardColor.Amber -> ColorProvider(Color(0xFFFFDEA6))
+        NoteCardColor.Mint -> ColorProvider(Color(0xFFBCECCB))
+        NoteCardColor.Sky -> ColorProvider(Color(0xFFC9E6FF))
+        NoteCardColor.Lavender -> ColorProvider(Color(0xFFE7DEFF))
+    }
+}
+
+@Composable
+private fun NoteCardAppearance.contentColor(): ColorProvider {
+    return when (color) {
+        NoteCardColor.Default -> GlanceTheme.colors.onSurfaceVariant
+        NoteCardColor.Rose -> ColorProvider(Color(0xFF410002))
+        NoteCardColor.Amber -> ColorProvider(Color(0xFF2A1800))
+        NoteCardColor.Mint -> ColorProvider(Color(0xFF00210F))
+        NoteCardColor.Sky -> ColorProvider(Color(0xFF001E30))
+        NoteCardColor.Lavender -> ColorProvider(Color(0xFF1D1735))
     }
 }
 

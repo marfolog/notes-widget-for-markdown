@@ -11,35 +11,56 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardSize
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
+import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent.get
 
 class SetupActivity : ComponentActivity() {
 
@@ -75,11 +96,36 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences(SetupActivity.PREFS_NAME, android.content.Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
+    val cardSettingsStore = remember { NoteCardSettingsStore(context.applicationContext) }
 
     var vaultUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_URI, null)) }
     var notesUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTES_URI, null)) }
     var vaultName by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_NAME, null)) }
     var derivedPath by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null) ?: "") }
+    var notesForSettings by remember { mutableStateOf<List<NoteSummary>>(emptyList()) }
+    var cardSettings by remember { mutableStateOf(cardSettingsStore.getAll()) }
+    var notesLoadError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(notesUri) {
+        val currentNotesUri = notesUri
+        if (currentNotesUri.isNullOrEmpty()) {
+            notesForSettings = emptyList()
+            notesLoadError = null
+            return@LaunchedEffect
+        }
+
+        runCatching {
+            val getNotesUseCase = get<GetNotesUseCase>(GetNotesUseCase::class.java)
+            getNotesUseCase(currentNotesUri).firstOrNull().orEmpty()
+        }.onSuccess { notes ->
+            notesForSettings = notes
+            cardSettings = cardSettingsStore.getAll()
+            notesLoadError = null
+        }.onFailure { error ->
+            notesForSettings = emptyList()
+            notesLoadError = error.message ?: "Unable to load notes"
+        }
+    }
 
     fun computeRelativePath(vaultUriStr: String, notesUriStr: String): String {
         val vaultDocId = DocumentsContract.getTreeDocumentId(Uri.parse(vaultUriStr))
@@ -186,6 +232,21 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         notesFolderName = notesDisplayName,
         onSelectNotesFolder = { notesPicker.launch(null) },
         derivedPath = derivedPath,
+        notes = notesForSettings,
+        cardSettings = cardSettings,
+        notesLoadError = notesLoadError,
+        onCardSizeSelected = { note, size ->
+            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(size = size)
+            cardSettingsStore.save(note.fileUri, updated)
+            cardSettings = cardSettingsStore.getAll()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
+        onCardColorSelected = { note, color ->
+            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(color = color)
+            cardSettingsStore.save(note.fileUri, updated)
+            cardSettings = cardSettingsStore.getAll()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
         canSave = vaultUri != null && notesUri != null,
         onSave = onSave,
         modifier = modifier
@@ -199,6 +260,11 @@ internal fun SetupScreenContent(
     notesFolderName: String?,
     onSelectNotesFolder: () -> Unit,
     derivedPath: String,
+    notes: List<NoteSummary> = emptyList(),
+    cardSettings: Map<String, NoteCardAppearance> = emptyMap(),
+    notesLoadError: String? = null,
+    onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit = { _, _ -> },
+    onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit = { _, _ -> },
     canSave: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
@@ -299,6 +365,32 @@ internal fun SetupScreenContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Card Appearance",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Set height and color for each note card in the widget.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        CardSettingsSection(
+            notes = notes,
+            cardSettings = cardSettings,
+            notesLoadError = notesLoadError,
+            onCardSizeSelected = onCardSizeSelected,
+            onCardColorSelected = onCardColorSelected
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         // Save button
         Button(
             onClick = onSave,
@@ -309,5 +401,113 @@ internal fun SetupScreenContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun CardSettingsSection(
+    notes: List<NoteSummary>,
+    cardSettings: Map<String, NoteCardAppearance>,
+    notesLoadError: String?,
+    onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit,
+    onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit
+) {
+    when {
+        notesLoadError != null -> {
+            Text(
+                text = notesLoadError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        notes.isEmpty() -> {
+            Text(
+                text = "Select a notes folder with .md files to configure cards.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        else -> {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                notes.forEach { note ->
+                    val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+                    NoteCardSettingsRow(
+                        note = note,
+                        appearance = appearance,
+                        onSizeSelected = { size -> onCardSizeSelected(note, size) },
+                        onColorSelected = { color -> onCardColorSelected(note, color) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoteCardSettingsRow(
+    note: NoteSummary,
+    appearance: NoteCardAppearance,
+    onSizeSelected: (NoteCardSize) -> Unit,
+    onColorSelected: (NoteCardColor) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = note.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                NoteCardSize.entries.forEach { size ->
+                    FilterChip(
+                        selected = appearance.size == size,
+                        onClick = { onSizeSelected(size) },
+                        label = { Text(size.label) }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                NoteCardColor.entries.forEach { color ->
+                    FilterChip(
+                        selected = appearance.color == color,
+                        onClick = { onColorSelected(color) },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(cardColorPreview(color), RoundedCornerShape(3.dp))
+                                )
+                                Spacer(modifier = Modifier.size(6.dp))
+                                Text(color.label)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun cardColorPreview(color: NoteCardColor): Color {
+    return when (color) {
+        NoteCardColor.Default -> Color(0xFFE7E0EC)
+        NoteCardColor.Rose -> Color(0xFFFFDAD6)
+        NoteCardColor.Amber -> Color(0xFFFFDEA6)
+        NoteCardColor.Mint -> Color(0xFFBCECCB)
+        NoteCardColor.Sky -> Color(0xFFC9E6FF)
+        NoteCardColor.Lavender -> Color(0xFFE7DEFF)
     }
 }
