@@ -19,7 +19,7 @@ Notes Widget for Markdown is built for people who keep their notes as plain `.md
   - text size
   - preset or custom color
   - manual order
-- Automatically keeps unknown/new files safe: newly synced or newly created Markdown files appear with default styling until configured.
+- Automatically keeps unknown/new files safe: newly added Markdown files appear with default styling until configured.
 
 ## Screenshots
 
@@ -156,4 +156,3 @@ Before opening a large pull request, please create an issue with the proposed ch
 ## License
 
 MIT. See [LICENSE](LICENSE).
-

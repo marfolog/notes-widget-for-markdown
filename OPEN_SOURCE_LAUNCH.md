@@ -27,9 +27,8 @@ Co raději neslibovat:
 
 ## Cleanup před public v1
 
-- Odstranit nebo schovat experimentální Obsidian Advanced URI sync flow.
-  - Pro první veřejnou verzi je lepší jednoduchý příběh: appka čte lokální Markdown a refreshne widget.
-  - Git/Obsidian sync je příliš specifický a může působit, že aplikace umí víc, než reálně dělá.
+- Držet jednoduchý příběh: appka čte lokální Markdown a refreshne widget.
+- Git/Obsidian sync neprezentovat jako součást MVP.
 - Zkontrolovat, že v repu není veřejně citlivý release signing materiál.
 - Vyčistit `app/build.gradle.kts` od lokálních hesel a nahradit je Gradle properties nebo lokálním necommitovaným configem.
 - Přidat skutečné screenshoty do README.
@@ -188,6 +187,7 @@ Před zveřejněním ověřit:
 - žádné analytics SDK
 - žádné síťové oprávnění, pokud není nutné
 - žádný cloud sync v aplikaci
+- žádný experimentální Advanced URI sync flow v aplikaci
 
 ## Roadmap po v0.1.0
 
@@ -207,4 +207,3 @@ Funkční nápady:
 - výběr podsložek
 - non-Obsidian editor deep-link nastavení
 - rychlé vytvoření poznámky bez otevření editoru
-

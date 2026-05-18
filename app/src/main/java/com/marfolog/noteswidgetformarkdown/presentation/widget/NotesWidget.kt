@@ -293,7 +293,7 @@ private fun WidgetActionButtons() {
         Column(horizontalAlignment = Alignment.End) {
             RoundIconButton(
                 icon = R.drawable.ic_refresh,
-                contentDescription = "Sync notes",
+                contentDescription = "Refresh notes",
                 onClickModifier = GlanceModifier.clickable(actionRunCallback<RefreshWidgetAction>())
             )
             Spacer(modifier = GlanceModifier.height(8.dp))
