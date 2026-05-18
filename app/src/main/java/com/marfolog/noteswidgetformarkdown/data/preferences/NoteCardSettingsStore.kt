@@ -5,7 +5,9 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardSize
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardTextSize
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import org.json.JSONArray
 import org.json.JSONObject
 
 class NoteCardSettingsStore(context: Context) {
@@ -36,6 +38,44 @@ class NoteCardSettingsStore(context: Context) {
         return getAll()[noteId] ?: NoteCardAppearance()
     }
 
+    fun getOrder(): List<String> {
+        val raw = prefs.getString(KEY_CARD_ORDER_JSON, null) ?: return emptyList()
+        return runCatching {
+            val array = JSONArray(raw)
+            buildList {
+                for (index in 0 until array.length()) {
+                    add(array.getString(index))
+                }
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    fun saveOrder(noteIds: List<String>) {
+        val array = JSONArray()
+        noteIds.distinct().forEach { noteId ->
+            array.put(noteId)
+        }
+        prefs.edit()
+            .putString(KEY_CARD_ORDER_JSON, array.toString())
+            .apply()
+    }
+
+    fun applyOrder(notes: List<NoteSummary>): List<NoteSummary> {
+        val order = getOrder()
+        if (order.isEmpty()) {
+            return notes
+        }
+
+        val positionById = order.withIndex().associate { it.value to it.index }
+        return notes.withIndex()
+            .sortedWith(
+                compareBy<IndexedValue<NoteSummary>> {
+                    positionById[it.value.fileUri] ?: Int.MAX_VALUE
+                }.thenBy { it.index }
+            )
+            .map { it.value }
+    }
+
     fun save(noteId: String, appearance: NoteCardAppearance) {
         val root = JSONObject(prefs.getString(KEY_CARD_SETTINGS_JSON, "{}") ?: "{}")
         val item = JSONObject()
@@ -51,6 +91,7 @@ class NoteCardSettingsStore(context: Context) {
 
     companion object {
         const val KEY_CARD_SETTINGS_JSON = "note_card_settings_json"
+        const val KEY_CARD_ORDER_JSON = "note_card_order_json"
         private const val KEY_SIZE = "size"
         private const val KEY_COLOR = "color"
         private const val KEY_TEXT_SIZE = "text_size"

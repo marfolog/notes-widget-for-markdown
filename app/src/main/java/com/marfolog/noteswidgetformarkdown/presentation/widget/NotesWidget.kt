@@ -55,14 +55,15 @@ class NotesWidget : GlanceAppWidget() {
 
         val vaultName = prefs.getString(SetupActivity.KEY_VAULT_NAME, null)
         val noteFolderPath = prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null)
-        val cardSettings = NoteCardSettingsStore(context).getAll()
+        val cardSettingsStore = NoteCardSettingsStore(context)
+        val cardSettings = cardSettingsStore.getAll()
 
         val state: WidgetState = if (folderUri.isNullOrEmpty()) {
             WidgetState.Uninitialized
         } else {
             runCatching {
                 val getNotesUseCase = get<GetNotesUseCase>(GetNotesUseCase::class.java)
-                val notes = getNotesUseCase(folderUri).firstOrNull() ?: emptyList()
+                val notes = cardSettingsStore.applyOrder(getNotesUseCase(folderUri).firstOrNull() ?: emptyList())
                 if (notes.isEmpty()) {
                     WidgetState.Empty
                 } else {

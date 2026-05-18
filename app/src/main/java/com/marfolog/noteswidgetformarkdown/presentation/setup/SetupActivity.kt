@@ -26,10 +26,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -120,7 +125,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
 
         runCatching {
             val getNotesUseCase = get<GetNotesUseCase>(GetNotesUseCase::class.java)
-            getNotesUseCase(currentNotesUri).firstOrNull().orEmpty()
+            cardSettingsStore.applyOrder(getNotesUseCase(currentNotesUri).firstOrNull().orEmpty())
         }.onSuccess { notes ->
             notesForSettings = notes
             cardSettings = cardSettingsStore.getAll()
@@ -272,6 +277,18 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             cardSettings = cardSettingsStore.getAll()
             scope.launch { NotesWidget.updateAll(context) }
         },
+        onMoveCard = { note, direction ->
+            val currentIndex = notesForSettings.indexOfFirst { it.fileUri == note.fileUri }
+            val targetIndex = currentIndex + direction
+            if (currentIndex >= 0 && targetIndex in notesForSettings.indices) {
+                notesForSettings = notesForSettings.toMutableList().also { notes ->
+                    val moved = notes.removeAt(currentIndex)
+                    notes.add(targetIndex, moved)
+                }
+                cardSettingsStore.saveOrder(notesForSettings.map { it.fileUri })
+                scope.launch { NotesWidget.updateAll(context) }
+            }
+        },
         canSave = vaultUri != null && notesUri != null,
         onSave = onSave,
         modifier = modifier
@@ -294,6 +311,7 @@ internal fun SetupScreenContent(
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit = { _, _ -> },
     onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit = { _, _ -> },
     onCardCustomColorChanged: (NoteSummary, String) -> Unit = { _, _ -> },
+    onMoveCard: (NoteSummary, Int) -> Unit = { _, _ -> },
     canSave: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
@@ -443,7 +461,8 @@ internal fun SetupScreenContent(
             onCardSizeSelected = onCardSizeSelected,
             onCardColorSelected = onCardColorSelected,
             onCardTextSizeSelected = onCardTextSizeSelected,
-            onCardCustomColorChanged = onCardCustomColorChanged
+            onCardCustomColorChanged = onCardCustomColorChanged,
+            onMoveCard = onMoveCard
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -469,7 +488,8 @@ private fun CardSettingsSection(
     onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit,
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit,
     onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit,
-    onCardCustomColorChanged: (NoteSummary, String) -> Unit
+    onCardCustomColorChanged: (NoteSummary, String) -> Unit,
+    onMoveCard: (NoteSummary, Int) -> Unit
 ) {
     when {
         notesLoadError != null -> {
@@ -488,11 +508,15 @@ private fun CardSettingsSection(
         }
         else -> {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                notes.forEach { note ->
+                notes.forEachIndexed { index, note ->
                     val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
                     NoteCardSettingsRow(
                         note = note,
                         appearance = appearance,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < notes.lastIndex,
+                        onMoveUp = { onMoveCard(note, -1) },
+                        onMoveDown = { onMoveCard(note, 1) },
                         onSizeSelected = { size -> onCardSizeSelected(note, size) },
                         onColorSelected = { color -> onCardColorSelected(note, color) },
                         onTextSizeSelected = { textSize -> onCardTextSizeSelected(note, textSize) },
@@ -508,6 +532,10 @@ private fun CardSettingsSection(
 private fun NoteCardSettingsRow(
     note: NoteSummary,
     appearance: NoteCardAppearance,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onSizeSelected: (NoteCardSize) -> Unit,
     onColorSelected: (NoteCardColor) -> Unit,
     onTextSizeSelected: (NoteCardTextSize) -> Unit,
@@ -519,11 +547,26 @@ private fun NoteCardSettingsRow(
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = note.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Move up"
+                    )
+                }
+                IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Move down"
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
