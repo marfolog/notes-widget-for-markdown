@@ -73,7 +73,7 @@ class MarkdownPreviewFormatterTest {
 
     @Test
     fun limitsPreviewLines() {
-        val preview = formatter.format(
+        val preview = MarkdownPreviewFormatter(previewLineCount = 5).format(
             """
             One
             Two

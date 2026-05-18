@@ -242,7 +242,7 @@ private fun ConfiguredContent(
 ) {
     Box(modifier = GlanceModifier.fillMaxSize()) {
         NotesList(notes, vaultName, cardSettings)
-        RefreshButton()
+        WidgetActionButtons()
         Fab(vaultName, noteFolderPath)
     }
 }
@@ -251,7 +251,7 @@ private fun ConfiguredContent(
 private fun ConfiguredContentEmpty(vaultName: String?, noteFolderPath: String?) {
     Box(modifier = GlanceModifier.fillMaxSize()) {
         EmptyContent()
-        RefreshButton()
+        WidgetActionButtons()
         Fab(vaultName, noteFolderPath)
     }
 }
@@ -260,36 +260,64 @@ private fun ConfiguredContentEmpty(vaultName: String?, noteFolderPath: String?) 
 private fun ConfiguredContentError(message: String, vaultName: String?, noteFolderPath: String?) {
     Box(modifier = GlanceModifier.fillMaxSize()) {
         ErrorContent(message)
-        RefreshButton()
+        WidgetActionButtons()
         Fab(vaultName, noteFolderPath)
     }
 }
 
 // endregion
 
-// region Refresh Button (Top-Right)
+// region Widget Action Buttons (Top-Right)
 
 @Composable
-private fun RefreshButton() {
+private fun WidgetActionButtons() {
+    val setupIntent = Intent(
+        androidx.glance.LocalContext.current,
+        SetupActivity::class.java
+    ).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    }
+
     Box(
         modifier = GlanceModifier.fillMaxSize().padding(4.dp),
         contentAlignment = Alignment.TopEnd
     ) {
-        Box(
-            modifier = GlanceModifier
-                .size(40.dp)
-                .cornerRadius(20.dp)
-                .background(GlanceTheme.colors.widgetBackground)
-                .clickable(actionRunCallback<RefreshWidgetAction>()),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                provider = ImageProvider(R.drawable.ic_refresh),
+        Column(horizontalAlignment = Alignment.End) {
+            RoundIconButton(
+                icon = R.drawable.ic_refresh,
                 contentDescription = "Sync notes",
-                modifier = GlanceModifier.size(20.dp),
-                colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
+                onClickModifier = GlanceModifier.clickable(actionRunCallback<RefreshWidgetAction>())
+            )
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            RoundIconButton(
+                icon = R.drawable.ic_edit,
+                contentDescription = "Open widget settings",
+                onClickModifier = GlanceModifier.clickable(actionStartActivity(setupIntent))
             )
         }
+    }
+}
+
+@Composable
+private fun RoundIconButton(
+    icon: Int,
+    contentDescription: String,
+    onClickModifier: GlanceModifier
+) {
+    Box(
+        modifier = GlanceModifier
+            .size(40.dp)
+            .cornerRadius(20.dp)
+            .background(GlanceTheme.colors.widgetBackground)
+            .then(onClickModifier),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            provider = ImageProvider(icon),
+            contentDescription = contentDescription,
+            modifier = GlanceModifier.size(20.dp),
+            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
+        )
     }
 }
 
@@ -393,7 +421,7 @@ private fun NoteCard(note: NoteSummary, vaultName: String?, appearance: NoteCard
             text = note.title,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                fontSize = appearance.textSize.titleSp.sp,
                 color = appearance.contentColor()
             ),
             maxLines = 1
@@ -401,7 +429,7 @@ private fun NoteCard(note: NoteSummary, vaultName: String?, appearance: NoteCard
         Text(
             text = note.preview,
             style = TextStyle(
-                fontSize = 12.sp,
+                fontSize = appearance.textSize.previewSp.sp,
                 color = appearance.contentColor()
             ),
             maxLines = appearance.size.previewMaxLines,
@@ -415,10 +443,15 @@ private fun NoteCardAppearance.backgroundColor(): ColorProvider {
     return when (color) {
         NoteCardColor.Default -> GlanceTheme.colors.surfaceVariant
         NoteCardColor.Rose -> ColorProvider(Color(0xFFFFDAD6))
+        NoteCardColor.Red -> ColorProvider(Color(0xFFFFB4AB))
         NoteCardColor.Amber -> ColorProvider(Color(0xFFFFDEA6))
+        NoteCardColor.Orange -> ColorProvider(Color(0xFFFFDCC2))
         NoteCardColor.Mint -> ColorProvider(Color(0xFFBCECCB))
+        NoteCardColor.Green -> ColorProvider(Color(0xFFCDEDA3))
         NoteCardColor.Sky -> ColorProvider(Color(0xFFC9E6FF))
+        NoteCardColor.Blue -> ColorProvider(Color(0xFFD0E4FF))
         NoteCardColor.Lavender -> ColorProvider(Color(0xFFE7DEFF))
+        NoteCardColor.Custom -> ColorProvider(parseCustomColor(customColorHex) ?: Color(0xFFE7E0EC))
     }
 }
 
@@ -427,11 +460,38 @@ private fun NoteCardAppearance.contentColor(): ColorProvider {
     return when (color) {
         NoteCardColor.Default -> GlanceTheme.colors.onSurfaceVariant
         NoteCardColor.Rose -> ColorProvider(Color(0xFF410002))
+        NoteCardColor.Red -> ColorProvider(Color(0xFF690005))
         NoteCardColor.Amber -> ColorProvider(Color(0xFF2A1800))
+        NoteCardColor.Orange -> ColorProvider(Color(0xFF331100))
         NoteCardColor.Mint -> ColorProvider(Color(0xFF00210F))
+        NoteCardColor.Green -> ColorProvider(Color(0xFF102000))
         NoteCardColor.Sky -> ColorProvider(Color(0xFF001E30))
+        NoteCardColor.Blue -> ColorProvider(Color(0xFF001D36))
         NoteCardColor.Lavender -> ColorProvider(Color(0xFF1D1735))
+        NoteCardColor.Custom -> ColorProvider(customContentColor(customColorHex))
     }
+}
+
+private fun parseCustomColor(value: String?): Color? {
+    val normalized = value?.trim().orEmpty()
+    if (!Regex("^#?[0-9A-Fa-f]{6}$").matches(normalized)) {
+        return null
+    }
+    val hex = normalized.removePrefix("#")
+    return Color(("FF$hex").toLong(16))
+}
+
+private fun customContentColor(value: String?): Color {
+    val hex = value?.trim()?.removePrefix("#").orEmpty()
+    if (!Regex("^[0-9A-Fa-f]{6}$").matches(hex)) {
+        return Color(0xFF111111)
+    }
+
+    val red = hex.substring(0, 2).toInt(16)
+    val green = hex.substring(2, 4).toInt(16)
+    val blue = hex.substring(4, 6).toInt(16)
+    val luminance = (0.299 * red) + (0.587 * green) + (0.114 * blue)
+    return if (luminance > 150) Color(0xFF111111) else Color(0xFFFFFFFF)
 }
 
 // endregion

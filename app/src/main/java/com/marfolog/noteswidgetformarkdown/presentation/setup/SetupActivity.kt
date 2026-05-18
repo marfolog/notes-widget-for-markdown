@@ -55,6 +55,7 @@ import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardSize
+import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardTextSize
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
@@ -256,6 +257,21 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             cardSettings = cardSettingsStore.getAll()
             scope.launch { NotesWidget.updateAll(context) }
         },
+        onCardTextSizeSelected = { note, textSize ->
+            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(textSize = textSize)
+            cardSettingsStore.save(note.fileUri, updated)
+            cardSettings = cardSettingsStore.getAll()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
+        onCardCustomColorChanged = { note, colorHex ->
+            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(
+                color = NoteCardColor.Custom,
+                customColorHex = colorHex
+            )
+            cardSettingsStore.save(note.fileUri, updated)
+            cardSettings = cardSettingsStore.getAll()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
         canSave = vaultUri != null && notesUri != null,
         onSave = onSave,
         modifier = modifier
@@ -276,6 +292,8 @@ internal fun SetupScreenContent(
     notesLoadError: String? = null,
     onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit = { _, _ -> },
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit = { _, _ -> },
+    onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit = { _, _ -> },
+    onCardCustomColorChanged: (NoteSummary, String) -> Unit = { _, _ -> },
     canSave: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
@@ -423,7 +441,9 @@ internal fun SetupScreenContent(
             cardSettings = cardSettings,
             notesLoadError = notesLoadError,
             onCardSizeSelected = onCardSizeSelected,
-            onCardColorSelected = onCardColorSelected
+            onCardColorSelected = onCardColorSelected,
+            onCardTextSizeSelected = onCardTextSizeSelected,
+            onCardCustomColorChanged = onCardCustomColorChanged
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -447,7 +467,9 @@ private fun CardSettingsSection(
     cardSettings: Map<String, NoteCardAppearance>,
     notesLoadError: String?,
     onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit,
-    onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit
+    onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit,
+    onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit,
+    onCardCustomColorChanged: (NoteSummary, String) -> Unit
 ) {
     when {
         notesLoadError != null -> {
@@ -472,7 +494,9 @@ private fun CardSettingsSection(
                         note = note,
                         appearance = appearance,
                         onSizeSelected = { size -> onCardSizeSelected(note, size) },
-                        onColorSelected = { color -> onCardColorSelected(note, color) }
+                        onColorSelected = { color -> onCardColorSelected(note, color) },
+                        onTextSizeSelected = { textSize -> onCardTextSizeSelected(note, textSize) },
+                        onCustomColorChanged = { colorHex -> onCardCustomColorChanged(note, colorHex) }
                     )
                 }
             }
@@ -485,7 +509,9 @@ private fun NoteCardSettingsRow(
     note: NoteSummary,
     appearance: NoteCardAppearance,
     onSizeSelected: (NoteCardSize) -> Unit,
-    onColorSelected: (NoteCardColor) -> Unit
+    onColorSelected: (NoteCardColor) -> Unit,
+    onTextSizeSelected: (NoteCardTextSize) -> Unit,
+    onCustomColorChanged: (String) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -512,6 +538,31 @@ private fun NoteCardSettingsRow(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Text size",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                NoteCardTextSize.entries.forEach { textSize ->
+                    FilterChip(
+                        selected = appearance.textSize == textSize,
+                        onClick = { onTextSizeSelected(textSize) },
+                        label = { Text(textSize.label) }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Color",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.horizontalScroll(rememberScrollState())
@@ -534,6 +585,17 @@ private fun NoteCardSettingsRow(
                     )
                 }
             }
+            if (appearance.color == NoteCardColor.Custom) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = appearance.customColorHex.orEmpty(),
+                    onValueChange = onCustomColorChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Custom color") },
+                    placeholder = { Text("#D9E8C8") },
+                    singleLine = true
+                )
+            }
         }
     }
 }
@@ -542,9 +604,23 @@ private fun cardColorPreview(color: NoteCardColor): Color {
     return when (color) {
         NoteCardColor.Default -> Color(0xFFE7E0EC)
         NoteCardColor.Rose -> Color(0xFFFFDAD6)
+        NoteCardColor.Red -> Color(0xFFFFB4AB)
         NoteCardColor.Amber -> Color(0xFFFFDEA6)
+        NoteCardColor.Orange -> Color(0xFFFFDCC2)
         NoteCardColor.Mint -> Color(0xFFBCECCB)
+        NoteCardColor.Green -> Color(0xFFCDEDA3)
         NoteCardColor.Sky -> Color(0xFFC9E6FF)
+        NoteCardColor.Blue -> Color(0xFFD0E4FF)
         NoteCardColor.Lavender -> Color(0xFFE7DEFF)
+        NoteCardColor.Custom -> parseColorOrDefault(color = null, fallback = Color(0xFFE7E0EC))
     }
+}
+
+private fun parseColorOrDefault(color: String?, fallback: Color): Color {
+    val normalized = color?.trim().orEmpty()
+    if (!Regex("^#?[0-9A-Fa-f]{6}$").matches(normalized)) {
+        return fallback
+    }
+    val hex = normalized.removePrefix("#")
+    return Color(("FF$hex").toLong(16))
 }

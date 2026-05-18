@@ -97,6 +97,6 @@ class FileRepositoryImpl(
     }
 
     companion object {
-        private const val PREVIEW_SOURCE_LINE_COUNT = 80
+        private const val PREVIEW_SOURCE_LINE_COUNT = 160
     }
 }
