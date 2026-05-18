@@ -1,98 +1,159 @@
 # Notes Widget for Markdown
 
-A beautiful, Material Design 3 (Material You) Android home screen widget that brings a Google Keep-style grid/list experience to your local Markdown notes.
+An Android home screen widget for local Markdown notes.
 
-Perfectly designed as a companion for mobile Obsidian vaults. It acts as a lightweight, native, scrollable viewer for your `.md` files, delegating creation and editing directly to your Markdown editor via deep links.
+Notes Widget for Markdown is built for people who keep their notes as plain `.md` files and want a fast, glanceable, Google Keep-like view on their Android home screen. It works especially well as a companion for an Obsidian vault, but it is not tied to Obsidian storage or sync. Your files stay in your folder; the app reads them directly.
 
-## ✨ Features (MVP)
-* **Scrollable Grid:** View all your notes directly on the home screen via Jetpack Glance widget.
-* **Material You Design:** Dynamic colors that adapt to the user's wallpaper and rounded corners (16dp).
-* **Local First:** Reads directly from your file system via Storage Access Framework (SAF). No databases, no cloud syncing.
-* **Folder Selection:** Pick your Obsidian vault folder with persistent URI permissions (survives reboots).
-* **Markdown Preview:** Automatically strips markdown formatting (#, *, -, links, code) for clean previews.
-* **Deep Integration:** *(planned)*
-    * Tap a note -> Opens the file in Obsidian (via `obsidian://open`).
-    * Tap '+' -> Opens Obsidian to create a new note (via `obsidian://new`).
-* **Abstracted Analytics:** *(planned)* Clean architecture for integrating Firebase Crashlytics & AppCenter.
+> Early project status: usable prototype / MVP. APIs, settings, and visual design may still change.
 
-## 🗺️ Project Roadmap
+## What It Does
 
-### Phase 1: Project Setup ✅
-- [x] Android project with Gradle KTS + Version Catalogs
-- [x] Dependencies: Glance, Koin, Coroutines, Compose, DocumentFile
+- Shows Markdown notes in a scrollable Android home screen widget.
+- Reads notes directly from a user-selected folder using Android Storage Access Framework.
+- Keeps the file system as the source of truth. No database, account, cloud backend, or proprietary note format.
+- Generates a clean preview from Markdown, including headings, links, lists, and task checkboxes.
+- Opens notes in Obsidian when tapped, using Obsidian deep links.
+- Creates a new note through Obsidian from the widget add button.
+- Lets you customize each note card:
+  - card height
+  - text size
+  - preset or custom color
+  - manual order
+- Automatically keeps unknown/new files safe: newly synced or newly created Markdown files appear with default styling until configured.
 
-### Phase 2: Domain Layer ✅
-- [x] `NoteSummary` data class (pure Kotlin)
-- [x] `FileRepository` interface (Flow-based)
-- [x] `GetNotesUseCase` (sorts by lastModified descending)
-- [x] `CreateNoteUseCase`
+## Screenshots
 
-### Phase 3: Data Layer & SAF ✅
-- [x] `FileRepositoryImpl` with SAF (`DocumentFile` + `ContentResolver`)
-- [x] Markdown stripping for preview (headings, lists, bold, italic, links, code, blockquotes)
-- [x] Efficient preview: reads only first 5 non-blank lines
-- [x] Koin DI module (`AppModule.kt`)
+Screenshots are planned before the first public release.
 
-### Phase 4: Presentation Layer ✅
-- [x] `NotesViewModel` with sealed `NotesUiState` (Loading, Empty, Success, Error)
-- [x] `NotesWidget` — Glance `LazyVerticalGrid` with Material You colors
-- [x] `NotesWidgetReceiver`
-- [x] Widget metadata (`notes_widget_info.xml`)
+Suggested screenshots:
 
-### Phase 5: Entry Point & Manifest ✅
-- [x] `NotesWidgetApp` (Application class with Koin init)
-- [x] `SetupActivity` — Compose UI with folder picker + persistable URI permission
-- [x] SharedPreferences for vault URI (`app_prefs` / `vault_uri`)
-- [x] Full AndroidManifest registration
+- configured home screen widget
+- setup screen with vault/folder selection
+- card appearance settings
+- Markdown task-list preview
 
-### Phase 6: Polish & Integration (Next)
-- [ ] Obsidian URI deep link routing (`obsidian://open`, `obsidian://new`)
-- [ ] Widget refresh after folder selection
-- [ ] Grid/List toggle in widget
-- [ ] Analytics abstraction (Firebase, AppCenter)
-- [ ] CI/CD setup
+## Why
 
-### Future Phases
-- [ ] **Interactive Widget:** Actionable checkboxes (`- [ ]` markdown syntax)
-- [ ] **Quick Capture:** Floating dialog to write notes without opening Obsidian
-- [ ] **Rich Media:** Camera integration, voice memos
+Obsidian and many other note apps are great for writing, linking, and organizing Markdown. Android widgets are great for quickly seeing what matters without opening an app.
 
-## 🛠️ Tech Stack
-* **Language:** Kotlin 2.0.21
-* **Min SDK:** 30 (Android 11) / **Target SDK:** 36
-* **UI (Widget):** Jetpack Glance 1.1.1
-* **UI (Setup):** Jetpack Compose (Material 3)
-* **Dependency Injection:** Koin 4.1.1
-* **Asynchronous:** Kotlin Coroutines 1.10.2 & Flow
-* **Storage:** SAF via DocumentFile + ContentResolver
+This project sits between those worlds:
 
-## 📦 Package Structure (`com.marfolog.noteswidgetformarkdown`)
+- Obsidian or another Markdown editor remains the writing tool.
+- Your local Markdown folder remains the source of truth.
+- The Android widget becomes a lightweight visual layer for quick access.
 
+The design goal is a practical note board, not a full Markdown editor.
+
+## Current Limitations
+
+- This is not an official Obsidian plugin.
+- It does not implement native Git sync.
+- It does not edit Markdown content inside the widget.
+- Android widgets cannot render full Obsidian/Markdown layout like the app itself can.
+- Only local folders accessible through Android Storage Access Framework are supported.
+- The current release flow is manual; there is no Play Store or F-Droid release yet.
+
+## Setup
+
+1. Install the app on Android 11 or newer.
+2. Open the app.
+3. Select the root of your Obsidian vault or Markdown folder.
+4. Select the folder that contains the `.md` files you want in the widget.
+5. Add the widget to your Android home screen.
+6. Optional: open the app settings again to customize card size, color, text size, and order.
+
+## Obsidian Integration
+
+The app delegates note opening and note creation to Obsidian using URI links:
+
+- tapping an existing note opens it in Obsidian
+- tapping the add button starts a new note in Obsidian
+
+If you use another Markdown editor, the file preview still works, but editor-specific deep links may need future support.
+
+## Build From Source
+
+Requirements:
+
+- Android Studio
+- JDK 17 or newer
+- Android SDK with API 36
+
+Build a debug APK:
+
+```bash
+./gradlew assembleDebug
 ```
-├── NotesWidgetApp.kt              # Application (Koin init)
-├── di/
-│   └── AppModule.kt               # Koin module definitions
-├── analytics/                     # (planned) Analytics abstraction
-├── data/
-│   ├── repository/
-│   │   └── FileRepositoryImpl.kt  # SAF-based file reading & creation
-│   └── parser/                    # (planned) Dedicated markdown parser
-├── domain/
-│   ├── model/
-│   │   └── NoteSummary.kt         # Pure Kotlin data class
-│   ├── repository/
-│   │   └── FileRepository.kt      # Interface (Flow-based)
-│   └── usecase/
-│       ├── GetNotesUseCase.kt     # Fetch + sort by date
-│       └── CreateNoteUseCase.kt   # Create new .md file
-├── presentation/
-│   ├── setup/
-│   │   └── SetupActivity.kt      # Launcher: folder picker UI
-│   ├── viewmodel/
-│   │   └── NotesViewModel.kt     # MVVM with sealed UiState
-│   └── widget/
-│       ├── NotesWidget.kt        # GlanceAppWidget (LazyVerticalGrid)
-│       ├── NotesWidgetReceiver.kt # GlanceAppWidgetReceiver
-│       └── components/            # (planned) NoteCard, FabButton
-└── ui/theme/                      # Compose theme (Material You)
+
+Run unit tests:
+
+```bash
+./gradlew testDebugUnitTest
 ```
+
+Install a debug build on a connected device:
+
+```bash
+./gradlew installDebug
+```
+
+## Tech Stack
+
+- Kotlin
+- Gradle Kotlin DSL
+- Jetpack Compose for the setup UI
+- Jetpack Glance for the home screen widget
+- Koin for dependency injection
+- Kotlin Coroutines and Flow
+- Android Storage Access Framework via `DocumentFile`
+- CommonMark for Markdown preview parsing
+- WorkManager for periodic widget refresh
+
+## Project Principles
+
+- Local-first by default.
+- Plain Markdown files remain the source of truth.
+- No Room database for note content.
+- No account system.
+- No cloud backend.
+- Android platform APIs over custom file access hacks.
+- Obsidian integration should be helpful but optional where possible.
+
+## Roadmap
+
+Near-term:
+
+- Add real screenshots and a demo GIF.
+- Clean up release signing and public APK publishing.
+- Improve Markdown preview fidelity within widget limits.
+- Add better empty/error states.
+- Make non-Obsidian editor integration configurable.
+- Add GitLab/GitHub release automation.
+
+Later:
+
+- F-Droid metadata and reproducible release setup.
+- Optional quick-capture flow.
+- More layout modes.
+- Better support for nested folders.
+- Accessibility review for widget contrast and touch targets.
+
+## Contributing
+
+Issues, ideas, and pull requests are welcome once the first public release is published.
+
+Useful contributions:
+
+- testing with real Obsidian vaults
+- testing with non-Obsidian Markdown folders
+- Markdown preview edge cases
+- Android launcher/widget compatibility reports
+- UI and accessibility improvements
+- documentation and screenshots
+
+Before opening a large pull request, please create an issue with the proposed change.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
