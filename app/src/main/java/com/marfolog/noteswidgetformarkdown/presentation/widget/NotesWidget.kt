@@ -285,7 +285,7 @@ private fun RefreshButton() {
         ) {
             Image(
                 provider = ImageProvider(R.drawable.ic_refresh),
-                contentDescription = "Refresh",
+                contentDescription = "Sync notes",
                 modifier = GlanceModifier.size(20.dp),
                 colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
             )

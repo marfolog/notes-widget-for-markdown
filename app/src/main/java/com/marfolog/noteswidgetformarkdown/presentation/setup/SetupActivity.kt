@@ -32,6 +32,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -88,6 +89,7 @@ class SetupActivity : ComponentActivity() {
         const val KEY_NOTES_URI = "notes_uri"
         const val KEY_VAULT_NAME = "vault_name"
         const val KEY_NOTE_FOLDER_PATH = "note_folder_path"
+        const val KEY_SYNC_URI = "sync_uri"
     }
 }
 
@@ -102,6 +104,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var notesUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTES_URI, null)) }
     var vaultName by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_NAME, null)) }
     var derivedPath by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null) ?: "") }
+    var syncUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_SYNC_URI, null).orEmpty()) }
     var notesForSettings by remember { mutableStateOf<List<NoteSummary>>(emptyList()) }
     var cardSettings by remember { mutableStateOf(cardSettingsStore.getAll()) }
     var notesLoadError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -218,6 +221,10 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
 
     val onSave: () -> Unit = {
+        prefs.edit()
+            .putString(SetupActivity.KEY_SYNC_URI, syncUri.trim())
+            .apply()
+
         Toast.makeText(context, "Settings saved!", Toast.LENGTH_SHORT).show()
 
         scope.launch {
@@ -232,6 +239,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         notesFolderName = notesDisplayName,
         onSelectNotesFolder = { notesPicker.launch(null) },
         derivedPath = derivedPath,
+        syncUri = syncUri,
+        onSyncUriChange = { syncUri = it },
         notes = notesForSettings,
         cardSettings = cardSettings,
         notesLoadError = notesLoadError,
@@ -260,6 +269,8 @@ internal fun SetupScreenContent(
     notesFolderName: String?,
     onSelectNotesFolder: () -> Unit,
     derivedPath: String,
+    syncUri: String = "",
+    onSyncUriChange: (String) -> Unit = {},
     notes: List<NoteSummary> = emptyList(),
     cardSettings: Map<String, NoteCardAppearance> = emptyMap(),
     notesLoadError: String? = null,
@@ -365,6 +376,32 @@ internal fun SetupScreenContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Obsidian Sync",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Paste an Obsidian Advanced URI command for your Git pull or sync action.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = syncUri,
+            onValueChange = onSyncUriChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Sync URI") },
+            placeholder = { Text("obsidian://advanced-uri?...") },
+            minLines = 2,
+            maxLines = 4
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
 
