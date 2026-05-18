@@ -3,6 +3,7 @@ package com.marfolog.noteswidgetformarkdown.presentation.widget
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import org.koin.java.KoinJavaComponent.get
 class NotesWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val startedAt = System.currentTimeMillis()
         val prefs = context.getSharedPreferences(SetupActivity.PREFS_NAME, Context.MODE_PRIVATE)
         val folderUri = prefs.getString(SetupActivity.KEY_NOTES_URI, null)
             ?: prefs.getString(SetupActivity.KEY_VAULT_URI, null)
@@ -86,15 +88,20 @@ class NotesWidget : GlanceAppWidget() {
                 WidgetRoot(state, vaultName, noteFolderPath, cardSettings)
             }
         }
+        Log.d(TAG, "Rendered widget in ${System.currentTimeMillis() - startedAt}ms")
     }
 
     companion object {
+        private const val TAG = "NotesWidget"
+
         suspend fun updateAll(context: Context) {
+            val startedAt = System.currentTimeMillis()
             val manager = GlanceAppWidgetManager(context)
             val ids = manager.getGlanceIds(NotesWidget::class.java)
             ids.forEach { id ->
                 NotesWidget().update(context, id)
             }
+            Log.d(TAG, "Requested update for ${ids.size} widgets in ${System.currentTimeMillis() - startedAt}ms")
         }
     }
 }

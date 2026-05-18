@@ -2,6 +2,7 @@ package com.marfolog.noteswidgetformarkdown.data.repository
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownPreviewFormatter
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
@@ -21,6 +22,7 @@ class FileRepositoryImpl(
     private val contentResolver get() = context.contentResolver
 
     override fun getNotes(folderUri: String): Flow<List<NoteSummary>> = flow {
+        val startedAt = System.currentTimeMillis()
         val treeUri = Uri.parse(folderUri)
 
         // Check if we still hold persistable permission for this URI
@@ -40,6 +42,7 @@ class FileRepositoryImpl(
             .filter { it.isFile && it.name?.endsWith(".md", ignoreCase = true) == true }
             .mapNotNull { docFile -> fileToNoteSummary(docFile) }
 
+        Log.d(TAG, "Loaded ${notes.size} notes in ${System.currentTimeMillis() - startedAt}ms")
         emit(notes)
     }.flowOn(Dispatchers.IO)
 
@@ -97,6 +100,7 @@ class FileRepositoryImpl(
     }
 
     companion object {
-        private const val PREVIEW_SOURCE_LINE_COUNT = 160
+        private const val TAG = "FileRepository"
+        private const val PREVIEW_SOURCE_LINE_COUNT = 36
     }
 }

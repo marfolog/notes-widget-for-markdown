@@ -2,6 +2,7 @@ package com.marfolog.noteswidgetformarkdown.presentation.widget
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
@@ -44,10 +45,13 @@ class RefreshWidgetAction : ActionCallback {
             return
         }
 
+        val startedAt = System.currentTimeMillis()
         NotesWidget().update(context, glanceId)
+        Log.d(TAG, "Manual refresh finished in ${System.currentTimeMillis() - startedAt}ms")
     }
 
     companion object {
+        private const val TAG = "RefreshWidgetAction"
         private const val SYNC_REFRESH_DELAY_SECONDS = 20L
         private const val SYNC_REFRESH_WORK_NAME = "notes_widget_sync_refresh"
     }
