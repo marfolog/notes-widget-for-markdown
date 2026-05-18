@@ -75,6 +75,11 @@ dependencies {
     // Material Icons Extended
     implementation(libs.androidx.compose.material.icons.extended)
 
+    // Markdown preview
+    implementation(libs.commonmark)
+    implementation(libs.commonmark.ext.task.list.items)
+    implementation(libs.commonmark.ext.gfm.strikethrough)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

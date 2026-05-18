@@ -3,6 +3,7 @@ package com.marfolog.noteswidgetformarkdown.data.repository
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownPreviewFormatter
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.repository.FileRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class FileRepositoryImpl(
-    private val context: Context
+    private val context: Context,
+    private val previewFormatter: MarkdownPreviewFormatter = MarkdownPreviewFormatter()
 ) : FileRepository {
 
     private val contentResolver get() = context.contentResolver
@@ -85,32 +87,16 @@ class FileRepositoryImpl(
                 BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
                     val lines = mutableListOf<String>()
                     var line: String?
-                    while (reader.readLine().also { line = it } != null && lines.size < PREVIEW_LINE_COUNT) {
-                        val cleaned = stripMarkdown(line!!)
-                        if (cleaned.isNotBlank()) {
-                            lines.add(cleaned)
-                        }
+                    while (reader.readLine().also { line = it } != null && lines.size < PREVIEW_SOURCE_LINE_COUNT) {
+                        lines.add(line.orEmpty())
                     }
-                    lines.joinToString("\n")
+                    previewFormatter.format(lines.joinToString("\n"))
                 }
             } ?: ""
         }.getOrDefault("")
     }
 
-    private fun stripMarkdown(line: String): String {
-        return line
-            .replace(Regex("^#{1,6}\\s+"), "")
-            .replace(Regex("^\\s*[*\\-+]\\s+"), "")
-            .replace(Regex("^\\s*\\d+\\.\\s+"), "")
-            .replace(Regex("\\*{1,2}(.+?)\\*{1,2}"), "$1")
-            .replace(Regex("~~(.+?)~~"), "$1")
-            .replace(Regex("`(.+?)`"), "$1")
-            .replace(Regex("\\[(.+?)]\\(.+?\\)"), "$1")
-            .replace(Regex("^>\\s?"), "")
-            .trim()
-    }
-
     companion object {
-        private const val PREVIEW_LINE_COUNT = 5
+        private const val PREVIEW_SOURCE_LINE_COUNT = 80
     }
 }
