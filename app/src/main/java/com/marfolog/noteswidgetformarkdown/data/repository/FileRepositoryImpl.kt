@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownFastNoteInserter
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownPreviewFormatter
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.repository.FileRepository
@@ -11,12 +12,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class FileRepositoryImpl(
     private val context: Context,
-    private val previewFormatter: MarkdownPreviewFormatter = MarkdownPreviewFormatter()
+    private val previewFormatter: MarkdownPreviewFormatter = MarkdownPreviewFormatter(),
+    private val fastNoteInserter: MarkdownFastNoteInserter = MarkdownFastNoteInserter()
 ) : FileRepository {
 
     private val contentResolver get() = context.contentResolver
@@ -64,6 +67,24 @@ class FileRepositoryImpl(
         } ?: return@runCatching false
 
         true
+    }
+
+    override suspend fun appendFastNote(fileUri: String, noteText: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = Uri.parse(fileUri)
+            val originalContent = contentResolver.openInputStream(uri)?.use { stream ->
+                BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
+                    reader.readText()
+                }
+            } ?: return@runCatching false
+
+            val updatedContent = fastNoteInserter.insert(originalContent, noteText)
+            contentResolver.openOutputStream(uri, "wt")?.use { stream ->
+                stream.write(updatedContent.toByteArray(Charsets.UTF_8))
+            } ?: return@runCatching false
+
+            true
+        }
     }
 
     private fun fileToNoteSummary(docFile: DocumentFile): NoteSummary? {

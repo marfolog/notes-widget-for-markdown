@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -52,10 +53,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
@@ -95,6 +99,7 @@ class SetupActivity : ComponentActivity() {
         const val KEY_NOTES_URI = "notes_uri"
         const val KEY_VAULT_NAME = "vault_name"
         const val KEY_NOTE_FOLDER_PATH = "note_folder_path"
+        const val KEY_FAST_NOTE_TARGET_URI = "fast_note_target_uri"
     }
 }
 
@@ -109,6 +114,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var notesUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTES_URI, null)) }
     var vaultName by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_NAME, null)) }
     var derivedPath by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null) ?: "") }
+    var fastNoteTargetUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, null)) }
     var notesForSettings by remember { mutableStateOf<List<NoteSummary>>(emptyList()) }
     var cardSettings by remember { mutableStateOf(cardSettingsStore.getAll()) }
     var notesLoadError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -242,6 +248,13 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         notes = notesForSettings,
         cardSettings = cardSettings,
         notesLoadError = notesLoadError,
+        fastNoteTargetUri = fastNoteTargetUri,
+        onFastNoteTargetSelected = { note ->
+            fastNoteTargetUri = note.fileUri
+            prefs.edit()
+                .putString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, note.fileUri)
+                .commit()
+        },
         onCardSizeSelected = { note, size ->
             val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(size = size)
             cardSettingsStore.save(note.fileUri, updated)
@@ -297,6 +310,8 @@ internal fun SetupScreenContent(
     notes: List<NoteSummary> = emptyList(),
     cardSettings: Map<String, NoteCardAppearance> = emptyMap(),
     notesLoadError: String? = null,
+    fastNoteTargetUri: String? = null,
+    onFastNoteTargetSelected: (NoteSummary) -> Unit = {},
     onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit = { _, _ -> },
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit = { _, _ -> },
     onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit = { _, _ -> },
@@ -306,12 +321,23 @@ internal fun SetupScreenContent(
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 8.dp, bottom = 24.dp)
+                .size(280.dp)
+                .alpha(0.055f)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+        ) {
         // Section 1: Obsidian Vault
         Text(
             text = "Obsidian Vault",
@@ -406,6 +432,31 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
+            text = "Fast Note Target",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Fast notes are saved locally into this Markdown file. Git sync remains handled by Obsidian Git.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        FastNoteTargetSection(
+            notes = notes,
+            notesLoadError = notesLoadError,
+            selectedNoteUri = fastNoteTargetUri,
+            onTargetSelected = onFastNoteTargetSelected
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
             text = "Card Appearance",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
@@ -441,6 +492,55 @@ internal fun SetupScreenContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun FastNoteTargetSection(
+    notes: List<NoteSummary>,
+    notesLoadError: String?,
+    selectedNoteUri: String?,
+    onTargetSelected: (NoteSummary) -> Unit
+) {
+    when {
+        notesLoadError != null -> {
+            Text(
+                text = notesLoadError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        notes.isEmpty() -> {
+            Text(
+                text = "Select a notes folder with .md files to choose a Fast note target.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        else -> {
+            val selectedExists = selectedNoteUri == null || notes.any { it.fileUri == selectedNoteUri }
+            if (!selectedExists) {
+                Text(
+                    text = "The selected Fast note target is no longer available. Choose another note.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                notes.forEach { note ->
+                    FilterChip(
+                        selected = note.fileUri == selectedNoteUri,
+                        onClick = { onTargetSelected(note) },
+                        label = { Text(note.title) }
+                    )
+                }
+            }
+        }
     }
 }
 

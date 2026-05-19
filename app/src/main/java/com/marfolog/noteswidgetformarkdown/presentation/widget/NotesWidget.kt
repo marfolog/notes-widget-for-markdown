@@ -27,12 +27,14 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -357,27 +359,52 @@ private fun Fab(vaultName: String?, noteFolderPath: String?) {
         modifier = GlanceModifier.fillMaxSize().padding(4.dp),
         contentAlignment = Alignment.BottomStart
     ) {
-        Box(
-            modifier = GlanceModifier
-                .size(56.dp)
-                .cornerRadius(16.dp)
-                .background(GlanceTheme.colors.primary)
-                .clickable(
-                    actionStartActivity(
-                        Intent(
-                            androidx.glance.LocalContext.current,
-                            TrampolineActivity::class.java
-                        ).putExtra(TrampolineActivity.EXTRA_URI, newNoteUri)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                provider = ImageProvider(R.drawable.ic_add),
-                contentDescription = "Add note",
-                modifier = GlanceModifier.size(24.dp),
-                colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = GlanceModifier
+                    .size(56.dp)
+                    .cornerRadius(16.dp)
+                    .background(GlanceTheme.colors.primary)
+                    .clickable(
+                        actionStartActivity(
+                            Intent(
+                                androidx.glance.LocalContext.current,
+                                TrampolineActivity::class.java
+                            ).putExtra(TrampolineActivity.EXTRA_URI, newNoteUri)
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    provider = ImageProvider(R.drawable.ic_add),
+                    contentDescription = "Add note",
+                    modifier = GlanceModifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
+                )
+            }
+            Spacer(modifier = GlanceModifier.width(8.dp))
+            Box(
+                modifier = GlanceModifier
+                    .size(48.dp)
+                    .cornerRadius(16.dp)
+                    .background(GlanceTheme.colors.primary)
+                    .clickable(
+                        actionStartActivity(
+                            Intent(
+                                androidx.glance.LocalContext.current,
+                                FastNoteActivity::class.java
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    provider = ImageProvider(R.drawable.ic_fast_note),
+                    contentDescription = "Add fast note",
+                    modifier = GlanceModifier.size(22.dp),
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
+                )
+            }
         }
     }
 }
@@ -396,7 +423,12 @@ private fun NotesList(
         modifier = GlanceModifier
             .fillMaxSize()
     ) {
-        items(notes, itemId = { it.id.hashCode().toLong() }) { note ->
+        items(notes, itemId = { note ->
+            val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+            "${note.id}:${appearance.size.storageValue}:${appearance.color.storageValue}:${appearance.textSize.storageValue}:${appearance.customColorHex.orEmpty()}"
+                .hashCode()
+                .toLong()
+        }) { note ->
             Column(modifier = GlanceModifier.fillMaxWidth()) {
                 NoteCard(note, vaultName, cardSettings[note.fileUri] ?: NoteCardAppearance())
                 Spacer(modifier = GlanceModifier.height(8.dp))

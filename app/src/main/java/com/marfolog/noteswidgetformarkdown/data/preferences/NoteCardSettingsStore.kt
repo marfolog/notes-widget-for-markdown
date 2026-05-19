@@ -57,7 +57,7 @@ class NoteCardSettingsStore(context: Context) {
         }
         prefs.edit()
             .putString(KEY_CARD_ORDER_JSON, array.toString())
-            .apply()
+            .commit()
     }
 
     fun applyOrder(notes: List<NoteSummary>): List<NoteSummary> {
@@ -86,7 +86,7 @@ class NoteCardSettingsStore(context: Context) {
         root.put(noteId, item)
         prefs.edit()
             .putString(KEY_CARD_SETTINGS_JSON, root.toString())
-            .apply()
+            .commit()
     }
 
     companion object {

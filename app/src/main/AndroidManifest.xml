@@ -29,6 +29,11 @@
             android:exported="false"
             android:theme="@style/Theme.Translucent" />
 
+        <activity
+            android:name=".presentation.widget.FastNoteActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Translucent" />
+
         <receiver
             android:name=".presentation.widget.NotesWidgetReceiver"
             android:exported="true">
