@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Notes Widget for Markdown logo</title>
+  <desc id="desc">Dark rounded app icon with compact bullet note lines and a small plus symbol for quick note capture.</desc>
+  <rect width="1024" height="1024" rx="224" fill="#061B2A"/>
+  <circle cx="370" cy="379" r="27" fill="#EAF7F0"/>
+  <rect x="464" y="352" width="171" height="54" rx="27" fill="#EAF7F0"/>
+  <circle cx="370" cy="484" r="27" fill="#EAF7F0"/>
+  <rect x="464" y="457" width="123" height="54" rx="27" fill="#EAF7F0"/>
+  <circle cx="370" cy="607" r="27" fill="#EAF7F0"/>
+  <rect x="464" y="580" width="171" height="54" rx="27" fill="#EAF7F0"/>
+  <circle cx="370" cy="711" r="27" fill="#EAF7F0"/>
+  <rect x="464" y="684" width="123" height="54" rx="27" fill="#EAF7F0"/>
+  <path fill="#77D5BF" d="M692 654h38v62h62v38h-62v62h-38v-62h-62v-38h62z"/>
+</svg>
