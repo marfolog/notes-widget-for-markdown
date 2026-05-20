@@ -33,12 +33,12 @@ class FileRepositoryImpl(
             perm.uri == treeUri && perm.isReadPermission
         }
         if (!hasPermission) {
-            throw SecurityException("Folder permission was revoked. Please re-select your vault.")
+            throw SecurityException("Folder permission was revoked. Please re-select your notes folder.")
         }
 
         val folder = DocumentFile.fromTreeUri(context, treeUri)
         if (folder == null || !folder.exists()) {
-            throw IllegalStateException("Folder not found. Please re-select your vault.")
+            throw IllegalStateException("Folder not found. Please re-select your notes folder.")
         }
 
         val notes = folder.listFiles()

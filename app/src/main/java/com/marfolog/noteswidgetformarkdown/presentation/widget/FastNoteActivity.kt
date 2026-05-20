@@ -121,7 +121,7 @@ private fun FastNoteDialog(
                 },
                 label = { Text("Note") },
                 supportingText = {
-                    val message = errorMessage ?: "Saved locally. Obsidian Git handles sync."
+                    val message = errorMessage ?: "Saved locally. Sync remains handled by your notes setup."
                     Text(message)
                 },
                 isError = errorMessage != null,

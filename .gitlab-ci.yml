@@ -1,0 +1,89 @@
+stages:
+  - test
+  - build
+  - release
+
+variables:
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  PACKAGE_NAME: "notes-widget-for-markdown"
+
+default:
+  image: "ghcr.io/cirruslabs/android-sdk:36"
+  cache:
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
+        - gradle/libs.versions.toml
+    paths:
+      - .gradle/caches
+      - .gradle/wrapper
+  before_script:
+    - chmod +x ./gradlew
+
+test_debug:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+  script:
+    - ./gradlew testDebugUnitTest
+
+build_debug:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+  script:
+    - ./gradlew assembleDebug
+  artifacts:
+    when: on_success
+    expire_in: 7 days
+    paths:
+      - app/build/outputs/apk/debug/*.apk
+
+release_apk:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
+  script:
+    - test -n "$ANDROID_KEYSTORE_BASE64"
+    - test -n "$ANDROID_KEYSTORE_PASSWORD"
+    - test -n "$ANDROID_KEY_ALIAS"
+    - test -n "$ANDROID_KEY_PASSWORD"
+    - echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > app/release-keystore.jks
+    - export RELEASE_STORE_FILE=release-keystore.jks
+    - export RELEASE_STORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+    - export RELEASE_KEY_ALIAS="$ANDROID_KEY_ALIAS"
+    - export RELEASE_KEY_PASSWORD="$ANDROID_KEY_PASSWORD"
+    - ./gradlew clean assembleRelease
+    - export APK_NAME="${PACKAGE_NAME}-${CI_COMMIT_TAG}.apk"
+    - cp app/build/outputs/apk/release/app-release.apk "$APK_NAME"
+    - sha256sum "$APK_NAME" > "$APK_NAME.sha256"
+  artifacts:
+    when: on_success
+    expire_in: 30 days
+    paths:
+      - notes-widget-for-markdown-*.apk
+      - notes-widget-for-markdown-*.apk.sha256
+
+publish_release:
+  stage: release
+  image: "registry.gitlab.com/gitlab-org/cli:latest"
+  needs:
+    - job: release_apk
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
+  before_script: []
+  script:
+    - export GITLAB_TOKEN="$CI_JOB_TOKEN"
+    - export APK_NAME="${PACKAGE_NAME}-${CI_COMMIT_TAG}.apk"
+    - |
+      glab release create "$CI_COMMIT_TAG" \
+        --name "Notes Widget for Markdown ${CI_COMMIT_TAG}" \
+        --notes-file RELEASE_NOTES.md \
+        --package-name "$PACKAGE_NAME" \
+        --use-package-registry \
+        "$APK_NAME" \
+        "$APK_NAME.sha256"

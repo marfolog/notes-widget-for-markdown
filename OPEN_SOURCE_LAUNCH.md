@@ -14,7 +14,8 @@ Co zdůrazňovat:
 - žádný účet
 - žádný cloud backend
 - čte existující `.md` soubory
-- vhodné pro Obsidian vaulty, ale není to oficiální Obsidian plugin
+- Markdown-first: vhodné pro Obsidian vaulty, ale použitelné i pro běžné lokální Markdown složky
+- Obsidian je zatím výchozí integrace pro otevření/vytvoření poznámky, ne storage ani sync dependency
 - widget je vizuální vrstva, ne editor
 
 Co raději neslibovat:
@@ -30,10 +31,38 @@ Co raději neslibovat:
 - Držet jednoduchý příběh: appka čte lokální Markdown a refreshne widget.
 - Git/Obsidian sync neprezentovat jako součást MVP.
 - Zkontrolovat, že v repu není veřejně citlivý release signing materiál.
-- Vyčistit `app/build.gradle.kts` od lokálních hesel a nahradit je Gradle properties nebo lokálním necommitovaným configem.
+- `app/build.gradle.kts` čte signing jen z Gradle properties nebo environment variables.
+- `app/release-keystore.jks` držet jen lokálně / v bezpečné záloze a necommitovat.
 - Přidat skutečné screenshoty do README.
 - Rozhodnout název APK/release artefaktu, např. `notes-widget-for-markdown-v0.1.0.apk`.
 - Založit tag `v0.1.0`.
+
+## GitLab release pipeline
+
+Pipeline je připravená pro tagy ve formátu `v0.1.0`.
+
+GitLab CI variables nastavit jako protected + masked:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Lokální signing Gradle properties / env názvy:
+
+- `RELEASE_STORE_FILE`
+- `RELEASE_STORE_PASSWORD`
+- `RELEASE_KEY_ALIAS`
+- `RELEASE_KEY_PASSWORD`
+
+Release job:
+
+- dekóduje keystore jen do CI workspace
+- sestaví `assembleRelease`
+- přejmenuje APK na `notes-widget-for-markdown-$CI_COMMIT_TAG.apk`
+- vytvoří `.sha256`
+- nahraje artefakty do GitLab Generic Packages
+- vytvoří GitLab Release z `RELEASE_NOTES.md`
 
 ## První release
 
@@ -59,7 +88,8 @@ Release checklist:
   - jak ji nastavit
   - známé limity
   - že jde o první MVP build
-- Přiložit APK jako release asset.
+- Přiložit APK jako release asset přes GitLab Generic Packages.
+- Přiložit SHA-256 checksum.
 - Přidat krátké varování: Android může při ruční instalaci vyžadovat povolení instalace z neznámých zdrojů.
 
 ## Doporučené release notes pro v0.1.0
@@ -127,6 +157,7 @@ Current MVP:
 - Markdown preview
 - task list preview
 - note cards with custom size/color/order
+- fast note append into a selected Markdown file
 - open/create notes via Obsidian deep links
 
 It is still early, and I’d appreciate feedback from people who use Obsidian on Android.
@@ -143,6 +174,7 @@ Current MVP:
 - reads a selected Markdown folder locally
 - displays notes as customizable cards
 - supports simplified Markdown/task-list preview
+- appends quick notes into a selected Markdown file
 - opens/creates notes through Obsidian deep links
 - no account, no backend, no proprietary note format
 
@@ -160,9 +192,8 @@ Android home screen widget for local Markdown notes, inspired by Google Keep and
 - `CONTRIBUTING.md`
 - `CHANGELOG.md`
 - GitLab/GitHub issue templates
-- screenshots in `docs/screenshots/`
+- real screenshots in `docs/screenshots/`
 - basic privacy note
-- release workflow
 - F-Droid metadata
 
 ## F-Droid příprava

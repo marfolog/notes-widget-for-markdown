@@ -338,15 +338,15 @@ internal fun SetupScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-        // Section 1: Obsidian Vault
+        // Section 1: Markdown root
         Text(
-            text = "Obsidian Vault",
+            text = "Markdown Root",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Select the root folder of your Obsidian vault.",
+            text = "Select the root folder that contains your Markdown notes. This can be an Obsidian vault or any local notes folder.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -362,7 +362,7 @@ internal fun SetupScreenContent(
         }
 
         OutlinedButton(onClick = onSelectVault, modifier = Modifier.fillMaxWidth()) {
-            Text(text = if (vaultName != null) "Change Vault Root" else "Select Vault Root")
+            Text(text = if (vaultName != null) "Change Root Folder" else "Select Root Folder")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -377,7 +377,7 @@ internal fun SetupScreenContent(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "The folder the widget will read .md files from. Can be the vault root or a subfolder.",
+            text = "The folder the widget will read .md files from. Can be the root folder or a subfolder.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -409,7 +409,7 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(4.dp))
         if (vaultName != null && notesFolderName != null) {
             val displayPath = if (derivedPath.isEmpty()) {
-                "$vaultName/ (vault root)"
+                "$vaultName/ (root folder)"
             } else {
                 "$vaultName/$derivedPath"
             }
@@ -438,7 +438,7 @@ internal fun SetupScreenContent(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Fast notes are saved locally into this Markdown file. Git sync remains handled by Obsidian Git.",
+            text = "Fast notes are saved locally into this Markdown file. Sync remains handled by your notes setup.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

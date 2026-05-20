@@ -2,7 +2,7 @@
 
 An Android home screen widget for local Markdown notes.
 
-Notes Widget for Markdown is built for people who keep their notes as plain `.md` files and want a fast, glanceable, Google Keep-like view on their Android home screen. It works especially well as a companion for an Obsidian vault, but it is not tied to Obsidian storage or sync. Your files stay in your folder; the app reads them directly.
+Notes Widget for Markdown is built for people who keep their notes as plain `.md` files and want a fast, glanceable, Google Keep-like view on their Android home screen. It works especially well as a companion for an Obsidian vault, but the note preview itself is not tied to Obsidian storage or sync. Your files stay in your folder; the app reads them directly.
 
 > Early project status: usable prototype / MVP. APIs, settings, and visual design may still change.
 
@@ -14,6 +14,7 @@ Notes Widget for Markdown is built for people who keep their notes as plain `.md
 - Generates a clean preview from Markdown, including headings, links, lists, and task checkboxes.
 - Opens notes in Obsidian when tapped, using Obsidian deep links.
 - Creates a new note through Obsidian from the widget add button.
+- Appends quick Fast notes directly to a selected local Markdown file.
 - Lets you customize each note card:
   - card height
   - text size
@@ -23,7 +24,7 @@ Notes Widget for Markdown is built for people who keep their notes as plain `.md
 
 ## Screenshots
 
-Screenshots are planned before the first public release.
+Screenshots are planned before the first public release. Keep public screenshots in `docs/screenshots/`.
 
 Suggested screenshots:
 
@@ -52,6 +53,7 @@ The design goal is a practical note board, not a full Markdown editor.
 - Android widgets cannot render full Obsidian/Markdown layout like the app itself can.
 - Only local folders accessible through Android Storage Access Framework are supported.
 - The current release flow is manual; there is no Play Store or F-Droid release yet.
+- Obsidian is currently required for tap-to-open and add-new-note actions.
 
 ## Setup
 
@@ -62,6 +64,23 @@ The design goal is a practical note board, not a full Markdown editor.
 5. Add the widget to your Android home screen.
 6. Optional: open the app settings again to customize card size, color, text size, and order.
 
+## Works Without Obsidian
+
+Yes, for the core preview flow:
+
+- selecting a local Markdown folder
+- reading `.md` files
+- showing note cards in the widget
+- customizing card size, text size, color, and order
+- appending Fast notes to a selected Markdown file
+
+Obsidian is currently used for editor actions:
+
+- tapping an existing note opens it in Obsidian
+- tapping the add button starts a new note in Obsidian
+
+Support for configurable non-Obsidian editor actions is on the roadmap.
+
 ## Obsidian Integration
 
 The app delegates note opening and note creation to Obsidian using URI links:
@@ -70,6 +89,20 @@ The app delegates note opening and note creation to Obsidian using URI links:
 - tapping the add button starts a new note in Obsidian
 
 If you use another Markdown editor, the file preview still works, but editor-specific deep links may need future support.
+
+## Privacy
+
+Notes Widget for Markdown reads only the folder you select through Android Storage Access Framework. It does not require an account and does not upload your notes to any server.
+
+The app currently has no analytics SDK, no cloud backend, and no app-level sync. If you sync your notes with Obsidian Git, Syncthing, Git, cloud storage, or another tool, that sync happens outside this app.
+
+## Supported Devices
+
+- Minimum Android version: Android 11 (API 30).
+- Target SDK: Android 16 / API 36.
+- Tested by the maintainer on Pixel 10 running Android 16.
+
+Please report launcher/widget compatibility issues with device model, Android version, launcher name, and whether battery optimization is enabled.
 
 ## Build From Source
 
@@ -96,6 +129,34 @@ Install a debug build on a connected device:
 ```bash
 ./gradlew installDebug
 ```
+
+Build a release APK:
+
+```bash
+./gradlew assembleRelease
+```
+
+Unsigned release builds are expected when no release signing config is provided. For signed releases, provide these values through local Gradle properties or environment variables:
+
+- `RELEASE_STORE_FILE`
+- `RELEASE_STORE_PASSWORD`
+- `RELEASE_KEY_ALIAS`
+- `RELEASE_KEY_PASSWORD`
+
+Do not commit keystores, passwords, tokens, or local signing properties.
+
+## Release Process
+
+The first public release target is a signed APK attached to a GitLab Release.
+
+For GitLab CI, configure these protected and masked variables:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Create a tag such as `v0.1.0`. The pipeline runs unit tests, builds the signed release APK, creates a SHA-256 checksum, uploads both files to GitLab Generic Packages, and creates a GitLab Release using `RELEASE_NOTES.md`.
 
 ## Tech Stack
 
@@ -124,11 +185,11 @@ Install a debug build on a connected device:
 Near-term:
 
 - Add real screenshots and a demo GIF.
-- Clean up release signing and public APK publishing.
+- Publish the first signed public APK release.
 - Improve Markdown preview fidelity within widget limits.
 - Add better empty/error states.
 - Make non-Obsidian editor integration configurable.
-- Add GitLab/GitHub release automation.
+- Harden GitLab release automation after the first public tag.
 
 Later:
 

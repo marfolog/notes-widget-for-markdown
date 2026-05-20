@@ -1,29 +1,30 @@
 package com.marfolog.noteswidgetformarkdown.presentation.widget
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,60 +73,64 @@ private val sampleNotes = listOf(
         lastModified = 1708444800000,
         fileUri = "",
         fileName = "Book Notes.md"
-    ),
-    NoteSummary(
-        id = "6",
-        title = "Recipes",
-        preview = "Pasta aglio e olio\nGarlic, chili flakes, parsley\nCook pasta al dente",
-        lastModified = 1708358400000,
-        fileUri = "",
-        fileName = "Recipes.md"
     )
 )
 
 @Composable
 private fun WidgetPreviewContent(notes: List<NoteSummary>) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        WidgetHeaderPreview()
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 150.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            contentPadding = PaddingValues(bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(16.dp)
+    ) {
+        // Notes list
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-            items(notes) { note ->
+            notes.forEachIndexed { index, note ->
                 NoteCardPreview(note)
+                if (index < notes.lastIndex) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
-    }
-}
 
-@Composable
-private fun WidgetHeaderPreview() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Notes",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Box(
+        // Refresh button — top end
+        IconButton(
+            onClick = {},
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape),
-            contentAlignment = Alignment.Center
+                .align(Alignment.TopEnd)
+                .size(40.dp)
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    CircleShape
+                )
         ) {
-            Text(
-                text = "↻",
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.primary
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Refresh",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        // FAB — bottom start
+        FloatingActionButton(
+            onClick = {},
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add note",
+                modifier = Modifier.size(24.dp)
             )
         }
     }
@@ -134,9 +139,7 @@ private fun WidgetHeaderPreview() {
 @Composable
 private fun NoteCardPreview(note: NoteSummary) {
     Surface(
-        modifier = Modifier
-            .padding(4.dp)
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
@@ -183,17 +186,14 @@ private fun EmptyStatePreview(message: String) {
 
 @Preview(
     showBackground = true,
-    name = "Widget - Notes Grid",
+    name = "Widget - Notes List",
     widthDp = 360,
     heightDp = 400
 )
 @Composable
-private fun WidgetNotesGridPreview() {
+private fun WidgetNotesPreview() {
     NotesWidgetForMarkdownTheme(dynamicColor = false) {
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(24.dp)
-        ) {
+        Surface(shape = RoundedCornerShape(24.dp)) {
             WidgetPreviewContent(sampleNotes)
         }
     }
@@ -201,17 +201,14 @@ private fun WidgetNotesGridPreview() {
 
 @Preview(
     showBackground = true,
-    name = "Widget - Dark - Notes Grid",
+    name = "Widget - Dark - Notes List",
     widthDp = 360,
     heightDp = 400
 )
 @Composable
-private fun WidgetNotesGridDarkPreview() {
+private fun WidgetNotesDarkPreview() {
     NotesWidgetForMarkdownTheme(dynamicColor = false, darkTheme = true) {
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(24.dp)
-        ) {
+        Surface(shape = RoundedCornerShape(24.dp)) {
             WidgetPreviewContent(sampleNotes)
         }
     }
@@ -256,12 +253,16 @@ private fun WidgetNoFolderPreview() {
 @Preview(
     showBackground = true,
     name = "NoteCard - Single",
-    widthDp = 180
+    widthDp = 360
 )
 @Composable
 private fun NoteCardSinglePreview() {
     NotesWidgetForMarkdownTheme(dynamicColor = false) {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(8.dp)
+        ) {
             NoteCardPreview(sampleNotes.first())
         }
     }
@@ -270,12 +271,16 @@ private fun NoteCardSinglePreview() {
 @Preview(
     showBackground = true,
     name = "NoteCard - Dark - Single",
-    widthDp = 180
+    widthDp = 360
 )
 @Composable
 private fun NoteCardSingleDarkPreview() {
     NotesWidgetForMarkdownTheme(dynamicColor = false, darkTheme = true) {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(8.dp)
+        ) {
             NoteCardPreview(sampleNotes.first())
         }
     }
