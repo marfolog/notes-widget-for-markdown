@@ -57,7 +57,10 @@ class FastNoteActivity : ComponentActivity() {
                                                 "Fast note saved locally",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            NotesWidget.updateAll(this@FastNoteActivity)
+                                            // Use applicationContext: the widget
+                                            // render is async and outlives this
+                                            // Activity, which finish() destroys.
+                                            NotesWidget.updateAll(applicationContext)
                                             finish()
                                         } else {
                                             onError("Unable to write to the selected note.")

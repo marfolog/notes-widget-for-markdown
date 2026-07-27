@@ -15,7 +15,8 @@ enum class NoteCardSize(
 ) {
     Compact("compact", "Compact", 96, 4),
     Medium("medium", "Medium", 156, 9),
-    Large("large", "Large", 260, 18);
+    Large("large", "Large", 260, 18),
+    ExtraLarge("extra_large", "XL", 340, 24);
 
     companion object {
         fun fromStorage(value: String?): NoteCardSize {

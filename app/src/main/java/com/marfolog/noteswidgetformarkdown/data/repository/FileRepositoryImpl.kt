@@ -41,8 +41,16 @@ class FileRepositoryImpl(
             throw IllegalStateException("Folder not found. Please re-select your notes folder.")
         }
 
+        // Obsidian folder note: a file named exactly like its parent folder
+        // (e.g. MobileQuickNote/MobileQuickNote.md). Obsidian hides it as the
+        // folder itself, so hide it here too to match what the user sees.
+        val folderName = folder.name
         val notes = folder.listFiles()
             .filter { it.isFile && it.name?.endsWith(".md", ignoreCase = true) == true }
+            .filterNot { docFile ->
+                folderName != null &&
+                    docFile.name?.removeSuffix(".md").equals(folderName, ignoreCase = true)
+            }
             .mapNotNull { docFile -> fileToNoteSummary(docFile) }
 
         Log.d(TAG, "Loaded ${notes.size} notes in ${System.currentTimeMillis() - startedAt}ms")
