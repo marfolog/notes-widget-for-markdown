@@ -1,0 +1,44 @@
+name: Idea or wish
+description: Something the app should do that it does not
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the situation rather than the solution — it often turns out there is a simpler
+        way to fix it than the one either of us thought of first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do that the app makes hard?
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+
+  - type: input
+    id: editor
+    attributes:
+      label: Your editor
+      placeholder: Obsidian, Logseq, plain files…
+
+  - type: input
+    id: sync
+    attributes:
+      label: Your sync
+      placeholder: Obsidian Git, Syncthing, none…
+
+  - type: dropdown
+    id: importance
+    attributes:
+      label: How much do you need it?
+      options:
+        - Nice to have
+        - Would use it often
+        - I cannot use the app without it
+    validations:
+      required: true

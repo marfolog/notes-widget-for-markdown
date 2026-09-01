@@ -14,6 +14,7 @@
   <a href="#how-to-use-it">How to use it</a> ·
   <a href="#sync-status">Sync status</a> ·
   <a href="#privacy">Privacy</a> ·
+  <a href="https://github.com/marfolog/notes-widget-for-markdown/discussions">Discussions</a> ·
   <a href="LICENSE">MIT</a>
 </p>
 
@@ -165,11 +166,18 @@ over widget contrast and touch targets.
 
 </details>
 
-## Contributing
+## Feedback and contributing
 
-Issues and pull requests are welcome. Most useful right now: testing against real vaults, Markdown
-preview edge cases, and launcher compatibility reports — widgets behave differently on Pixel, One UI
-and Nova, and I can only test one. Please open an issue before a large pull request.
+- **Something broken?** [Open a bug report](https://github.com/marfolog/notes-widget-for-markdown/issues/new?template=bug_report.yml).
+  The foss build reports nothing anywhere, so a report from you is the only way a crash is ever seen.
+  The form asks for your launcher and sync client because widget bugs almost always depend on them.
+- **Want something?** [Open an idea](https://github.com/marfolog/notes-widget-for-markdown/issues/new?template=feature_request.yml)
+  or bring it to [Discussions](https://github.com/marfolog/notes-widget-for-markdown/discussions)
+  if it is still half-formed.
+
+Pull requests are welcome. Most useful right now: testing against real vaults, Markdown preview edge
+cases, and launcher compatibility reports — widgets behave differently on Pixel, One UI and Nova,
+and I can only test one. Please open an issue before a large pull request.
 
 ## License
 

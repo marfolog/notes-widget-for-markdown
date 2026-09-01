@@ -1,0 +1,107 @@
+name: Bug report
+description: Something in the widget or the app does not work
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Widget bugs are usually launcher- or sync-specific, so the details below decide whether
+        this can be reproduced at all. Please do not paste note contents.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      placeholder: The widget shows nothing after I picked my vault folder.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Pixel 7, Android 15
+    validations:
+      required: true
+
+  - type: input
+    id: launcher
+    attributes:
+      label: Launcher
+      description: Widgets behave differently on each one.
+      placeholder: Pixel Launcher / One UI / Nova
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flavour
+    attributes:
+      label: Which build
+      options:
+        - foss (from GitHub Releases or F-Droid)
+        - play (from Google Play)
+        - built from source
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: widget
+    attributes:
+      label: Which widget
+      options:
+        - cards
+        - compact list
+        - both
+        - not widget-related
+
+  - type: dropdown
+    id: sync
+    attributes:
+      label: How the folder syncs
+      options:
+        - not synced
+        - Obsidian Git
+        - Git Sync
+        - Syncthing
+        - Obsidian Sync
+        - something else
+
+  - type: checkboxes
+    id: battery
+    attributes:
+      label: Background restrictions
+      options:
+        - label: Battery optimization is enabled for this app (it can stop background refreshes)
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "Collect with: adb logcat -s NW:V — folder paths appear there, note contents never do."
+      render: shell

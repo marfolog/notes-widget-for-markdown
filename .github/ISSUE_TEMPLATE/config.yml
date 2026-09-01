@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea to talk through
+    url: https://github.com/marfolog/notes-widget-for-markdown/discussions
+    about: Discussions are the place for wishlists, setup questions and anything not yet a bug.
