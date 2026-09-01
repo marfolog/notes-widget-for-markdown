@@ -48,7 +48,7 @@ The design goal is a practical note board, not a full Markdown editor.
 ## Current Limitations
 
 - This is not an official Obsidian plugin.
-- It does not implement native Git sync.
+- It does not implement native Git sync. It only *reads* `.git` metadata to show when the vault was last pulled or committed; pulling and pushing stays with your own client (Obsidian Git, GitSync, …).
 - It does not edit Markdown content inside the widget.
 - Android widgets cannot render full Obsidian/Markdown layout like the app itself can.
 - Only local folders accessible through Android Storage Access Framework are supported.
