@@ -22,14 +22,21 @@ object AppLog {
 
     fun d(area: String, message: String) = Log.d(TAG, "[$area] $message")
 
-    fun i(area: String, message: String) = Log.i(TAG, "[$area] $message")
+    fun i(area: String, message: String) {
+        Log.i(TAG, "[$area] $message")
+        Telemetry.breadcrumb("[$area] $message")
+    }
 
     fun w(area: String, message: String, error: Throwable? = null) {
         if (error == null) Log.w(TAG, "[$area] $message") else Log.w(TAG, "[$area] $message", error)
+        Telemetry.breadcrumb("[$area] $message")
     }
 
+    /** Errors are also recorded as non-fatals, so they surface without waiting for a crash. */
     fun e(area: String, message: String, error: Throwable? = null) {
         if (error == null) Log.e(TAG, "[$area] $message") else Log.e(TAG, "[$area] $message", error)
+        Telemetry.breadcrumb("[$area] $message")
+        error?.let { Telemetry.recordError(it) }
     }
 
     /** Folder URIs contain the full path, which is fine, but note file names are not logged. */

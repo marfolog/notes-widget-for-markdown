@@ -9,6 +9,8 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.marfolog.noteswidgetformarkdown.di.appModule
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
+import com.marfolog.noteswidgetformarkdown.util.AppLog
+import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +46,8 @@ class NotesWidgetApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Telemetry.init(this)
+        AppLog.i("App", "Started, telemetry=${Telemetry.ENABLED}")
         startKoin {
             androidContext(this@NotesWidgetApp)
             modules(appModule)

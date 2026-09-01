@@ -4,6 +4,15 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Firebase plugins refuse to configure without a google-services.json, and the foss flavour
+// deliberately has none. Gradle cannot apply a plugin per variant, so decide from the requested
+// task names instead: only a Play build pulls them in.
+val buildsPlayFlavour = gradle.startParameter.taskNames.any { it.contains("play", ignoreCase = true) }
+if (buildsPlayFlavour) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+    apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+}
+
 val releaseStoreFile = providers.gradleProperty("RELEASE_STORE_FILE")
     .orElse(providers.environmentVariable("RELEASE_STORE_FILE"))
 val releaseStorePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD")
@@ -33,6 +42,21 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Two ways to ship the same app:
+    //   play — Firebase Analytics and Crashlytics, so sideloaded installs are visible too
+    //   foss — no proprietary dependency and no permissions at all, which is what F-Droid
+    //          requires and what the privacy claim in the README rests on
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("play") {
+            dimension = "distribution"
+        }
+        create("foss") {
+            dimension = "distribution"
+            versionNameSuffix = "-foss"
+        }
     }
 
     signingConfigs {
@@ -67,6 +91,15 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+// When both flavours are built in one invocation the Firebase plugins are applied for the Play
+// variant and then also demand a google-services.json for foss, which deliberately has none.
+// Switch their foss counterparts off instead.
+tasks.configureEach {
+    if (name.contains("Foss") && (name.contains("GoogleServices") || name.contains("Crashlytics"))) {
+        enabled = false
     }
 }
 
@@ -106,6 +139,11 @@ dependencies {
 
     // Drag and drop reordering of note cards
     implementation(libs.reorderable)
+
+    // Analytics and crash reporting, Play flavour only
+    "playImplementation"(platform(libs.firebase.bom))
+    "playImplementation"(libs.firebase.analytics)
+    "playImplementation"(libs.firebase.crashlytics)
 
     // Markdown preview
     implementation(libs.commonmark)

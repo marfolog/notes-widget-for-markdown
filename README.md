@@ -6,7 +6,7 @@
 
 <p align="center">
   Your Markdown notes on the Android home screen — and a chip that tells you when git sync broke.<br>
-  <sub>No account. No backend. No Android permissions, not even <code>INTERNET</code>.</sub>
+  <sub>No account. No backend. The F-Droid build cannot reach the network at all.</sub>
 </p>
 
 <p align="center">
@@ -45,7 +45,8 @@ straight from settings. New notes appear at the top within seconds of landing on
 
 No Play Store or F-Droid listing yet.
 
-1. Download the APK from [Releases](https://github.com/marfolog/notes-widget-for-markdown/releases).
+1. Download the APK from [Releases](https://github.com/marfolog/notes-widget-for-markdown/releases)
+   — take the `foss` one unless you want the Play build's crash reporting.
 2. Allow installs from unknown sources when Android asks.
 3. Requires Android 11 (API 30) or newer.
 
@@ -85,9 +86,28 @@ settings and nothing under `.git` is read at all.
 
 ## Privacy
 
-- **No permissions in the manifest.** Not even `INTERNET`. Verify with `aapt dump permissions`.
-- No analytics, no crash reporting, no account, no server, no database.
-- Files are read only in folders you picked, only while the widget renders.
+The app ships in two flavours, and they differ in exactly one thing — whether anything leaves your
+phone.
+
+| | `foss` — GitHub, F-Droid | `play` — Google Play |
+| --- | --- | --- |
+| `INTERNET` permission | **no** | yes |
+| Analytics | none | Firebase, app usage only |
+| Crash reports | none | Firebase Crashlytics |
+
+**The foss build has no `INTERNET` permission, so it physically cannot send anything anywhere.**
+Android will not let it open a socket. Verify with `aapt dump permissions app-foss-release.apk`.
+It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` and
+`FOREGROUND_SERVICE` — those come from WorkManager, which schedules the widget refresh, and none of
+them can move data off the device.
+
+The Play build reports which actions happened (setup finished, note opened, sync state) and crashes,
+so installs outside Play are visible at all. It never sends note contents, file names or folder
+paths, no advertising ID is collected, and the ad-related permissions Firebase would normally add
+are stripped from the manifest.
+
+Neither build has an account, a server or a database. Files are read only in folders you picked, and
+only while the widget renders.
 
 ## Limitations
 
@@ -104,11 +124,15 @@ settings and nothing under `.git` is read at all.
 
 Needs Android Studio, JDK 17+ and the API 36 SDK.
 
+There are two flavours: `foss` (no Firebase, no `INTERNET`) and `play` (analytics and crash
+reporting). Build the one you want.
+
 ```bash
-./gradlew assembleDebug        # debug APK
-./gradlew testDebugUnitTest    # unit tests
-./gradlew installDebug         # install on a connected device
-./gradlew assembleRelease      # release APK
+./gradlew assembleFossDebug    # debug APK, no telemetry
+./gradlew assemblePlayDebug    # debug APK with Firebase
+./gradlew testFossDebugUnitTest
+./gradlew installFossDebug     # install on a connected device
+./gradlew assembleFossRelease  # release APK
 ```
 
 Release builds are unsigned unless you supply `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`,
