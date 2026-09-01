@@ -45,7 +45,7 @@ build_debug:
 release_apk:
   stage: build
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
   script:
     - test -n "$ANDROID_KEYSTORE_BASE64"
     - test -n "$ANDROID_KEYSTORE_PASSWORD"
@@ -74,7 +74,7 @@ publish_release:
     - job: release_apk
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/'
   before_script: []
   script:
     - export GITLAB_TOKEN="$CI_JOB_TOKEN"

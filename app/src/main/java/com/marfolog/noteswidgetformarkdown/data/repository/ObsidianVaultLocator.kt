@@ -49,7 +49,7 @@ class ObsidianVaultLocator(private val context: Context) {
         private const val OBSIDIAN_DIR = ".obsidian"
 
         /**
-         * Path of the notes folder relative to the vault root, e.g. `MobileQuickNote`.
+         * Path of the notes folder relative to the vault root, e.g. `Projects`.
          * Empty when the notes folder *is* the vault root; null when it lives outside it.
          */
         fun relativePath(vaultDocumentId: String, notesFolderUri: String?): String? {

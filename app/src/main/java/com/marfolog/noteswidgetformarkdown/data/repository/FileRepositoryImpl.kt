@@ -43,7 +43,7 @@ class FileRepositoryImpl(
         }
 
         // Obsidian folder note: a file named exactly like its parent folder
-        // (e.g. MobileQuickNote/MobileQuickNote.md). Obsidian hides it as the
+        // (e.g. Projects/Projects.md). Obsidian hides it as the
         // folder itself, so hide it here too to match what the user sees.
         val folderName = folder.name
         val notes = folder.listFiles()
