@@ -9,6 +9,7 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import com.marfolog.noteswidgetformarkdown.util.AppLog
 import kotlinx.coroutines.flow.firstOrNull
 import org.koin.java.KoinJavaComponent.get
 
@@ -68,6 +69,11 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
         }
     }
 
+    AppLog.d(
+        "WidgetData",
+        "vault=${vaultName ?: "?"} folder=${noteFolderPath ?: "?"} " +
+            "state=${state::class.simpleName} git=${gitSyncStatus?.let { it::class.simpleName } ?: "off"}"
+    )
     return WidgetData(
         state = state,
         vaultName = vaultName,

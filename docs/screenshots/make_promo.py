@@ -161,6 +161,13 @@ def canvas_of(size):
     return c
 
 
+def plain_cutouts():
+    """The bare widgets for the README, rounded so no wallpaper survives in the corners."""
+    Image.open(f'{SRC}/{SHOT}').save(f'{OUT}/01-home-both-widgets.png')
+    widget(CARD_BOX, 968).save(f'{OUT}/02-card-widget.png')
+    widget(LIST_BOX, 968).save(f'{OUT}/03-list-widget.png')
+
+
 def screenshot_hero():
     c = canvas_of((1080, 1920))
     headline(c, ['Your .md files.', 'On the home screen.'],
@@ -215,6 +222,15 @@ def feature_graphic():
     c.convert('RGB').save(f'{OUT}/store-00-feature.png')
 
 
+def plain_cutouts():
+    """The bare widgets for the README, rounded so no wallpaper survives in the corners."""
+    Image.open(f'{SRC}/{SHOT}').save(f'{OUT}/01-home-both-widgets.png')
+    widget(CARD_BOX, 968).save(f'{OUT}/02-card-widget.png')
+    widget(LIST_BOX, 968).save(f'{OUT}/03-list-widget.png')
+
+
+plain_cutouts()
+plain_cutouts()
 screenshot_hero()
 screenshot_widget(CARD_BOX, 'store-02-cards.png',
                   ['Notes, not just', 'note titles.'],

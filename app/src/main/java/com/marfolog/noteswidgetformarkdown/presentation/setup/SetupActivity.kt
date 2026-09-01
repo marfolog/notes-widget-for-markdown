@@ -79,6 +79,7 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
+import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
 import sh.calvin.reorderable.ReorderableColumn
@@ -107,6 +108,7 @@ class SetupActivity : ComponentActivity() {
     }
 
     companion object {
+        internal const val AREA = "Setup"
         const val PREFS_NAME = "app_prefs"
         const val KEY_VAULT_URI = "vault_uri"
         const val KEY_NOTES_URI = "notes_uri"
@@ -152,6 +154,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             cardSettings = cardSettingsStore.getAll()
             notesLoadError = null
         }.onFailure { error ->
+            AppLog.w(SetupActivity.AREA, "Could not list notes in $currentNotesUri", error)
             notesForSettings = emptyList()
             notesLoadError = error.message ?: "Unable to load notes"
         }
@@ -181,6 +184,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
+            AppLog.i(SetupActivity.AREA, "Git folder granted: $uri")
             prefs.edit().putString(SetupActivity.KEY_GIT_ROOT_URI, uri.toString()).apply()
             gitReloadTrigger++
             scope.launch { NotesWidget.updateAll(context) }
@@ -223,6 +227,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
 
             val name = DocumentFile.fromTreeUri(context, uri)?.name
             val uriStr = uri.toString()
+            AppLog.i(SetupActivity.AREA, "Vault root granted: $uriStr")
 
             prefs.edit()
                 .putString(SetupActivity.KEY_VAULT_URI, uriStr)
@@ -268,6 +273,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                 .apply()
 
             notesUri = uriStr
+            AppLog.i(SetupActivity.AREA, "Notes folder granted: $uriStr")
             // Re-arm the folder watcher: it is bound to one specific tree URI.
             NotesFolderObserverJob.schedule(context)
 
@@ -381,6 +387,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                         noteToDelete = null
                         scope.launch {
                             val deleteNoteUseCase = get<DeleteNoteUseCase>(DeleteNoteUseCase::class.java)
+                            AppLog.i(SetupActivity.AREA, "Deleting a note file on user request")
                             deleteNoteUseCase(note.fileUri)
                                 .onSuccess { deleted ->
                                     if (deleted) {
@@ -408,6 +415,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                                     }
                                 }
                                 .onFailure { error ->
+                                    AppLog.e(SetupActivity.AREA, "Delete failed", error)
                                     Toast.makeText(
                                         context,
                                         error.message ?: "Could not delete the file",

@@ -7,6 +7,7 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardSize
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardTextSize
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import com.marfolog.noteswidgetformarkdown.util.AppLog
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -31,7 +32,10 @@ class NoteCardSettingsStore(context: Context) {
                 )
             }
             result
-        }.getOrDefault(emptyMap())
+        }.getOrElse { e ->
+            AppLog.w(AREA, "Card settings JSON is unreadable, falling back to defaults", e)
+            emptyMap()
+        }
     }
 
     fun get(noteId: String): NoteCardAppearance {
@@ -47,7 +51,10 @@ class NoteCardSettingsStore(context: Context) {
                     add(array.getString(index))
                 }
             }
-        }.getOrDefault(emptyList())
+        }.getOrElse { e ->
+            AppLog.w(AREA, "Card order JSON is unreadable, falling back to file order", e)
+            emptyList()
+        }
     }
 
     fun saveOrder(noteIds: List<String>) {
@@ -103,6 +110,7 @@ class NoteCardSettingsStore(context: Context) {
     }
 
     companion object {
+        private const val AREA = "CardSettings"
         const val KEY_CARD_SETTINGS_JSON = "note_card_settings_json"
         const val KEY_CARD_ORDER_JSON = "note_card_order_json"
         private const val KEY_SIZE = "size"
