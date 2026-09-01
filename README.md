@@ -140,6 +140,10 @@ Release builds are unsigned unless you supply `RELEASE_STORE_FILE`, `RELEASE_STO
 `RELEASE_KEY_ALIAS` and `RELEASE_KEY_PASSWORD` through local Gradle properties or environment
 variables. Never commit keystores or passwords.
 
+Tagging `vX.Y.Z` builds and signs both flavours in GitHub Actions and attaches them to a Release
+with their SHA-256 sums. The release fails if the foss APK ever gains the `INTERNET` permission —
+the privacy claim is enforced by the pipeline, not by memory.
+
 </details>
 
 <details>

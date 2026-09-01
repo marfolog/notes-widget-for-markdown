@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Both flavours have to compile. The foss one is the guard: if a Google dependency ever
+      # leaks into shared code, this build is where it fails.
+      - name: Build and test
+        run: ./gradlew :app:assembleFossDebug :app:assemblePlayDebug :app:testFossDebugUnitTest
+
+      - name: Check the foss build cannot reach the network
+        run: |
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | tail -1)
+          if "$AAPT" dump permissions app/build/outputs/apk/foss/debug/app-foss-debug.apk | grep -q "android.permission.INTERNET"; then
+            echo "::error::The foss build gained the INTERNET permission. Either remove the dependency that added it, or correct the privacy claim in the README."
+            exit 1
+          fi
+          echo "foss build has no INTERNET permission"
