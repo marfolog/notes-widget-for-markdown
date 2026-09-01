@@ -2,6 +2,7 @@ package com.marfolog.noteswidgetformarkdown.data.repository
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownFastNoteInserter
@@ -92,6 +93,14 @@ class FileRepositoryImpl(
             } ?: return@runCatching false
 
             true
+        }
+    }
+
+    override suspend fun deleteNote(fileUri: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        runCatching {
+            val deleted = DocumentsContract.deleteDocument(contentResolver, Uri.parse(fileUri))
+            Log.d(TAG, "Delete of $fileUri returned $deleted")
+            deleted
         }
     }
 

@@ -67,13 +67,26 @@ class NoteCardSettingsStore(context: Context) {
         }
 
         val positionById = order.withIndex().associate { it.value to it.index }
+        // Notes the user never ordered are the ones that just appeared. They belong at the top,
+        // where they are visible — at the bottom a new note looks like it never loaded.
+        // Among themselves they keep the incoming order, which is newest first.
         return notes.withIndex()
             .sortedWith(
                 compareBy<IndexedValue<NoteSummary>> {
-                    positionById[it.value.fileUri] ?: Int.MAX_VALUE
+                    positionById[it.value.fileUri] ?: Int.MIN_VALUE
                 }.thenBy { it.index }
             )
             .map { it.value }
+    }
+
+    /** Drops a deleted note's appearance and its slot in the manual order. */
+    fun forget(noteId: String) {
+        val root = JSONObject(prefs.getString(KEY_CARD_SETTINGS_JSON, "{}") ?: "{}")
+        root.remove(noteId)
+        prefs.edit()
+            .putString(KEY_CARD_SETTINGS_JSON, root.toString())
+            .apply()
+        saveOrder(getOrder().filterNot { it == noteId })
     }
 
     fun save(noteId: String, appearance: NoteCardAppearance) {
