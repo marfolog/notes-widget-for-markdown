@@ -1,281 +1,152 @@
-# Notes Widget for Markdown
+<p align="center">
+  <img src="docs/screenshots/store-01-hero.png" width="340" alt="Both widgets on an Android home screen">
+</p>
+
+<h1 align="center">Notes Widget for Markdown</h1>
 
 <p align="center">
-  <img src="docs/screenshots/store-01-hero.png" width="360" alt="Both widgets on an Android home screen">
+  Your Markdown notes on the Android home screen — and a chip that tells you when git sync broke.<br>
+  <sub>No account. No backend. No Android permissions, not even <code>INTERNET</code>.</sub>
 </p>
 
 <p align="center">
-  <b>An Android home screen widget for local Markdown notes.</b><br>
-  Reads a folder you pick. No account, no backend, no database — and no Android permissions,
-  not even <code>INTERNET</code>.
+  <a href="#install">Install</a> ·
+  <a href="#how-to-use-it">How to use it</a> ·
+  <a href="#sync-status">Sync status</a> ·
+  <a href="#privacy">Privacy</a> ·
+  <a href="LICENSE">MIT</a>
 </p>
+
+---
+
+## What you get
 
 <p align="center">
-  <img src="docs/screenshots/02-card-widget.png" width="300" alt="Note cards with Markdown preview">
-  &nbsp;
-  <img src="docs/screenshots/03-list-widget.png" width="300" alt="Compact list of note names">
+  <img src="docs/screenshots/02-card-widget.png" width="330" alt="Cards with a Markdown preview">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/03-list-widget.png" width="330" alt="Compact list of note names">
 </p>
 
-Notes Widget for Markdown is built for people who keep their notes as plain `.md` files and want a fast, glanceable, Google Keep-like view on their Android home screen. It works especially well as a companion for an Obsidian vault, but the note preview itself is not tied to Obsidian storage or sync. Your files stay in your folder; the app reads them directly.
+**Two widgets over the same folder.** Cards render a preview of each note — headings, links, lists,
+task checkboxes. The compact list shows just names, so more notes fit. Tapping a note opens it in
+Obsidian.
 
-> Early project status: usable prototype / MVP. APIs, settings, and visual design may still change.
+**A sync chip that means something.** It reads the vault's `.git` and says `synced 17:51`,
+`sync stuck` when a merge or rebase was left half-finished, or `not pushed` when your branch drifted
+from `origin`. Nothing else on your phone tells you sync quietly stopped.
 
-## What It Does
+**Notes that stay yours.** Plain `.md` files in a folder you pick, read through Android's Storage
+Access Framework. Nothing is copied, converted or uploaded.
 
-- Shows Markdown notes in a scrollable Android home screen widget.
-- Reads notes directly from a user-selected folder using Android Storage Access Framework.
-- Keeps the file system as the source of truth. No database, account, cloud backend, or proprietary note format.
-- Generates a clean preview from Markdown, including headings, links, lists, and task checkboxes.
-- Opens notes in Obsidian when tapped, using Obsidian deep links.
-- Creates a new note through Obsidian from the widget add button.
-- Appends quick Fast notes directly to a selected local Markdown file.
-- Ships two widgets, both reading the same folder:
-  - **cards** with a Markdown preview of each note
-  - **compact list** of note names, for fitting more on screen
-- Shows the state of your git sync in a small chip: the last pull or commit, a merge or rebase your
-  sync client left unfinished, or a branch that has drifted from `origin`. See
-  [Git sync status](#git-sync-status) for exactly what is read.
-- Refreshes within seconds of the folder changing, so a note written in Obsidian or pulled by a
-  sync client shows up without waiting for the next update cycle.
-- Lets you customize each note card:
-  - card height, including an extra-large size
-  - text size
-  - preset or custom color
-  - order, by dragging notes in settings
-- Deletes a note file from settings, behind a confirmation.
-- Hides Obsidian folder notes (a file named like its parent folder), matching what Obsidian shows.
-- Newly added Markdown files appear at the top with default styling until you configure them.
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/04-settings-git-sync.png" width="300" alt="Git sync status in settings">
-  &nbsp;
-  <img src="docs/screenshots/05-settings-notes.png" width="300" alt="Notes folder selection">
-</p>
-
-More in [`docs/screenshots/`](docs/screenshots/), including the store graphics. All of them use a
-throwaway demo vault, never real notes.
+**Cards you can arrange.** Per-note height, text size and colour; drag to reorder; delete a file
+straight from settings. New notes appear at the top within seconds of landing on disk.
 
 ## Install
 
-There is no Play Store or F-Droid listing yet. Grab the APK from the
-[Releases page](https://gitlab.com/Marfolog/notes-widget-for-markdown/-/releases), allow installs
-from unknown sources when Android asks, and open the app once to pick your notes folder.
+No Play Store or F-Droid listing yet.
 
-Requires Android 11 (API 30) or newer. Every release lists the APK's SHA-256 so you can verify what
-you downloaded.
+1. Download the APK from [Releases](https://github.com/marfolog/notes-widget-for-markdown/releases).
+2. Allow installs from unknown sources when Android asks.
+3. Requires Android 11 (API 30) or newer.
 
-## Git sync status
+Every release lists a SHA-256 so you can check what you downloaded.
 
-If your vault is a git repository, the widget shows what git last did. The app **never runs git**
-and never touches the network — it only reads plain-text files that every git client writes:
+## How to use it
+
+1. Open the app and pick the **root of your vault** — the folder holding `.obsidian` and, if you sync
+   with git, `.git`.
+2. Pick the **notes folder** the widget should show. It can be the root or any subfolder.
+3. Add either widget to your home screen and resize it.
+4. Tap the pencil on the widget to come back and set card colours, sizes and order.
+
+Tapping a note opens it in Obsidian and the **+** button creates one there. Everything else —
+reading, previewing, ordering, deleting — works without Obsidian installed.
+
+## Sync status
+
+If the vault is a git repository, the widget reports what git last did. The app **never runs git**
+and never touches the network. It only reads plain-text files every git client writes:
 
 | File | What it tells us |
 | --- | --- |
-| `.git/logs/HEAD` | the last commit, pull, merge or checkout, and when |
-| `.git/FETCH_HEAD` | when a client last contacted the remote (modification time only) |
-| `.git/index` | that a client is running at all, even with nothing to transfer (modification time only) |
-| `.git/MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply` | a merge or rebase that stopped — in practice, a conflict |
-| `.git/HEAD`, `.git/refs/**`, `.git/packed-refs` | the current branch, and whether it matches `origin` |
+| `logs/HEAD` | the last commit, pull, merge or checkout, and when |
+| `FETCH_HEAD` | when a client last contacted the remote (timestamp only) |
+| `index` | that a client is alive, even with nothing to transfer (timestamp only) |
+| `MERGE_HEAD`, `rebase-merge`, `rebase-apply` | a merge or rebase that stopped — in practice a conflict |
+| `HEAD`, `refs/**`, `packed-refs` | the current branch, and whether it matches `origin` |
 
-It does not read commit contents, `.git/config`, remote URLs or credentials. Because all of this is
-ordinary git plumbing rather than any client's private format, it works the same with CLI git,
-Obsidian Git, Git Sync or anything else.
+Commit contents, `config`, remote URLs and credentials are never read. Because this is ordinary git
+plumbing, it behaves the same with CLI git, Obsidian Git or Git Sync.
 
-Storage Access Framework cannot look above a folder you granted, so if `.git` sits one level above
-your notes folder, the app asks for that folder too — and it searches every folder you have granted
-it for a `.git`. If you sync some other way, switch the chip off in settings and nothing under
-`.git` is read at all.
+Two things worth knowing. The reflog only moves when something actually transfers, so a quiet vault
+is normal rather than broken. And Storage Access Framework cannot look above a folder you granted —
+if `.git` sits one level up, the app asks for that folder too. Not using git? Switch the chip off in
+settings and nothing under `.git` is read at all.
 
 ## Privacy
 
-- The manifest declares **no Android permissions**, not even `INTERNET`. The app cannot phone home.
-  Verify it yourself: `aapt dump permissions app-release.apk`.
+- **No permissions in the manifest.** Not even `INTERNET`. Verify with `aapt dump permissions`.
 - No analytics, no crash reporting, no account, no server, no database.
-- Files are read through the Storage Access Framework, only in folders you explicitly picked, and
-  only when the widget renders.
-- Nothing is copied anywhere. Your notes stay where they are.
+- Files are read only in folders you picked, only while the widget renders.
 
-## Why
+## Limitations
 
-Obsidian and many other note apps are great for writing, linking, and organizing Markdown. Android widgets are great for quickly seeing what matters without opening an app.
+- Not an official Obsidian plugin, and not affiliated with Obsidian.
+- Reports sync state, never performs it — pulling and pushing stays with your client.
+- No editing inside the widget; opening and creating go through Obsidian deep links.
+- Android widgets cannot render full Markdown, so previews are simplified.
+- English only for now; strings are still hardcoded in Kotlin.
+- For Obsidian Sync, Syncthing and similar there is no status — those clients keep their state in
+  private app storage no other app can read.
 
-This project sits between those worlds:
+<details>
+<summary><b>Build from source</b></summary>
 
-- Obsidian or another Markdown editor remains the writing tool.
-- Your local Markdown folder remains the source of truth.
-- The Android widget becomes a lightweight visual layer for quick access.
-
-The design goal is a practical note board, not a full Markdown editor.
-
-## Current Limitations
-
-- This is not an official Obsidian plugin.
-- It does not sync anything. It only reads `.git` to report state — pulling and pushing stays with
-  your own client. See [Git sync status](#git-sync-status).
-- It does not edit Markdown content inside the widget.
-- Android widgets cannot render full Obsidian/Markdown layout like the app itself can.
-- Only local folders accessible through Android Storage Access Framework are supported.
-- There is no Play Store or F-Droid listing yet; releases are APKs on the Releases page.
-- All user-visible text is English and hardcoded, so the app cannot be translated yet.
-- For non-git setups (Obsidian Sync, Syncthing) there is no sync status: those clients keep their
-  state in their own private app storage, which no other app can read.
-- Obsidian is currently required for tap-to-open and add-new-note actions.
-
-## Setup
-
-1. Install the app on Android 11 or newer.
-2. Open the app.
-3. Select the root of your Obsidian vault or Markdown folder.
-4. Select the folder that contains the `.md` files you want in the widget.
-5. Add the widget to your Android home screen.
-6. Optional: open the app settings again to customize card size, color, text size, and order.
-
-## Works Without Obsidian
-
-Yes, for the core preview flow:
-
-- selecting a local Markdown folder
-- reading `.md` files
-- showing note cards in the widget
-- customizing card size, text size, color, and order
-- appending Fast notes to a selected Markdown file
-
-Obsidian is currently used for editor actions:
-
-- tapping an existing note opens it in Obsidian
-- tapping the add button starts a new note in Obsidian
-
-Support for configurable non-Obsidian editor actions is on the roadmap.
-
-## Obsidian Integration
-
-The app delegates note opening and note creation to Obsidian using URI links:
-
-- tapping an existing note opens it in Obsidian
-- tapping the add button starts a new note in Obsidian
-
-If you use another Markdown editor, the file preview still works, but editor-specific deep links may need future support.
-
-## Supported Devices
-
-- Minimum Android version: Android 11 (API 30).
-- Target SDK: Android 16 / API 36.
-- Tested by the maintainer on Pixel 10 running Android 16.
-
-Please report launcher/widget compatibility issues with device model, Android version, launcher name, and whether battery optimization is enabled.
-
-## Build From Source
-
-Requirements:
-
-- Android Studio
-- JDK 17 or newer
-- Android SDK with API 36
-
-Build a debug APK:
+Needs Android Studio, JDK 17+ and the API 36 SDK.
 
 ```bash
-./gradlew assembleDebug
+./gradlew assembleDebug        # debug APK
+./gradlew testDebugUnitTest    # unit tests
+./gradlew installDebug         # install on a connected device
+./gradlew assembleRelease      # release APK
 ```
 
-Run unit tests:
+Release builds are unsigned unless you supply `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`,
+`RELEASE_KEY_ALIAS` and `RELEASE_KEY_PASSWORD` through local Gradle properties or environment
+variables. Never commit keystores or passwords.
 
-```bash
-./gradlew testDebugUnitTest
-```
+</details>
 
-Install a debug build on a connected device:
+<details>
+<summary><b>How it is built</b></summary>
 
-```bash
-./gradlew installDebug
-```
+Kotlin, Gradle Kotlin DSL, Jetpack Compose for settings, Jetpack Glance for the widgets, Koin,
+Coroutines and Flow, Storage Access Framework via `DocumentFile`, CommonMark for the preview, and
+WorkManager plus a JobScheduler content trigger for refreshes.
 
-Build a release APK:
+The rules the code sticks to: the file system is the source of truth, no database for note content,
+no account, no cloud, and platform APIs over file-access hacks.
 
-```bash
-./gradlew assembleRelease
-```
+</details>
 
-Unsigned release builds are expected when no release signing config is provided. For signed releases, provide these values through local Gradle properties or environment variables:
+<details>
+<summary><b>Roadmap</b></summary>
 
-- `RELEASE_STORE_FILE`
-- `RELEASE_STORE_PASSWORD`
-- `RELEASE_KEY_ALIAS`
-- `RELEASE_KEY_PASSWORD`
+Next: first signed public release · strings moved to `strings.xml` so it can be translated · a
+"last changed" time for folders that are not git repositories · configurable non-Obsidian editors ·
+better empty and error states.
 
-Do not commit keystores, passwords, tokens, or local signing properties.
+Later: F-Droid metadata · a grid layout for the card widget · nested folders · an accessibility pass
+over widget contrast and touch targets.
 
-## Release Process
-
-The first public release target is a signed APK attached to a GitLab Release.
-
-For GitLab CI, configure these protected and masked variables:
-
-- `ANDROID_KEYSTORE_BASE64`
-- `ANDROID_KEYSTORE_PASSWORD`
-- `ANDROID_KEY_ALIAS`
-- `ANDROID_KEY_PASSWORD`
-
-Create a tag such as `v0.1.0`. The pipeline runs unit tests, builds the signed release APK, creates a SHA-256 checksum, uploads both files to GitLab Generic Packages, and creates a GitLab Release using `RELEASE_NOTES.md`.
-
-## Tech Stack
-
-- Kotlin
-- Gradle Kotlin DSL
-- Jetpack Compose for the setup UI
-- Jetpack Glance for the home screen widget
-- Koin for dependency injection
-- Kotlin Coroutines and Flow
-- Android Storage Access Framework via `DocumentFile`
-- CommonMark for Markdown preview parsing
-- WorkManager for periodic widget refresh
-
-## Project Principles
-
-- Local-first by default.
-- Plain Markdown files remain the source of truth.
-- No Room database for note content.
-- No account system.
-- No cloud backend.
-- Android platform APIs over custom file access hacks.
-- Obsidian integration should be helpful but optional where possible.
-
-## Roadmap
-
-Near-term:
-
-- Publish the first signed public APK release.
-- Move user-visible strings into `strings.xml` so the app can be translated.
-- Show a "last changed" time for folders that are not git repositories, which is the only sync
-  signal readable for Obsidian Sync, Syncthing and the like.
-- Make non-Obsidian editor integration configurable.
-- Improve Markdown preview fidelity within widget limits.
-- Add better empty/error states.
-
-Later:
-
-- F-Droid metadata and reproducible release setup.
-- A grid layout for the card widget.
-- Better support for nested folders.
-- Accessibility review for widget contrast and touch targets.
+</details>
 
 ## Contributing
 
-Issues, ideas, and pull requests are welcome once the first public release is published.
-
-Useful contributions:
-
-- testing with real Obsidian vaults
-- testing with non-Obsidian Markdown folders
-- Markdown preview edge cases
-- Android launcher/widget compatibility reports
-- UI and accessibility improvements
-- documentation and screenshots
-
-Before opening a large pull request, please create an issue with the proposed change.
+Issues and pull requests are welcome. Most useful right now: testing against real vaults, Markdown
+preview edge cases, and launcher compatibility reports — widgets behave differently on Pixel, One UI
+and Nova, and I can only test one. Please open an issue before a large pull request.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
