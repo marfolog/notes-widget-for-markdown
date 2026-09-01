@@ -1,6 +1,5 @@
 package com.marfolog.noteswidgetformarkdown.presentation.widget
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -8,25 +7,14 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.marfolog.noteswidgetformarkdown.worker.RefreshWorker
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class NotesWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = NotesWidget()
 
-    private val coroutineScope = MainScope()
-
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-        coroutineScope.launch {
-            NotesWidget.updateAll(context)
-        }
-    }
+    // No onUpdate override: GlanceAppWidgetReceiver already recomposes the widget here.
+    // Calling NotesWidget.updateAll() from it would bounce back through the fallback
+    // broadcast that updateAll sends, and the two would keep triggering each other.
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)

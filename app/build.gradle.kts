@@ -104,6 +104,9 @@ dependencies {
     // Material Icons Extended
     implementation(libs.androidx.compose.material.icons.extended)
 
+    // Drag and drop reordering of note cards
+    implementation(libs.reorderable)
+
     // Markdown preview
     implementation(libs.commonmark)
     implementation(libs.commonmark.ext.task.list.items)

@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.marfolog.noteswidgetformarkdown.di.appModule
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
+import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,6 +48,7 @@ class NotesWidgetApp : Application() {
             androidContext(this@NotesWidgetApp)
             modules(appModule)
         }
+        NotesFolderObserverJob.schedule(this)
         ContextCompat.registerReceiver(
             this,
             unlockReceiver,
