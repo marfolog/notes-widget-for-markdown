@@ -22,7 +22,7 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(2)), now)
 
         assertEquals(GitSyncLabel.Severity.Ok, label.severity)
-        assertEquals("pull 2 d", label.text)
+        assertEquals("synced 2 d", label.text)
     }
 
     @Test
@@ -30,11 +30,11 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(4)), now)
 
         assertEquals(GitSyncLabel.Severity.Stale, label.severity)
-        assertEquals("pull 4 d", label.text)
+        assertEquals("synced 4 d", label.text)
     }
 
     @Test
-    fun `a newer fetch is labelled fetch, not the stale reflog action`() {
+    fun `a newer fetch still counts as synced`() {
         val status = GitSyncStatus.Tracked(
             lastChangeAtMillis = now - TimeUnit.DAYS.toMillis(5),
             lastAction = "commit",
@@ -45,7 +45,7 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(status, now)
 
         assertEquals(GitSyncLabel.Severity.Ok, label.severity)
-        assertTrue(label.text.startsWith("fetch "))
+        assertTrue(label.text.startsWith("synced "))
     }
 
     @Test
@@ -53,7 +53,7 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(GitSyncStatus.NotTracked, now)
 
         assertEquals(GitSyncLabel.Severity.Off, label.severity)
-        assertEquals("no git", label.text)
+        assertEquals("no sync info", label.text)
     }
 
     @Test
@@ -63,14 +63,14 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(status, now)
 
         assertEquals(GitSyncLabel.Severity.Problem, label.severity)
-        assertEquals("conflict", label.text)
+        assertEquals("sync stuck", label.text)
     }
 
     @Test
     fun `diverged branch is reported as unpushed`() {
         val status = tracked(now).copy(problem = GitSyncStatus.Problem.Diverged)
 
-        assertEquals("unpushed", GitSyncLabel.format(status, now).text)
+        assertEquals("not pushed", GitSyncLabel.format(status, now).text)
     }
 
     private fun tracked(atMillis: Long) = GitSyncStatus.Tracked(

@@ -8,6 +8,11 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Turns [GitSyncStatus] into the short text + severity shown in the widget's bottom bar.
+ *
+ * The chip answers "are my notes up to date", not "what did git do" — git verbs like *commit* or
+ * *rebase* mean nothing to someone syncing another way, and the same chip will later cover those
+ * setups. Which git operation it actually was belongs in settings, where there is room to say it.
+ *
  * Pure logic, so it can be unit tested without a device clock.
  */
 object GitSyncLabel {
@@ -23,26 +28,22 @@ object GitSyncLabel {
     private val STALE_AFTER_MILLIS = TimeUnit.HOURS.toMillis(72)
 
     fun format(status: GitSyncStatus, nowMillis: Long): Label = when (status) {
-        is GitSyncStatus.NotTracked -> Label("no git", Severity.Off)
-        is GitSyncStatus.Unavailable -> Label("git ?", Severity.Off)
+        is GitSyncStatus.NotTracked -> Label("no sync info", Severity.Off)
+        is GitSyncStatus.Unavailable -> Label("sync unknown", Severity.Off)
         is GitSyncStatus.Tracked -> {
             // The text answers "what arrived and when"; the colour answers "is sync alive",
             // which includes the client merely checking with nothing to transfer.
             val at = maxOf(status.lastChangeAtMillis, status.lastFetchAtMillis ?: 0L)
             val transferAge = nowMillis - at
             val healthAge = nowMillis - maxOf(at, status.lastClientActivityAtMillis ?: 0L)
+
             // A stuck merge or rebase outranks freshness: the sync is broken, not just old.
             when (status.problem) {
-                GitSyncStatus.Problem.Conflict -> Label("conflict", Severity.Problem)
-                GitSyncStatus.Problem.RebaseInProgress -> Label("rebase", Severity.Problem)
-                GitSyncStatus.Problem.Diverged -> Label("unpushed", Severity.Problem)
+                GitSyncStatus.Problem.Conflict,
+                GitSyncStatus.Problem.RebaseInProgress -> Label("sync stuck", Severity.Problem)
+                GitSyncStatus.Problem.Diverged -> Label("not pushed", Severity.Problem)
                 GitSyncStatus.Problem.None -> {
-                    // Name the operation, otherwise a bare "14:03" says nothing about what
-                    // happened. The reflog action only describes the reflog entry — if the
-                    // newer timestamp came from FETCH_HEAD, say "fetch" instead of mislabelling it.
-                    val fetchIsNewer = (status.lastFetchAtMillis ?: 0L) > status.lastChangeAtMillis
-                    val action = if (fetchIsNewer) "fetch" else status.lastAction ?: "change"
-                    val text = "$action ${formatAge(at, transferAge)}"
+                    val text = "synced ${formatAge(at, transferAge)}"
                     if (healthAge in 0..STALE_AFTER_MILLIS) {
                         Label(text, Severity.Ok)
                     } else {

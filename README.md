@@ -1,6 +1,20 @@
 # Notes Widget for Markdown
 
-An Android home screen widget for local Markdown notes.
+<p align="center">
+  <img src="docs/screenshots/store-01-hero.png" width="360" alt="Both widgets on an Android home screen">
+</p>
+
+<p align="center">
+  <b>An Android home screen widget for local Markdown notes.</b><br>
+  Reads a folder you pick. No account, no backend, no database — and no Android permissions,
+  not even <code>INTERNET</code>.
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/02-card-widget.png" width="300" alt="Note cards with Markdown preview">
+  &nbsp;
+  <img src="docs/screenshots/03-list-widget.png" width="300" alt="Compact list of note names">
+</p>
 
 Notes Widget for Markdown is built for people who keep their notes as plain `.md` files and want a fast, glanceable, Google Keep-like view on their Android home screen. It works especially well as a companion for an Obsidian vault, but the note preview itself is not tied to Obsidian storage or sync. Your files stay in your folder; the app reads them directly.
 
@@ -34,10 +48,14 @@ Notes Widget for Markdown is built for people who keep their notes as plain `.md
 
 ## Screenshots
 
-![Both widgets on the home screen](docs/screenshots/promo-02-phone.png)
+<p align="center">
+  <img src="docs/screenshots/04-settings-git-sync.png" width="300" alt="Git sync status in settings">
+  &nbsp;
+  <img src="docs/screenshots/05-settings-notes.png" width="300" alt="Notes folder selection">
+</p>
 
-More in [`docs/screenshots/`](docs/screenshots/): each widget on its own, and the settings screens.
-All of them use a throwaway demo vault, never real notes.
+More in [`docs/screenshots/`](docs/screenshots/), including the store graphics. All of them use a
+throwaway demo vault, never real notes.
 
 ## Install
 
