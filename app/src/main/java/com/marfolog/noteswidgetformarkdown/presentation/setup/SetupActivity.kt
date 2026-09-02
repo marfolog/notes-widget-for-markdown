@@ -1445,7 +1445,6 @@ private fun BoxScope.DriftingLogo(containerWidth: Dp, containerHeight: Dp) {
 private const val REPO_URL = "https://github.com/marfolog/notes-widget-for-markdown"
 private const val ISSUES_URL = "$REPO_URL/issues/new/choose"
 private const val DISCUSSIONS_URL = "$REPO_URL/discussions"
-private const val SPONSOR_URL = "https://github.com/sponsors/marfolog"
 private const val PRIVACY_URL = "https://folmbuild.cz/notes-widget-privacy/"
 
 /**
@@ -1486,14 +1485,6 @@ private fun AboutSection() {
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedButton(onClick = { open(REPO_URL) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.about_source))
-    }
-    // Jen ve foss variante. Google Play zakazuje odkazovat na platby mimo svuj system, a i
-    // kdyz cisty dar je vyjimka, neni duvod si tim v obchode zadelavat na problem.
-    if (BuildConfig.FLAVOR == "foss") {
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedButton(onClick = { open(SPONSOR_URL) }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.about_sponsor))
-        }
     }
     Spacer(modifier = Modifier.height(8.dp))
     TextButton(onClick = { open(PRIVACY_URL) }, modifier = Modifier.fillMaxWidth()) {
