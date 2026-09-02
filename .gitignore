@@ -16,4 +16,3 @@ local.properties
 
 # IDE, agent and OS files — never belong in a public repo
 .idea/
-.claude/
