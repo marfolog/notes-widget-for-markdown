@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
 
 class FileRepositoryImpl(
@@ -88,10 +89,33 @@ class FileRepositoryImpl(
             } ?: return@runCatching false
 
             val updatedContent = fastNoteInserter.insert(originalContent, noteText)
-            contentResolver.openOutputStream(uri, "wt")?.use { stream ->
-                stream.write(updatedContent.toByteArray(Charsets.UTF_8))
-            } ?: return@runCatching false
+            val updatedBytes = updatedContent.toByteArray(Charsets.UTF_8)
 
+            // "wt" truncates first, so a failure between truncating and writing would leave the
+            // note empty — and the target is the file someone appends to every day. Keep the old
+            // bytes in cache until the new ones are safely written, and put them back if not.
+            val rescue = File(context.cacheDir, "fast-note-rescue.md")
+            rescue.writeBytes(originalContent.toByteArray(Charsets.UTF_8))
+
+            val written = runCatching {
+                contentResolver.openOutputStream(uri, "wt")?.use { stream ->
+                    stream.write(updatedBytes)
+                    stream.flush()
+                } ?: return@runCatching false
+                true
+            }
+
+            if (written.isFailure) {
+                runCatching {
+                    contentResolver.openOutputStream(uri, "wt")?.use { it.write(rescue.readBytes()) }
+                }.onFailure { restoreError ->
+                    Log.e(TAG, "Fast note write failed and the note could not be restored", restoreError)
+                }
+                rescue.delete()
+                throw written.exceptionOrNull() ?: IllegalStateException("Fast note write failed")
+            }
+
+            rescue.delete()
             true
         }
     }
