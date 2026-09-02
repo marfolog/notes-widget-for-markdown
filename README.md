@@ -15,7 +15,7 @@
   <a href="#sync-status">Sync status</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="https://github.com/marfolog/notes-widget-for-markdown/discussions">Discussions</a> ·
-  <a href="LICENSE">MIT</a>
+  <a href="LICENSE">GPL-3.0</a>
 </p>
 
 ---
@@ -200,7 +200,7 @@ and I can only test one. Please open an issue before a large pull request.
 
 ## No warranty
 
-This is a free, MIT-licensed hobby project maintained by one person in his spare time. It comes
+This is a free, GPL-3.0-licensed hobby project maintained by one person in his spare time. It comes
 **as is, without warranty of any kind**, and you use it at your own risk. Two things deserve saying
 plainly rather than hiding in the licence text:
 
@@ -214,5 +214,12 @@ Nothing here excludes liability where the law does not allow it to be excluded.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). That licence also disclaims warranty and liability; the section above
-just says the same thing in plain words.
+GPL-3.0 — see [LICENSE](LICENSE). You may use, study, change and share it; if you distribute a
+changed version, it has to stay under the same licence and its source has to come with it. The
+licence also disclaims warranty and liability; the section above just says the same thing in plain
+words.
+
+**Linking exception.** As an additional permission under GPL-3.0 section 7, you may link this
+program with the Google Play Services and Firebase libraries and distribute the result, even though
+those libraries are not free software. This exists so the `play` flavour can be built and shipped
+by anyone, not only by the copyright holder. The `foss` flavour contains none of them.

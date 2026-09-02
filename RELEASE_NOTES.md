@@ -12,4 +12,4 @@ First release.
 Two builds: `foss` has no `INTERNET` permission, `play` adds analytics and crash reporting that can
 be switched off. Take `foss` unless you want to send crash reports.
 
-Android 11+. MIT, as is, without warranty.
+Android 11+. GPL-3.0, as is, without warranty.
