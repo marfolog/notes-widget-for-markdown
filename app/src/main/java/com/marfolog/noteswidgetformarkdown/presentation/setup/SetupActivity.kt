@@ -80,6 +80,7 @@ import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.util.AppLog
+import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
 import sh.calvin.reorderable.ReorderableColumn
@@ -163,6 +164,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var expandedNoteUri by rememberSaveable { mutableStateOf<String?>(null) }
     var noteToDelete by remember { mutableStateOf<NoteSummary?>(null) }
     var gitStatus by remember { mutableStateOf<GitSyncStatus>(GitSyncStatus.NotTracked) }
+    var telemetryEnabled by rememberSaveable { mutableStateOf(Telemetry.isEnabled(context)) }
     var showGitStatus by rememberSaveable {
         mutableStateOf(prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true))
     }
@@ -363,6 +365,13 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         gitStatusText = gitStatusText(gitStatus),
         gitIsTracked = gitStatus is GitSyncStatus.Tracked,
         onSelectGitFolder = { gitPicker.launch(parentFolderHint()) },
+        telemetryAvailable = Telemetry.ENABLED,
+        telemetryEnabled = telemetryEnabled,
+        onTelemetryChanged = { enabled ->
+            telemetryEnabled = enabled
+            Telemetry.setEnabled(context, enabled)
+            AppLog.i(SetupActivity.AREA, "Reporting switched ${if (enabled) "on" else "off"}")
+        },
         showGitStatus = showGitStatus,
         onShowGitStatusChanged = { enabled ->
             showGitStatus = enabled
@@ -504,6 +513,9 @@ internal fun SetupScreenContent(
     onSelectGitFolder: () -> Unit = {},
     showGitStatus: Boolean = true,
     onShowGitStatusChanged: (Boolean) -> Unit = {},
+    telemetryAvailable: Boolean = false,
+    telemetryEnabled: Boolean = false,
+    onTelemetryChanged: (Boolean) -> Unit = {},
     canSave: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
@@ -586,6 +598,40 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Only the Play build has anything to switch off; the foss build never reports.
+        if (telemetryAvailable) {
+            Text(
+                text = "Reporting",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Send anonymous usage and crash reports",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(checked = telemetryEnabled, onCheckedChange = onTelemetryChanged)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Helps find crashes and shows how many people use the app. Never includes " +
+                    "note contents, file names or folder paths. Switching this off stops all " +
+                    "reporting immediately.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Section 3: Git sync status
         Text(

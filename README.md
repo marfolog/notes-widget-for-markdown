@@ -95,17 +95,19 @@ phone.
 | `INTERNET` permission | **no** | yes |
 | Analytics | none | Firebase, app usage only |
 | Crash reports | none | Firebase Crashlytics |
+| Can be switched off | nothing to switch off | yes, in settings |
 
-**The foss build has no `INTERNET` permission, so it physically cannot send anything anywhere.**
-Android will not let it open a socket. Verify with `aapt dump permissions app-foss-release.apk`.
+**The foss build declares no `INTERNET` permission, so Android will not let it open a network
+connection of its own.** Verify with `aapt dump permissions app-foss-release.apk`. Opening a note
+still hands its location to Obsidian — that is what the tap is for.
 It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` and
 `FOREGROUND_SERVICE` — those come from WorkManager, which schedules the widget refresh, and none of
 them can move data off the device.
 
-The Play build reports which actions happened (setup finished, note opened, sync state) and crashes,
-so installs outside Play are visible at all. It never sends note contents, file names or folder
-paths, no advertising ID is collected, and the ad-related permissions Firebase would normally add
-are stripped from the manifest.
+The Play build reports app and crash events, so installs outside Play are visible at all. It can be
+switched off in settings, and it never sends note contents, file names or folder paths — storage
+locations are stripped from crash breadcrumbs before they leave the device. No advertising ID is
+collected, and the ad-related permissions Firebase would normally add are removed from the manifest.
 
 Neither build has an account, a server or a database. Files are read only in folders you picked, and
 only while the widget renders.

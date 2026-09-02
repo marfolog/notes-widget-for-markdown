@@ -15,6 +15,11 @@ object Telemetry {
 
     fun init(context: Context) = Unit
 
+    /** Nothing to switch off — this build reports nothing in the first place. */
+    fun isEnabled(context: Context): Boolean = false
+
+    fun setEnabled(context: Context, enabled: Boolean) = Unit
+
     fun event(name: String, vararg params: Pair<String, String>) = Unit
 
     fun breadcrumb(message: String) = Unit

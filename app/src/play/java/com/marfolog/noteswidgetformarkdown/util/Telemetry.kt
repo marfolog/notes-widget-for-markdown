@@ -18,10 +18,14 @@ object Telemetry {
 
     const val ENABLED = true
 
+    private const val PREFS = "app_prefs"
+    private const val KEY_ENABLED = "telemetry_enabled"
+
     private var analytics: FirebaseAnalytics? = null
 
     fun init(context: Context) {
         analytics = FirebaseAnalytics.getInstance(context)
+        applyOptOut(context, isEnabled(context))
         // The audience for this app does not expect ad tracking, and it buys nothing here.
         analytics?.setAnalyticsCollectionEnabled(true)
         // No ad identifier: the AD_ID permission is stripped in this flavour's manifest.
@@ -33,6 +37,27 @@ object Telemetry {
                 FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to FirebaseAnalytics.ConsentStatus.GRANTED
             )
         )
+    }
+
+    /**
+     * Reporting is on by default and can be switched off in settings. Without a real opt-out the
+     * legitimate-interest basis this runs on would be hard to defend, and the user would be left
+     * with writing an e-mail as their only way to object.
+     */
+    fun isEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, true)
+
+    fun setEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_ENABLED, enabled)
+            .apply()
+        applyOptOut(context, enabled)
+    }
+
+    private fun applyOptOut(context: Context, enabled: Boolean) {
+        analytics?.setAnalyticsCollectionEnabled(enabled)
+        FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = enabled
     }
 
     fun event(name: String, vararg params: Pair<String, String>) {
