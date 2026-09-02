@@ -583,7 +583,9 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Section 2: only needed when the vault could not be worked out
-        if (detectedVaultName != null) {
+        if (notesFolderName == null) {
+            // Nothing to say yet — everything below depends on the folder above.
+        } else if (detectedVaultName != null) {
             Text(
                 text = "Vault detected: $detectedVaultName",
                 style = MaterialTheme.typography.bodyMedium,
@@ -660,7 +662,8 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Section 3: Git sync status
+        // Section 3: Git sync status — meaningless before a folder is picked
+        if (notesFolderName != null) {
         Text(
             text = "Git Sync Status",
             style = MaterialTheme.typography.titleMedium,
@@ -712,6 +715,7 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Section 4: Derived info
         Text(
@@ -720,11 +724,12 @@ internal fun SetupScreenContent(
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
-        if (vaultName != null && notesFolderName != null) {
-            val displayPath = if (derivedPath.isEmpty()) {
-                "$vaultName/ (root folder)"
-            } else {
-                "$vaultName/$derivedPath"
+        val vaultLabel = detectedVaultName ?: vaultName
+        if (notesFolderName != null) {
+            val displayPath = when {
+                vaultLabel == null -> notesFolderName
+                derivedPath.isEmpty() -> "$vaultLabel/ (root folder)"
+                else -> "$vaultLabel/$derivedPath"
             }
             Text(
                 text = "New notes will be created in: $displayPath",
@@ -733,7 +738,7 @@ internal fun SetupScreenContent(
             )
         } else {
             Text(
-                text = "Select both folders to see the derived path.",
+                text = "Pick a notes folder to see where new notes will go.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
