@@ -73,7 +73,7 @@
     <string name="action_done">完成</string>
     <string name="action_delete">删除</string>
     <string name="action_skip">跳过</string>
-    <string name="delete_note_body">该文件将从设备上永久删除，此操作无法撤销。</string>
+    <string name="delete_note_body">该文件将被删除。应用没有回收站可以找回，如果该文件夹处于同步状态，删除会同步到你的其他设备。</string>
     <string name="delete_note_failed">无法删除该文件</string>
     <string name="fast_note_target_none_yet">请选择包含 .md 文件的笔记文件夹，才能指定快速笔记的目标。</string>
     <string name="fast_note_target_gone">所选的快速笔记目标已不存在。请另选一条笔记。</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 天</string>
     <string name="stale_1w">一周</string>
     <string name="vault_root_desc">只有当笔记文件夹不是仓库根目录时才需要。缺少它时，点按笔记可能会打开错误的文件，上一级的 .git 文件夹也无法被看到。</string>
-    <string name="reporting_desc">有助于发现崩溃，并显示有多少人在使用本应用。其设计不包含笔记内容、文件名或文件夹路径。关闭后即停止上报。</string>
+    <string name="reporting_desc">有助于发现崩溃，并显示有多少人在使用本应用。在你同意之前一直是关闭的。其设计不包含笔记内容、文件名或文件夹路径。</string>
     <string name="sync_section_desc">小组件可以显示一个小标签，告诉你上次同步的时间，这样同步悄悄停下来时你能察觉。</string>
     <string name="sync_desc_git">读取任意客户端留下的 .git — GitSync、Obsidian Git、Termux 都可以。本应用不执行 git，也不向其写入。</string>
     <string name="sync_desc_other">没有任何同步工具会把状态写进文件夹，因此标签显示的是笔记的最后修改时间。这已足以察觉同步已经停摆。</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
     <string name="about_sponsor">赞助一下 — 一次性，完全自愿</string>
+    <string name="consent_title">发送报告吗？</string>
+    <string name="consent_body">崩溃报告让我知道哪里出了问题，使用数据让我知道有多少人在用。其中绝不包含你的笔记、笔记名称或文件夹路径。之后可以随时在设置中更改。</string>
+    <string name="consent_yes">好，发送</string>
+    <string name="consent_no">不用了</string>
 </resources>

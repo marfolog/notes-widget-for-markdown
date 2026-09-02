@@ -82,7 +82,7 @@
     <string name="action_done">Done</string>
     <string name="action_delete">Delete</string>
     <string name="action_skip">Skip</string>
-    <string name="delete_note_body">The file will be permanently removed from your device. This cannot be undone.</string>
+    <string name="delete_note_body">The file will be deleted. There is no trash in the app to recover it from, and if the folder is synced the deletion will follow to your other devices.</string>
     <string name="delete_note_failed">Could not delete the file</string>
     <string name="fast_note_target_none_yet">Select a notes folder with .md files to choose a Fast note target.</string>
     <string name="fast_note_target_gone">The selected Fast note target is no longer available. Choose another note.</string>
@@ -108,7 +108,7 @@
     <string name="stale_3d">3 days</string>
     <string name="stale_1w">a week</string>
     <string name="vault_root_desc">Only needed if your notes folder is not the top of your vault. Without it, tapping a note may open the wrong one, and a .git folder one level up stays invisible.</string>
-    <string name="reporting_desc">Helps find crashes and shows how many people use the app. It is written not to include note contents, file names or folder paths. Switching it off stops reporting.</string>
+    <string name="reporting_desc">Helps find crashes and shows how many people use the app. Off until you say otherwise. It is written not to include note contents, file names or folder paths.</string>
     <string name="sync_section_desc">The widget can show a small chip telling you when your notes last synced, so you notice when syncing quietly stops.</string>
     <string name="sync_desc_git">Reads .git left behind by whatever client you use — GitSync, Obsidian Git, Termux. The app does not run git itself and does not write to it.</string>
     <string name="sync_desc_other">No sync tool exposes its state in the folder, so the chip shows when a note last changed. That is enough to notice a sync that died.</string>
@@ -138,4 +138,8 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="about_sponsor">Chip in — one-off, entirely optional</string>
+    <string name="consent_title">Send reports?</string>
+    <string name="consent_body">Crash reports show me what breaks, and usage numbers show how many people the app is for. They never include your notes, their names or your folder paths. You can change this later in settings.</string>
+    <string name="consent_yes">Yes, send them</string>
+    <string name="consent_no">No thanks</string>
 </resources>

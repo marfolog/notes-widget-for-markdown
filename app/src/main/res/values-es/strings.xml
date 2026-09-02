@@ -73,7 +73,7 @@
     <string name="action_done">Listo</string>
     <string name="action_delete">Eliminar</string>
     <string name="action_skip">Omitir</string>
-    <string name="delete_note_body">El archivo se eliminará del dispositivo de forma permanente. Esto no se puede deshacer.</string>
+    <string name="delete_note_body">El archivo se eliminará. La app no tiene papelera para recuperarlo y, si la carpeta está sincronizada, el borrado llegará a tus otros dispositivos.</string>
     <string name="delete_note_failed">No se pudo eliminar el archivo</string>
     <string name="fast_note_target_none_yet">Elige una carpeta con archivos .md para poder fijar un destino de notas rápidas.</string>
     <string name="fast_note_target_gone">El destino de notas rápidas elegido ya no existe. Elige otra nota.</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 días</string>
     <string name="stale_1w">una semana</string>
     <string name="vault_root_desc">Solo hace falta si tu carpeta de notas no es la raíz del vault. Sin ella, tocar una nota puede abrir la equivocada, y una carpeta .git un nivel más arriba queda invisible.</string>
-    <string name="reporting_desc">Ayuda a encontrar fallos y muestra cuánta gente usa la app. Está escrito para no incluir el contenido de las notas, ni nombres de archivo, ni rutas de carpetas. Al desactivarlo se detiene el envío.</string>
+    <string name="reporting_desc">Ayuda a encontrar fallos y muestra cuánta gente usa la app. Desactivado hasta que digas lo contrario. Está escrito para no incluir el contenido de las notas, ni nombres de archivo, ni rutas de carpetas.</string>
     <string name="sync_section_desc">El widget puede mostrar un pequeño indicador con la última sincronización, para que notes cuándo deja de funcionar en silencio.</string>
     <string name="sync_desc_git">Lee el .git que deja cualquier cliente que uses: GitSync, Obsidian Git, Termux. La app no ejecuta git ni escribe en él.</string>
     <string name="sync_desc_other">Ninguna herramienta de sincronización deja su estado en la carpeta, así que el indicador muestra cuándo cambió una nota por última vez. Con eso basta para notar una sincronización muerta.</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="about_sponsor">Contribuir — pago único, totalmente voluntario</string>
+    <string name="consent_title">¿Enviar informes?</string>
+    <string name="consent_body">Los informes de fallos me muestran qué se rompe, y las cifras de uso para cuánta gente es la app. Nunca incluyen tus notas, sus nombres ni las rutas de tus carpetas. Puedes cambiarlo luego en los ajustes.</string>
+    <string name="consent_yes">Sí, enviarlos</string>
+    <string name="consent_no">No, gracias</string>
 </resources>

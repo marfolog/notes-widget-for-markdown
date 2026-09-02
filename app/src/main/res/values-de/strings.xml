@@ -73,7 +73,7 @@
     <string name="action_done">Fertig</string>
     <string name="action_delete">Löschen</string>
     <string name="action_skip">Überspringen</string>
-    <string name="delete_note_body">Die Datei wird dauerhaft vom Gerät entfernt. Das lässt sich nicht rückgängig machen.</string>
+    <string name="delete_note_body">Die Datei wird gelöscht. Die App hat keinen Papierkorb, aus dem sie zurückzuholen wäre, und wenn der Ordner synchronisiert wird, folgt die Löschung auf deine anderen Geräte.</string>
     <string name="delete_note_failed">Datei konnte nicht gelöscht werden</string>
     <string name="fast_note_target_none_yet">Wähle einen Notizordner mit .md-Dateien, um ein Ziel für Schnellnotizen zu bestimmen.</string>
     <string name="fast_note_target_gone">Das gewählte Ziel für Schnellnotizen gibt es nicht mehr. Wähle eine andere Notiz.</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 Tage</string>
     <string name="stale_1w">eine Woche</string>
     <string name="vault_root_desc">Nur nötig, wenn dein Notizordner nicht der Stamm des Vaults ist. Ohne ihn öffnet ein Tippen womöglich die falsche Notiz, und ein .git-Ordner eine Ebene höher bleibt unsichtbar.</string>
-    <string name="reporting_desc">Hilft, Abstürze zu finden, und zeigt, wie viele Leute die App nutzen. Es ist so geschrieben, dass es keine Notizinhalte, Dateinamen oder Ordnerpfade enthält. Ausschalten stoppt die Übermittlung.</string>
+    <string name="reporting_desc">Hilft, Abstürze zu finden, und zeigt, wie viele Leute die App nutzen. Aus, bis du etwas anderes sagst. Es ist so geschrieben, dass es keine Notizinhalte, Dateinamen oder Ordnerpfade enthält.</string>
     <string name="sync_section_desc">Das Widget kann eine kleine Anzeige einblenden, wann zuletzt synchronisiert wurde — so fällt dir auf, wenn es still stehen bleibt.</string>
     <string name="sync_desc_git">Liest den .git-Ordner, den jeder beliebige Client hinterlässt — GitSync, Obsidian Git, Termux. Die App führt selbst kein git aus und schreibt nicht hinein.</string>
     <string name="sync_desc_other">Kein Sync-Werkzeug legt seinen Zustand im Ordner ab, also zeigt die Anzeige, wann sich zuletzt eine Notiz geändert hat. Das genügt, um einen toten Sync zu bemerken.</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="about_sponsor">Etwas beitragen — einmalig, völlig freiwillig</string>
+    <string name="consent_title">Berichte senden?</string>
+    <string name="consent_body">Absturzberichte zeigen mir, was kaputtgeht, Nutzungszahlen, für wie viele Leute die App da ist. Sie enthalten nie deine Notizen, deren Namen oder deine Ordnerpfade. Du kannst das später in den Einstellungen ändern.</string>
+    <string name="consent_yes">Ja, senden</string>
+    <string name="consent_no">Nein, danke</string>
 </resources>

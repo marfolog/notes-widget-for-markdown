@@ -73,7 +73,7 @@
     <string name="action_done">Hotovo</string>
     <string name="action_delete">Smazat</string>
     <string name="action_skip">Přeskočit</string>
-    <string name="delete_note_body">Soubor se ze zařízení nenávratně odstraní. Tuhle akci nelze vzít zpět.</string>
+    <string name="delete_note_body">Soubor se smaže. Aplikace nemá koš, ze kterého by šel vrátit, a pokud je složka synchronizovaná, smazání se přenese i na vaše ostatní zařízení.</string>
     <string name="delete_note_failed">Soubor se nepodařilo smazat</string>
     <string name="fast_note_target_none_yet">Cíl rychlých poznámek půjde vybrat, až zvolíte složku se soubory .md.</string>
     <string name="fast_note_target_gone">Vybraný cíl rychlých poznámek už neexistuje. Zvolte jinou poznámku.</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 dny</string>
     <string name="stale_1w">týden</string>
     <string name="vault_root_desc">Potřeba jen tehdy, když složka s poznámkami není kořen vaultu. Bez toho se po klepnutí může otevřít jiná poznámka a složka .git o úroveň výš zůstane neviditelná.</string>
-    <string name="reporting_desc">Pomáhá najít pády a ukazuje, kolik lidí aplikaci používá. Je psané tak, aby neobsahovalo obsah poznámek, názvy souborů ani cesty ke složkám. Vypnutím se odesílání zastaví.</string>
+    <string name="reporting_desc">Pomáhá najít pády a ukazuje, kolik lidí aplikaci používá. Dokud neřeknete jinak, je vypnuté. Je psané tak, aby neobsahovalo obsah poznámek, názvy souborů ani cesty ke složkám.</string>
     <string name="sync_section_desc">Widget umí ukázat malý štítek s časem poslední synchronizace, takže si všimnete, když se potichu zasekne.</string>
     <string name="sync_desc_git">Čte složku .git, kterou po sobě nechá jakýkoli klient — GitSync, Obsidian Git, Termux. Aplikace sama git nespouští a nic do něj nezapisuje.</string>
     <string name="sync_desc_other">Žádný synchronizační nástroj svůj stav do složky neukládá, takže štítek ukáže čas poslední změny poznámky. To stačí k tomu, abyste poznali mrtvou synchronizaci.</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">Světlé</string>
     <string name="theme_dark">Tmavé</string>
     <string name="about_sponsor">Přispět — jednorázově, zcela dobrovolně</string>
+    <string name="consent_title">Odesílat hlášení?</string>
+    <string name="consent_body">Hlášení o pádech mi ukážou, co se rozbilo, a čísla o používání, pro kolik lidí ta aplikace je. Nikdy neobsahují vaše poznámky, jejich názvy ani cesty ke složkám. Změnit to jde kdykoli v nastavení.</string>
+    <string name="consent_yes">Ano, odesílat</string>
+    <string name="consent_no">Ne, děkuji</string>
 </resources>

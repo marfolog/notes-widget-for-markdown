@@ -73,7 +73,7 @@
     <string name="action_done">完了</string>
     <string name="action_delete">削除</string>
     <string name="action_skip">スキップ</string>
-    <string name="delete_note_body">ファイルは端末から完全に削除されます。元に戻すことはできません。</string>
+    <string name="delete_note_body">ファイルは削除されます。アプリにゴミ箱はなく、フォルダを同期している場合は削除が他の端末にも及びます。</string>
     <string name="delete_note_failed">ファイルを削除できませんでした</string>
     <string name="fast_note_target_none_yet">クイックノートの保存先を選ぶには、.md ファイルのあるフォルダを選んでください。</string>
     <string name="fast_note_target_gone">選択していたクイックノートの保存先は、もう存在しません。別のノートを選んでください。</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 日</string>
     <string name="stale_1w">1 週間</string>
     <string name="vault_root_desc">ノートのフォルダが Vault のルートでない場合にだけ必要です。設定しないと、ノートをタップしたときに別のファイルが開くことがあり、一つ上にある .git フォルダも見えません。</string>
-    <string name="reporting_desc">クラッシュの発見に役立ち、何人が使っているかがわかります。ノートの中身、ファイル名、フォルダのパスを含めない作りになっています。オフにすると送信は止まります。</string>
+    <string name="reporting_desc">クラッシュの発見に役立ち、何人が使っているかがわかります。あなたが許可するまではオフです。ノートの中身、ファイル名、フォルダのパスを含めない作りになっています。</string>
     <string name="sync_section_desc">ウィジェットに、最後に同期した時刻を示す小さな表示を出せます。同期が静かに止まったときに気づけます。</string>
     <string name="sync_desc_git">どのクライアントが残した .git でも読み取ります — GitSync、Obsidian Git、Termux。アプリ自体は git を実行せず、書き込みもしません。</string>
     <string name="sync_desc_other">同期ツールはどれもフォルダに状態を残さないため、表示はノートが最後に変わった時刻を示します。同期が止まったことに気づくには、それで十分です。</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>
     <string name="about_sponsor">支援する — 一度きり、まったくの任意です</string>
+    <string name="consent_title">レポートを送信しますか？</string>
+    <string name="consent_body">クラッシュレポートは何が壊れたかを、利用状況はどれだけの人に使われているかを教えてくれます。ノートの中身、その名前、フォルダのパスが含まれることはありません。あとから設定で変更できます。</string>
+    <string name="consent_yes">はい、送信する</string>
+    <string name="consent_no">いいえ</string>
 </resources>

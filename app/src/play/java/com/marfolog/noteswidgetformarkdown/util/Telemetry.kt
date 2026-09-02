@@ -20,6 +20,7 @@ object Telemetry {
 
     private const val PREFS = "app_prefs"
     private const val KEY_ENABLED = "telemetry_enabled"
+    private const val KEY_ASKED = "telemetry_asked"
 
     private var analytics: FirebaseAnalytics? = null
 
@@ -40,12 +41,21 @@ object Telemetry {
     }
 
     /**
-     * Reporting is on by default and can be switched off in settings. Without a real opt-out the
-     * legitimate-interest basis this runs on would be hard to defend, and the user would be left
-     * with writing an e-mail as their only way to object.
+     * Off until the user says otherwise. Firebase writes an identifier to the device, and for that
+     * ePrivacy asks for consent rather than a balancing test — so nothing is sent before the
+     * question on first launch is answered.
      */
     fun isEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, true)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, false)
+
+    /** Whether the first-launch question has been answered, either way. */
+    fun hasBeenAsked(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ASKED, false)
+
+    fun markAsked(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_ASKED, true).apply()
+    }
 
     fun setEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

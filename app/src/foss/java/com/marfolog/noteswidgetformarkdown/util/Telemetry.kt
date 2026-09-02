@@ -5,9 +5,8 @@ import android.content.Context
 /**
  * FOSS flavour: reports nothing, anywhere.
  *
- * Same API as the Play twin so the rest of the app is identical, but every call is a no-op. This
- * build declares no Android permissions at all — not even INTERNET — which is what F-Droid needs
- * and what the README's privacy claim rests on.
+ * Same API as the Play twin so the rest of the app is identical, but every call is a no-op.
+ * This build has no INTERNET permission, which CI checks on every release.
  */
 object Telemetry {
 
@@ -19,6 +18,11 @@ object Telemetry {
     fun isEnabled(context: Context): Boolean = false
 
     fun setEnabled(context: Context, enabled: Boolean) = Unit
+
+    /** Nothing is ever sent here, so there is nothing to ask about. */
+    fun hasBeenAsked(context: Context): Boolean = true
+
+    fun markAsked(context: Context) = Unit
 
     fun event(name: String, vararg params: Pair<String, String>) = Unit
 

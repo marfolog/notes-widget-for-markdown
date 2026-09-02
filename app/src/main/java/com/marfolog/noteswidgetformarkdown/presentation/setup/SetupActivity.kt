@@ -224,6 +224,9 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var noteToDelete by remember { mutableStateOf<NoteSummary?>(null) }
     var gitStatus by remember { mutableStateOf<GitSyncStatus>(GitSyncStatus.NotTracked) }
     var telemetryEnabled by rememberSaveable { mutableStateOf(Telemetry.isEnabled(context)) }
+    // Asked once, and only where there is something to ask about. Until it is answered the Play
+    // build sends nothing, so this is a real question rather than a notice.
+    var askAboutReporting by rememberSaveable { mutableStateOf(!Telemetry.hasBeenAsked(context)) }
     // Whether the app could work the vault out on its own. When it can, the root folder never
     // has to be picked, which is the difference between one tap and two.
     var detectedVaultName by remember { mutableStateOf<String?>(null) }
@@ -412,6 +415,15 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    if (askAboutReporting && Telemetry.ENABLED) {
+        ReportingConsentDialog { agreed ->
+            Telemetry.setEnabled(context, agreed)
+            Telemetry.markAsked(context)
+            telemetryEnabled = agreed
+            askAboutReporting = false
+        }
+    }
+
     SetupScreenContent(
         guideStep = guideStep,
         onSkipGuide = dismissGuide,
@@ -578,6 +590,21 @@ private fun humanFolderPath(treeUri: String): String? = runCatching {
     val root = if (volume.equals("primary", ignoreCase = true)) "Internal storage" else volume
     if (path.isEmpty()) root else "$root/$path"
 }.getOrNull()
+
+@Composable
+private fun ReportingConsentDialog(onAnswer: (Boolean) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onAnswer(false) },
+        title = { Text(stringResource(R.string.consent_title)) },
+        text = { Text(stringResource(R.string.consent_body)) },
+        confirmButton = {
+            Button(onClick = { onAnswer(true) }) { Text(stringResource(R.string.consent_yes)) }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = { onAnswer(false) }) { Text(stringResource(R.string.consent_no)) }
+        }
+    )
+}
 
 private fun gitStatusText(context: Context, status: GitSyncStatus): String = when (status) {
     is GitSyncStatus.NotTracked -> context.getString(R.string.git_status_not_tracked)

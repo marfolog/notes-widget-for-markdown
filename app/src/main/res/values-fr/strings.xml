@@ -73,7 +73,7 @@
     <string name="action_done">Terminé</string>
     <string name="action_delete">Supprimer</string>
     <string name="action_skip">Ignorer</string>
-    <string name="delete_note_body">Le fichier sera définitivement supprimé de votre appareil. Cette action est irréversible.</string>
+    <string name="delete_note_body">Le fichier sera supprimé. L\'application n\'a pas de corbeille pour le récupérer, et si le dossier est synchronisé la suppression suivra sur vos autres appareils.</string>
     <string name="delete_note_failed">Impossible de supprimer le fichier</string>
     <string name="fast_note_target_none_yet">Choisissez un dossier contenant des fichiers .md pour définir une destination de notes rapides.</string>
     <string name="fast_note_target_gone">La destination de notes rapides choisie n\'existe plus. Choisissez une autre note.</string>
@@ -99,7 +99,7 @@
     <string name="stale_3d">3 jours</string>
     <string name="stale_1w">une semaine</string>
     <string name="vault_root_desc">Utile seulement si votre dossier de notes n\'est pas la racine du coffre. Sans elle, toucher une note peut en ouvrir une autre, et un dossier .git situé un niveau au-dessus reste invisible.</string>
-    <string name="reporting_desc">Aide à trouver les plantages et indique combien de personnes utilisent l\'application. Il est écrit pour ne pas inclure le contenu des notes, ni les noms de fichiers, ni les chemins de dossiers. Le désactiver arrête l\'envoi.</string>
+    <string name="reporting_desc">Aide à trouver les plantages et indique combien de personnes utilisent l\'application. Désactivé tant que vous n\'en décidez autrement. Il est écrit pour ne pas inclure le contenu des notes, ni les noms de fichiers, ni les chemins de dossiers.</string>
     <string name="sync_section_desc">Le widget peut afficher un petit indicateur de la dernière synchronisation, pour que vous remarquiez si elle s\'arrête sans bruit.</string>
     <string name="sync_desc_git">Lit le .git laissé par le client que vous utilisez — GitSync, Obsidian Git, Termux. L\'application n\'exécute pas git et n\'y écrit pas.</string>
     <string name="sync_desc_other">Aucun outil de synchronisation n\'expose son état dans le dossier : l\'indicateur montre donc la dernière modification d\'une note. Cela suffit à repérer une synchronisation morte.</string>
@@ -129,4 +129,8 @@
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
     <string name="about_sponsor">Contribuer — une fois, totalement facultatif</string>
+    <string name="consent_title">Envoyer des rapports ?</string>
+    <string name="consent_body">Les rapports de plantage me montrent ce qui casse, et les chiffres d\'usage pour combien de personnes l\'application existe. Ils n\'incluent jamais vos notes, leurs noms ni vos chemins de dossiers. Vous pourrez changer cela dans les réglages.</string>
+    <string name="consent_yes">Oui, les envoyer</string>
+    <string name="consent_no">Non merci</string>
 </resources>
