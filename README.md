@@ -122,13 +122,18 @@ Full text: [Privacy Policy](https://folmbuild.cz/notes-widget-privacy/).
 
 ## Limitations
 
+- **Updates are not instant.** The widget redraws within seconds of Android telling it the folder
+  changed — but Android decides when to tell it, and holds that back for apps you rarely open. A
+  new note usually shows up in seconds, sometimes minutes. Exempting the app from battery
+  optimisation makes it prompt. A widget over a folder someone else writes into can never match one
+  over an app's own database, which is what Google Keep has.
 - Not an official Obsidian plugin, and not affiliated with Obsidian.
 - Reports sync state, never performs it — pulling and pushing stays with your client.
 - No editing inside the widget; opening and creating go through Obsidian deep links.
 - Android widgets cannot render full Markdown, so previews are simplified.
 - English only for now; strings are still hardcoded in Kotlin.
-- For Obsidian Sync, Syncthing and similar there is no status — those clients keep their state in
-  private app storage no other app can read.
+- For Obsidian Sync, Syncthing and similar there is no real status — those clients keep their state
+  in private app storage no other app can read. The chip falls back to when a note last changed.
 
 <details>
 <summary><b>Build from source</b></summary>
