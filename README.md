@@ -198,6 +198,17 @@ Pull requests are welcome. Most useful right now: testing against real vaults, M
 cases, and launcher compatibility reports — widgets behave differently on Pixel, One UI and Nova,
 and I can only test one. Please open an issue before a large pull request.
 
+## Support, honestly
+
+I answer when I can. Sometimes that is the same day, sometimes it is a month, and sometimes this
+project goes quiet for a while — it is written in evenings, next to a job. Issues stay open rather
+than being closed to keep the tracker tidy, and a quiet issue is not a rejected one.
+
+If it ever stops for good, **you lose nothing.** Your notes are your own files in your own folder.
+Uninstall the app and every one of them is still there, in Markdown, readable by anything. That is
+the whole reason it reads a folder instead of keeping a database of its own — and it is the part
+no abandoned app can take away from you.
+
 ## No warranty
 
 This is a free, GPL-3.0-licensed hobby project maintained by one person in his spare time. It comes
