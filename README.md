@@ -109,8 +109,9 @@ switched off in settings, and it never sends note contents, file names or folder
 locations are stripped from crash breadcrumbs before they leave the device. No advertising ID is
 collected, and the ad-related permissions Firebase would normally add are removed from the manifest.
 
-Neither build has an account, a server or a database. Files are read only in folders you picked, and
-only while the widget renders.
+Neither build has an account, a server or a database. Files are read only in folders you picked.
+
+Full text: [Privacy Policy](https://folmbuild.cz/notes-widget-privacy/).
 
 ## Limitations
 
