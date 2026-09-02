@@ -83,6 +83,7 @@ import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
+import com.marfolog.noteswidgetformarkdown.ui.theme.NoteCardPalette
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
 import sh.calvin.reorderable.ReorderableColumn
 import kotlinx.coroutines.flow.firstOrNull
@@ -1056,27 +1057,5 @@ private fun NoteCardSettingsRow(
     }
 }
 
-private fun cardColorPreview(color: NoteCardColor): Color {
-    return when (color) {
-        NoteCardColor.Default -> Color(0xFFE7E0EC)
-        NoteCardColor.Rose -> Color(0xFFFFDAD6)
-        NoteCardColor.Red -> Color(0xFFFFB4AB)
-        NoteCardColor.Amber -> Color(0xFFFFDEA6)
-        NoteCardColor.Orange -> Color(0xFFFFDCC2)
-        NoteCardColor.Mint -> Color(0xFFBCECCB)
-        NoteCardColor.Green -> Color(0xFFCDEDA3)
-        NoteCardColor.Sky -> Color(0xFFC9E6FF)
-        NoteCardColor.Blue -> Color(0xFFD0E4FF)
-        NoteCardColor.Lavender -> Color(0xFFE7DEFF)
-        NoteCardColor.Custom -> parseColorOrDefault(color = null, fallback = Color(0xFFE7E0EC))
-    }
-}
-
-private fun parseColorOrDefault(color: String?, fallback: Color): Color {
-    val normalized = color?.trim().orEmpty()
-    if (!Regex("^#?[0-9A-Fa-f]{6}$").matches(normalized)) {
-        return fallback
-    }
-    val hex = normalized.removePrefix("#")
-    return Color(("FF$hex").toLong(16))
-}
+private fun cardColorPreview(color: NoteCardColor): Color =
+    NoteCardPalette.background(color) ?: Color(0xFFE7E0EC)

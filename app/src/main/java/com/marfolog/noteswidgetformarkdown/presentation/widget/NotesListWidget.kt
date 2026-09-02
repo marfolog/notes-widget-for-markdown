@@ -32,6 +32,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
+import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetTheme
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 
 /**
@@ -45,7 +46,7 @@ class NotesListWidget : GlanceAppWidget() {
         val data = loadWidgetData(context)
 
         provideContent {
-            GlanceTheme {
+            WidgetTheme {
                 Box(
                     modifier = GlanceModifier
                         .fillMaxSize()

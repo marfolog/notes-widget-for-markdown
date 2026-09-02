@@ -51,6 +51,7 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetTheme
 import kotlinx.coroutines.flow.firstOrNull
 import org.koin.java.KoinJavaComponent.get
 
@@ -61,7 +62,7 @@ class NotesWidget : GlanceAppWidget() {
         val data = loadWidgetData(context)
 
         provideContent {
-            GlanceTheme {
+            WidgetTheme {
                 WidgetRoot(data.state, data.vaultName, data.noteFolderPath, data.cardSettings, data.gitSyncStatus)
             }
         }
