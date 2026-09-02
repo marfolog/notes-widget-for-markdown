@@ -68,6 +68,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
 import com.marfolog.noteswidgetformarkdown.data.repository.GitSyncStatusReader
+import com.marfolog.noteswidgetformarkdown.data.repository.ObsidianVaultLocator
 import java.text.DateFormat
 import java.util.Date
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
@@ -165,6 +166,16 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var noteToDelete by remember { mutableStateOf<NoteSummary?>(null) }
     var gitStatus by remember { mutableStateOf<GitSyncStatus>(GitSyncStatus.NotTracked) }
     var telemetryEnabled by rememberSaveable { mutableStateOf(Telemetry.isEnabled(context)) }
+    // Whether the app could work the vault out on its own. When it can, the root folder never
+    // has to be picked, which is the difference between one tap and two.
+    var detectedVaultName by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(notesUri, vaultUri) {
+        val vault = ObsidianVaultLocator(context.applicationContext).locate()
+        detectedVaultName = vault
+            ?.takeIf { ObsidianVaultLocator.relativePath(it.documentId, notesUri) != null }
+            ?.name
+    }
     var showGitStatus by rememberSaveable {
         mutableStateOf(prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true))
     }
@@ -365,6 +376,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         gitStatusText = gitStatusText(gitStatus),
         gitIsTracked = gitStatus is GitSyncStatus.Tracked,
         onSelectGitFolder = { gitPicker.launch(parentFolderHint()) },
+        detectedVaultName = detectedVaultName,
         telemetryAvailable = Telemetry.ENABLED,
         telemetryEnabled = telemetryEnabled,
         onTelemetryChanged = { enabled ->
@@ -378,7 +390,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             prefs.edit().putBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, enabled).apply()
             scope.launch { NotesWidget.updateAll(context) }
         },
-        canSave = vaultUri != null && notesUri != null,
+        canSave = notesUri != null,
         onSave = onSave,
         modifier = modifier
     )
@@ -513,6 +525,7 @@ internal fun SetupScreenContent(
     onSelectGitFolder: () -> Unit = {},
     showGitStatus: Boolean = true,
     onShowGitStatusChanged: (Boolean) -> Unit = {},
+    detectedVaultName: String? = null,
     telemetryAvailable: Boolean = false,
     telemetryEnabled: Boolean = false,
     onTelemetryChanged: (Boolean) -> Unit = {},
@@ -537,38 +550,7 @@ internal fun SetupScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-        // Section 1: Markdown root
-        Text(
-            text = "Markdown Root",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Select the root folder that contains your Markdown notes. This can be an Obsidian vault or any local notes folder.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (vaultName != null) {
-            Text(
-                text = vaultName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        OutlinedButton(onClick = onSelectVault, modifier = Modifier.fillMaxWidth()) {
-            Text(text = if (vaultName != null) "Change Root Folder" else "Select Root Folder")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Section 2: Notes Folder
+        // Section 1: the only folder anyone has to pick
         Text(
             text = "Notes Folder",
             style = MaterialTheme.typography.titleMedium,
@@ -598,6 +580,50 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Section 2: only needed when the vault could not be worked out
+        if (detectedVaultName != null) {
+            Text(
+                text = "Vault detected: $detectedVaultName",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        } else {
+        Text(
+            text = "Vault root (optional)",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Only needed if your notes folder is not the top of your vault. Without it, " +
+                "tapping a note may open the wrong one, and a .git folder one level up stays " +
+                "invisible.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (vaultName != null) {
+            Text(
+                text = vaultName,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        OutlinedButton(onClick = onSelectVault, modifier = Modifier.fillMaxWidth()) {
+            Text(text = if (vaultName != null) "Change Root Folder" else "Select Root Folder")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Only the Play build has anything to switch off; the foss build never reports.
         if (telemetryAvailable) {

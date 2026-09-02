@@ -14,6 +14,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.remember
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,11 +40,16 @@ class FastNoteActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences(SetupActivity.PREFS_NAME, MODE_PRIVATE)
         val targetUri = prefs.getString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, null)
+        // Show where the line will land. The target is set once in settings and then forgotten,
+        // so without this the dialog asks you to type into an unknown file.
+        val targetName = targetUri
+            ?.let { runCatching { DocumentFile.fromSingleUri(this, Uri.parse(it))?.name }.getOrNull() }
 
         setContent {
             NotesWidgetForMarkdownTheme {
                 FastNoteDialog(
                     hasTarget = !targetUri.isNullOrBlank(),
+                    targetName = targetName,
                     onCancel = { finish() },
                     onOpenSettings = {
                         startActivity(
@@ -89,6 +98,7 @@ class FastNoteActivity : ComponentActivity() {
 @Composable
 private fun FastNoteDialog(
     hasTarget: Boolean,
+    targetName: String? = null,
     onCancel: () -> Unit,
     onOpenSettings: () -> Unit,
     onSave: (String, (String) -> Unit) -> Unit
@@ -122,7 +132,18 @@ private fun FastNoteDialog(
                 onCancel()
             }
         },
-        title = { Text("Fast note") },
+        title = {
+            Column {
+                Text("Fast note")
+                targetName?.let { name ->
+                    Text(
+                        text = "adds a line to $name",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
         text = {
             val focusRequester = remember { FocusRequester() }
             val keyboard = LocalSoftwareKeyboardController.current
@@ -141,10 +162,9 @@ private fun FastNoteDialog(
                     errorMessage = null
                 },
                 label = { Text("Note") },
-                supportingText = {
-                    val message = errorMessage ?: "Saved locally. Sync remains handled by your notes setup."
-                    Text(message)
-                },
+                // Only speak up when something went wrong. The old hint explained the sync model
+                // to someone who just wants to jot a line down.
+                supportingText = errorMessage?.let { message -> { Text(message) } },
                 isError = errorMessage != null,
                 minLines = 3,
                 modifier = Modifier
