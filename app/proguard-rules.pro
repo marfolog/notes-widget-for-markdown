@@ -1,21 +1,22 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Glance builds its widgets through RemoteViews and looks up the receiver and the widget class by
+# name, so R8 must not rename or remove them.
+-keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+-keep class * extends androidx.glance.appwidget.action.ActionCallback { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Entry points the system instantiates by name from the manifest.
+-keep class com.marfolog.noteswidgetformarkdown.NotesWidgetApp { *; }
+-keep class com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Koin resolves these by class reference at runtime.
+-keep class com.marfolog.noteswidgetformarkdown.domain.usecase.** { *; }
+-keep class com.marfolog.noteswidgetformarkdown.domain.repository.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Crashlytics stack traces are worth reading; keep line numbers and original file names.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# These names end up in logs and crash reports ("state=Success", "git=Tracked"). Obfuscated to
+# s0 and c they say nothing, and a bug report is all the visibility the foss build has.
+-keepnames class com.marfolog.noteswidgetformarkdown.domain.model.** { *; }
+-keepnames class com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetState** { *; }

@@ -72,7 +72,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Google Play requires shipped apps to be shrunk and obfuscated (announced Aug 2026,
+            // minimum 25% coverage). It also takes this app from ~50 MB to a sane size, most of
+            // which was unused Material icons.
+            isMinifyEnabled = true
+            isShrinkResources = true
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }

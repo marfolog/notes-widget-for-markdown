@@ -7,6 +7,13 @@ import androidx.activity.ComponentActivity
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import androidx.activity.compose.setContent
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.runtime.remember
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -117,6 +124,16 @@ private fun FastNoteDialog(
         },
         title = { Text("Fast note") },
         text = {
+            val focusRequester = remember { FocusRequester() }
+            val keyboard = LocalSoftwareKeyboardController.current
+
+            // The whole point of a fast note is typing straight away — opening the dialog and then
+            // tapping the field first defeats it.
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+                keyboard?.show()
+            }
+
             OutlinedTextField(
                 value = noteText,
                 onValueChange = {
@@ -129,7 +146,10 @@ private fun FastNoteDialog(
                     Text(message)
                 },
                 isError = errorMessage != null,
-                minLines = 3
+                minLines = 3,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
             )
         },
         confirmButton = {
