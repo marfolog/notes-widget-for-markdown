@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/store-01-hero.png" width="340" alt="Both widgets on an Android home screen">
+  <img src="docs/screenshots/hero.png" alt="Both widgets on an Android home screen">
 </p>
 
 <h1 align="center">Notes Widget for Markdown</h1>
