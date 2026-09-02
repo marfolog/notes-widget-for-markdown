@@ -1,5 +1,6 @@
 package com.marfolog.noteswidgetformarkdown.presentation.widget
 
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,7 +44,8 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(4)), now)
 
         assertEquals(GitSyncLabel.Severity.Stale, label.severity)
-        assertEquals("synced 4 d", label.text)
+        assertEquals(R.string.sync_synced, label.textRes)
+        assertEquals("4 d", label.arg)
     }
 
     @Test
@@ -58,7 +60,7 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(status, now)
 
         assertEquals(GitSyncLabel.Severity.Ok, label.severity)
-        assertTrue(label.text.startsWith("synced "))
+        assertEquals(R.string.sync_synced, label.textRes)
     }
 
     @Test
@@ -66,7 +68,7 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(GitSyncStatus.NotTracked, now)
 
         assertEquals(GitSyncLabel.Severity.Off, label.severity)
-        assertEquals("no sync info", label.text)
+        assertEquals(R.string.sync_no_info, label.textRes)
     }
 
     @Test
@@ -76,14 +78,14 @@ class GitSyncLabelTest {
         val label = GitSyncLabel.format(status, now)
 
         assertEquals(GitSyncLabel.Severity.Problem, label.severity)
-        assertEquals("sync stuck", label.text)
+        assertEquals(R.string.sync_stuck, label.textRes)
     }
 
     @Test
     fun `diverged branch is reported as unpushed`() {
         val status = tracked(now).copy(problem = GitSyncStatus.Problem.Diverged)
 
-        assertEquals("not pushed", GitSyncLabel.format(status, now).text)
+        assertEquals(R.string.sync_not_pushed, GitSyncLabel.format(status, now).textRes)
     }
 
     private fun tracked(atMillis: Long) = GitSyncStatus.Tracked(

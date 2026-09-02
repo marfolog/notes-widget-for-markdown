@@ -62,13 +62,13 @@ internal fun WidgetActionButtons() {
         Column(horizontalAlignment = Alignment.End) {
             RoundIconButton(
                 icon = R.drawable.ic_refresh,
-                contentDescription = "Refresh notes",
+                contentDescription = LocalContext.current.getString(R.string.action_refresh),
                 onClickModifier = GlanceModifier.clickable(actionRunCallback<RefreshWidgetAction>())
             )
             Spacer(modifier = GlanceModifier.height(8.dp))
             RoundIconButton(
                 icon = R.drawable.ic_edit,
-                contentDescription = "Open widget settings",
+                contentDescription = LocalContext.current.getString(R.string.action_open_settings),
                 onClickModifier = GlanceModifier.clickable(actionStartActivity(setupIntent))
             )
         }
@@ -134,7 +134,8 @@ internal fun BottomBar(
 
 @Composable
 internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
-    val staleHours = LocalContext.current
+    val context = LocalContext.current
+    val staleHours = context
         .getSharedPreferences(SetupActivity.PREFS_NAME, Context.MODE_PRIVATE)
         .getInt(SetupActivity.KEY_STALE_HOURS, GitSyncLabel.DEFAULT_STALE_HOURS)
     val label = GitSyncLabel.format(gitSyncStatus, System.currentTimeMillis(), staleHours)
@@ -171,7 +172,9 @@ internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
         ) {}
         Spacer(modifier = GlanceModifier.width(6.dp))
         Text(
-            text = label.text,
+            text = label.arg
+                ?.let { context.getString(label.textRes, it) }
+                ?: context.getString(label.textRes),
             style = TextStyle(
                 fontSize = 12.sp,
                 color = GlanceTheme.colors.onSurfaceVariant
@@ -213,7 +216,7 @@ internal fun QuickActions(vaultName: String?, noteFolderPath: String?) {
     ) {
         Image(
             provider = ImageProvider(R.drawable.ic_add),
-            contentDescription = "Add note",
+            contentDescription = LocalContext.current.getString(R.string.action_add_note),
             modifier = GlanceModifier.size(24.dp),
             colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
         )
@@ -236,7 +239,7 @@ internal fun QuickActions(vaultName: String?, noteFolderPath: String?) {
     ) {
         Image(
             provider = ImageProvider(R.drawable.ic_fast_note),
-            contentDescription = "Add fast note",
+            contentDescription = LocalContext.current.getString(R.string.action_add_fast_note),
             modifier = GlanceModifier.size(22.dp),
             colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
         )

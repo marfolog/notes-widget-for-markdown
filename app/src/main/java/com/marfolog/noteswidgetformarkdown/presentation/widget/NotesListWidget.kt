@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
 import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -31,6 +32,7 @@ import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetTheme
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
@@ -149,9 +151,9 @@ private fun NoteNameRow(
 @Composable
 private fun StatusMessage(state: WidgetState) {
     val message = when (state) {
-        is WidgetState.Uninitialized -> "Tap the pencil to pick your notes folder"
-        is WidgetState.PermissionLost -> "Folder permission lost — open settings"
-        is WidgetState.Empty -> "No notes found"
+        is WidgetState.Uninitialized -> LocalContext.current.getString(R.string.widget_pick_folder_hint)
+        is WidgetState.PermissionLost -> LocalContext.current.getString(R.string.widget_permission_lost_short)
+        is WidgetState.Empty -> LocalContext.current.getString(R.string.widget_no_notes)
         is WidgetState.Error -> state.message
         is WidgetState.Success -> ""
     }

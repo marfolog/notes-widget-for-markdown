@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ class TrampolineActivity : ComponentActivity() {
                 AppLog.d(AREA, "Opened ${AppLog.redactFileName(targetUri)}")
             } catch (e: ActivityNotFoundException) {
                 AppLog.w(AREA, "No app handles this link — is Obsidian installed?", e)
-                Toast.makeText(this, "No app can open this note. Is Obsidian installed?", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.no_app_opens_notes, Toast.LENGTH_LONG).show()
                 finish()
                 return
             }

@@ -1,5 +1,7 @@
 package com.marfolog.noteswidgetformarkdown.presentation.widget
 
+import androidx.annotation.StringRes
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -19,7 +21,15 @@ object GitSyncLabel {
 
     enum class Severity { Ok, Stale, Problem, Off }
 
-    data class Label(val text: String, val severity: Severity)
+    /**
+     * Text se nese jako ID retezce a pripadny argument, ne jako hotova veta. Logika tim zustava
+     * bez Contextu a testovatelna na JVM, prekladat se da presto.
+     */
+    data class Label(
+        @StringRes val textRes: Int,
+        val severity: Severity,
+        val arg: String? = null
+    )
 
     /**
      * Den ticha uz stoji za pozornost: bezny klient se hlasi po minutach az hodinach, takze
@@ -42,17 +52,17 @@ object GitSyncLabel {
         nowMillis: Long,
         STALE_AFTER_MILLIS: Long
     ): Label = when (status) {
-        is GitSyncStatus.NotTracked -> Label("no sync info", Severity.Off)
-        is GitSyncStatus.Unavailable -> Label("sync unknown", Severity.Off)
+        is GitSyncStatus.NotTracked -> Label(R.string.sync_no_info, Severity.Off)
+        is GitSyncStatus.Unavailable -> Label(R.string.sync_unknown, Severity.Off)
         is GitSyncStatus.FileActivity -> {
             // Bez gitu nevime, jestli sync bezi — vime jen, kdy se naposled neco zmenilo.
             // Ticho delsi nez prah je jediny signal, ktery muzeme nabidnout.
             val age = nowMillis - status.lastChangeAtMillis
-            val text = "updated ${formatAge(status.lastChangeAtMillis, age)}"
+            val at = formatAge(status.lastChangeAtMillis, age)
             if (age in 0..STALE_AFTER_MILLIS) {
-                Label(text, Severity.Ok)
+                Label(R.string.sync_updated, Severity.Ok, at)
             } else {
-                Label(text, Severity.Stale)
+                Label(R.string.sync_updated, Severity.Stale, at)
             }
         }
         is GitSyncStatus.Tracked -> {
@@ -65,14 +75,14 @@ object GitSyncLabel {
             // A stuck merge or rebase outranks freshness: the sync is broken, not just old.
             when (status.problem) {
                 GitSyncStatus.Problem.Conflict,
-                GitSyncStatus.Problem.RebaseInProgress -> Label("sync stuck", Severity.Problem)
-                GitSyncStatus.Problem.Diverged -> Label("not pushed", Severity.Problem)
+                GitSyncStatus.Problem.RebaseInProgress -> Label(R.string.sync_stuck, Severity.Problem)
+                GitSyncStatus.Problem.Diverged -> Label(R.string.sync_not_pushed, Severity.Problem)
                 GitSyncStatus.Problem.None -> {
-                    val text = "synced ${formatAge(at, transferAge)}"
+                    val when_ = formatAge(at, transferAge)
                     if (healthAge in 0..STALE_AFTER_MILLIS) {
-                        Label(text, Severity.Ok)
+                        Label(R.string.sync_synced, Severity.Ok, when_)
                     } else {
-                        Label(text, Severity.Stale)
+                        Label(R.string.sync_synced, Severity.Stale, when_)
                     }
                 }
             }

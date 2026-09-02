@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.BuildConfig
@@ -143,7 +144,7 @@ class SetupActivity : ComponentActivity() {
                         TopAppBar(
                             title = {
                                 Column {
-                                    Text("Notes Widget Settings")
+                                    Text(stringResource(R.string.settings_title))
                                     // Verze primo v hlavicce: pri hlaseni chyby ji uzivatel
                                     // nemusi hledat v systemovem nastaveni.
                                     Text(
@@ -214,7 +215,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }.onFailure { error ->
             AppLog.w(SetupActivity.AREA, "Could not list notes in $currentNotesUri", error)
             notesForSettings = emptyList()
-            notesLoadError = error.message ?: "Unable to load notes"
+            notesLoadError = error.message ?: context.getString(R.string.notes_load_failed)
         }
     }
 
@@ -402,7 +403,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
 
     val onSave: () -> Unit = {
         dismissGuide()
-        Toast.makeText(context, "Widget updated", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.widget_updated_toast, Toast.LENGTH_SHORT).show()
 
         scope.launch {
             NotesWidget.updateAll(context)
@@ -482,7 +483,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             prefs.edit().putInt(SetupActivity.KEY_STALE_HOURS, hours).apply()
             scope.launch { NotesWidget.updateAll(context) }
         },
-        gitStatusText = gitStatusText(gitStatus),
+        gitStatusText = gitStatusText(context, gitStatus),
         gitIsTracked = gitStatus is GitSyncStatus.Tracked,
         gitIsBroken = gitStatus is GitSyncStatus.Unavailable,
         onSelectGitFolder = { gitPicker.launch(parentFolderHint()) },
@@ -510,8 +511,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     noteToDelete?.let { note ->
         AlertDialog(
             onDismissRequest = { noteToDelete = null },
-            title = { Text("Delete ${note.fileName}?") },
-            text = { Text("The file will be permanently removed from your device. This cannot be undone.") },
+            title = { Text(stringResource(R.string.delete_note_title, note.fileName)) },
+            text = { Text(stringResource(R.string.delete_note_body)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -549,16 +550,16 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                                     AppLog.e(SetupActivity.AREA, "Delete failed", error)
                                     Toast.makeText(
                                         context,
-                                        error.message ?: "Could not delete the file",
+                                        error.message ?: context.getString(R.string.delete_note_failed),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
                         }
                     }
-                ) { Text("Delete") }
+                ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                OutlinedButton(onClick = { noteToDelete = null }) { Text("Cancel") }
+                OutlinedButton(onClick = { noteToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -577,28 +578,29 @@ private fun humanFolderPath(treeUri: String): String? = runCatching {
     if (path.isEmpty()) root else "$root/$path"
 }.getOrNull()
 
-private fun gitStatusText(status: GitSyncStatus): String = when (status) {
-    is GitSyncStatus.NotTracked ->
-        "No .git folder here — that is fine if you sync another way. If you do use Obsidian Git, " +
-            "pick the folder that contains .git, usually one level above your notes."
+private fun gitStatusText(context: Context, status: GitSyncStatus): String = when (status) {
+    is GitSyncStatus.NotTracked -> context.getString(R.string.git_status_not_tracked)
     is GitSyncStatus.Unavailable ->
-        "Found .git but could not read it: ${status.reason}"
-    is GitSyncStatus.FileActivity ->
-        "Newest note changed " + SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
-            .format(java.util.Date(status.lastChangeAtMillis))
+        context.getString(R.string.git_status_unreadable, status.reason)
+    is GitSyncStatus.FileActivity -> context.getString(
+        R.string.git_status_file_activity,
+        SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
+            .format(Date(status.lastChangeAtMillis))
+    )
     is GitSyncStatus.Tracked -> buildString {
         // This is when HEAD last moved — a pull, a commit, a checkout. Not "when the note
         // was written", and not "when the client last ran".
-        append("Last repo change")
+        append(context.getString(R.string.git_status_last_change))
         status.lastAction?.let { append(" ($it)") }
         append(": ")
         append(
             DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
                 .format(Date(status.lastChangeAtMillis))
         )
-        status.branch?.let { append(" · branch $it") }
+        status.branch?.let { append(context.getString(R.string.git_status_branch, it)) }
         status.lastFetchAtMillis?.let { fetchedAt ->
-            append("\nLast contact with remote: ")
+            append("\n")
+            append(context.getString(R.string.git_status_last_remote_contact))
             append(
                 DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
                     .format(Date(fetchedAt))
@@ -606,7 +608,8 @@ private fun gitStatusText(status: GitSyncStatus): String = when (status) {
         }
         // Two different questions: "when did anything arrive" vs "is the client even running".
         status.lastClientActivityAtMillis?.let { activeAt ->
-            append("\nSync client last active: ")
+            append("\n")
+            append(context.getString(R.string.git_status_client_active))
             append(
                 DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
                     .format(Date(activeAt))
@@ -614,14 +617,11 @@ private fun gitStatusText(status: GitSyncStatus): String = when (status) {
         }
         val problem = when (status.problem) {
             GitSyncStatus.Problem.None -> null
-            GitSyncStatus.Problem.Conflict ->
-                "Unfinished merge (MERGE_HEAD present) — most likely a conflict waiting in your git client."
-            GitSyncStatus.Problem.RebaseInProgress ->
-                "A rebase was started and never finished — resolve it in your git client."
-            GitSyncStatus.Problem.Diverged ->
-                "Local branch differs from origin — changes are waiting to be pushed or pulled."
+            GitSyncStatus.Problem.Conflict -> R.string.git_problem_conflict
+            GitSyncStatus.Problem.RebaseInProgress -> R.string.git_problem_rebase
+            GitSyncStatus.Problem.Diverged -> R.string.git_problem_diverged
         }
-        problem?.let { append("\n\n⚠ $it") }
+        problem?.let { append("\n\n⚠ " + context.getString(it)) }
     }
 }
 
@@ -684,13 +684,13 @@ internal fun SetupScreenContent(
 
         // Section 1: the only folder anyone has to pick
         Text(
-            text = if (notesFolderName == null) "Start here — Notes Folder" else "Notes Folder",
+            text = if (notesFolderName == null) stringResource(R.string.notes_folder_title_first) else stringResource(R.string.notes_folder_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "The folder the widget will read .md files from. Can be the root folder or a subfolder.",
+            text = stringResource(R.string.notes_folder_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -705,7 +705,7 @@ internal fun SetupScreenContent(
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "The + button on the widget creates new notes here.",
+                text = stringResource(R.string.notes_folder_plus_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -717,11 +717,11 @@ internal fun SetupScreenContent(
                 onClick = onSelectNotesFolder,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Select Notes Folder")
+                Text(text = stringResource(R.string.notes_folder_select))
             }
         } else {
             OutlinedButton(onClick = onSelectNotesFolder, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Change Notes Folder")
+                Text(text = stringResource(R.string.notes_folder_change))
             }
         }
 
@@ -734,13 +734,13 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Fast Note Target",
+            text = stringResource(R.string.fast_note_target_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Fast notes are saved locally into this Markdown file. Sync remains handled by your notes setup.",
+            text = stringResource(R.string.fast_note_target_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -762,8 +762,7 @@ internal fun SetupScreenContent(
         // Section 2: only needed when the vault could not be worked out
         if (detectedVaultName != null) {
             Text(
-                text = "Obsidian vault \"$detectedVaultName\" detected, so tapping a note on the " +
-                    "widget opens the right file. Nothing to set up here.",
+                text = stringResource(R.string.vault_detected, detectedVaultName),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -772,15 +771,13 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
         } else {
         Text(
-            text = "Vault root (optional)",
+            text = stringResource(R.string.vault_root_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Only needed if your notes folder is not the top of your vault. Without it, " +
-                "tapping a note may open the wrong one, and a .git folder one level up stays " +
-                "invisible.",
+            text = stringResource(R.string.vault_root_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -800,7 +797,7 @@ internal fun SetupScreenContent(
             enabled = notesFolderName != null,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = if (vaultName != null) "Change Root Folder" else "Select Root Folder")
+            Text(text = if (vaultName != null) stringResource(R.string.vault_root_change) else stringResource(R.string.vault_root_select))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -811,7 +808,7 @@ internal fun SetupScreenContent(
         // Only the Play build has anything to switch off; the foss build never reports.
         if (telemetryAvailable) {
             Text(
-                text = "Reporting",
+                text = stringResource(R.string.reporting_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -821,7 +818,7 @@ internal fun SetupScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Send anonymous usage and crash reports",
+                    text = stringResource(R.string.reporting_switch),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
@@ -830,9 +827,7 @@ internal fun SetupScreenContent(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Helps find crashes and shows how many people use the app. Never includes " +
-                    "note contents, file names or folder paths. Switching this off stops all " +
-                    "reporting immediately.",
+                text = stringResource(R.string.reporting_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -844,41 +839,38 @@ internal fun SetupScreenContent(
 
         // Section 3: Git sync status
         Text(
-            text = "Sync status chip (optional)",
+            text = stringResource(R.string.sync_section_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "The widget can show a small chip telling you when your notes last synced, so " +
-                "you notice when syncing quietly stops.",
+            text = stringResource(R.string.sync_section_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "How do you sync your notes?",
+            text = stringResource(R.string.sync_question),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SYNC_MODES.forEach { (mode, label) ->
+            SYNC_MODES.forEach { (mode, labelRes) ->
                 FilterChip(
                     selected = syncMode == mode,
                     onClick = { onSyncModeChanged(mode) },
-                    label = { Text(label) }
+                    label = { Text(stringResource(labelRes)) }
                 )
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = when (syncMode) {
-                "git" -> "Reads .git left behind by whatever client you use — GitSync, Obsidian " +
-                    "Git, Termux. The app never runs git itself and never writes to it."
-                "other" -> "No sync tool exposes its state in the folder, so the chip shows when " +
-                    "a note last changed. That is enough to notice a sync that died."
-                else -> "No chip on the widget."
+                "git" -> stringResource(R.string.sync_desc_git)
+                "other" -> stringResource(R.string.sync_desc_other)
+                else -> stringResource(R.string.sync_no_chip)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -889,9 +881,9 @@ internal fun SetupScreenContent(
             // "Nothing new" znamena v kazdem rezimu neco jineho, tak se to rovnou pojmenuje.
             Text(
                 text = if (syncMode == "git") {
-                    "Warn me when nothing syncs for:"
+                    stringResource(R.string.sync_warn_git)
                 } else {
-                    "Warn me when no note changes for:"
+                    stringResource(R.string.sync_warn_files)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
@@ -899,10 +891,9 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = if (syncMode == "git") {
-                    "The chip turns amber. Match it to how often your git client runs — with a " +
-                        "15-minute schedule, a whole quiet day already means something broke."
+                    stringResource(R.string.sync_warn_git_hint)
                 } else {
-                    "The chip turns amber. Pick roughly how often you normally write notes."
+                    stringResource(R.string.sync_warn_files_hint)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -912,11 +903,11 @@ internal fun SetupScreenContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.horizontalScroll(rememberScrollState())
             ) {
-                STALE_CHOICES.forEach { (hours, label) ->
+                STALE_CHOICES.forEach { (hours, labelRes) ->
                     FilterChip(
                         selected = staleHours == hours,
                         onClick = { onStaleHoursChanged(hours) },
-                        label = { Text(label) }
+                        label = { Text(stringResource(labelRes)) }
                     )
                 }
             }
@@ -926,7 +917,7 @@ internal fun SetupScreenContent(
         if (syncMode != "none") {
         Text(
             text = if (notesFolderName == null) {
-                "Checked once you pick a notes folder above."
+                stringResource(R.string.sync_not_checked_yet)
             } else {
                 gitStatusText
             },
@@ -944,7 +935,7 @@ internal fun SetupScreenContent(
             enabled = notesFolderName != null,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = if (gitIsTracked) "Change Git Folder" else "Select Folder Containing .git")
+            Text(text = if (gitIsTracked) stringResource(R.string.git_folder_change) else stringResource(R.string.git_folder_select))
         }
         }
         }
@@ -954,13 +945,13 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Card Appearance",
+            text = stringResource(R.string.cards_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Set height and color for each note card in the widget.",
+            text = stringResource(R.string.cards_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -989,13 +980,13 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Appearance",
+            text = stringResource(R.string.appearance_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Applies to this screen and the Fast note dialog. Widget card colours are set separately.",
+            text = stringResource(R.string.appearance_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1027,7 +1018,7 @@ internal fun SetupScreenContent(
             enabled = canSave,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Done")
+            Text(stringResource(R.string.action_done))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -1056,10 +1047,9 @@ private fun FastNoteTargetSection(
             // neco jineho.
             Text(
                 text = if (folderSelected) {
-                    "No .md files in this folder yet. Create a note with the + button on the " +
-                        "widget, then come back and pick it here."
+                    stringResource(R.string.fast_note_target_folder_empty)
                 } else {
-                    "Select a notes folder with .md files to choose a Fast note target."
+                    stringResource(R.string.fast_note_target_none_yet)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1069,7 +1059,7 @@ private fun FastNoteTargetSection(
             val selectedExists = selectedNoteUri == null || notes.any { it.fileUri == selectedNoteUri }
             if (!selectedExists) {
                 Text(
-                    text = "The selected Fast note target is no longer available. Choose another note.",
+                    text = stringResource(R.string.fast_note_target_gone),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -1120,7 +1110,7 @@ private fun CardSettingsSection(
         }
         notes.isEmpty() -> {
             Text(
-                text = "No notes to set up yet — this folder has no .md files.",
+                text = stringResource(R.string.cards_empty),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1207,7 +1197,7 @@ private fun NoteCardSettingsRow(
                 )
                 Icon(
                     imageVector = Icons.Default.DragHandle,
-                    contentDescription = "Drag to reorder",
+                    contentDescription = stringResource(R.string.card_drag_hint),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = dragHandleModifier.padding(8.dp)
                 )
@@ -1218,7 +1208,7 @@ private fun NoteCardSettingsRow(
                         } else {
                             Icons.Default.KeyboardArrowDown
                         },
-                        contentDescription = if (expanded) "Collapse" else "Expand appearance"
+                        contentDescription = if (expanded) stringResource(R.string.card_collapse) else stringResource(R.string.card_expand)
                     )
                 }
             }
@@ -1239,7 +1229,7 @@ private fun NoteCardSettingsRow(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Text size",
+                text = stringResource(R.string.card_text_size),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1258,7 +1248,7 @@ private fun NoteCardSettingsRow(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Color",
+                text = stringResource(R.string.card_color),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1291,7 +1281,7 @@ private fun NoteCardSettingsRow(
                     value = appearance.customColorHex.orEmpty(),
                     onValueChange = onCustomColorChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Custom color") },
+                    label = { Text(stringResource(R.string.card_custom_color)) },
                     placeholder = { Text("#D9E8C8") },
                     singleLine = true
                 )
@@ -1350,7 +1340,7 @@ private fun DeleteSwipeBackground(direction: SwipeToDismissBoxValue) {
     ) {
         Icon(
             imageVector = Icons.Default.Delete,
-            contentDescription = "Delete note file",
+            contentDescription = stringResource(R.string.card_delete_file),
             tint = MaterialTheme.colorScheme.onErrorContainer
         )
     }
@@ -1372,16 +1362,19 @@ private fun GuideBanner(step: GuideStep, onSkip: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Setup — step ${if (step == GuideStep.PickFolder) 1 else 2} of 2",
+                text = stringResource(
+                    R.string.guide_step_counter,
+                    if (step == GuideStep.PickFolder) 1 else 2
+                ),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Spacer(modifier = Modifier.height(8.dp))
-            GuideLine("Pick the folder your notes live in", done = step != GuideStep.PickFolder)
-            GuideLine("Add the widget to your home screen", done = false)
+            GuideLine(stringResource(R.string.guide_step_folder), done = step != GuideStep.PickFolder)
+            GuideLine(stringResource(R.string.guide_step_widget), done = false)
             Spacer(modifier = Modifier.height(4.dp))
             TextButton(onClick = onSkip, modifier = Modifier.align(Alignment.End)) {
-                Text("Skip")
+                Text(stringResource(R.string.action_skip))
             }
         }
     }
@@ -1464,51 +1457,50 @@ private fun AboutSection() {
         runCatching {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }.onFailure {
-            Toast.makeText(context, "No browser found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.about_no_browser, Toast.LENGTH_SHORT).show()
         }
     }
 
     Text(
-        text = "Something broken, or just using it?",
+        text = stringResource(R.string.about_title),
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary
     )
     Spacer(modifier = Modifier.height(4.dp))
     Text(
-        text = "This app is made by one person in their spare time. Bug reports are read, and " +
-            "knowing someone out there uses it is what keeps it going.",
+        text = stringResource(R.string.about_desc),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
     Spacer(modifier = Modifier.height(12.dp))
 
     OutlinedButton(onClick = { open(ISSUES_URL) }, modifier = Modifier.fillMaxWidth()) {
-        Text("Report a bug")
+        Text(stringResource(R.string.about_report))
     }
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedButton(onClick = { open(DISCUSSIONS_URL) }, modifier = Modifier.fillMaxWidth()) {
-        Text("Say hi — tell me you use it")
+        Text(stringResource(R.string.about_say_hi))
     }
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedButton(onClick = { open(REPO_URL) }, modifier = Modifier.fillMaxWidth()) {
-        Text("Source code on GitHub")
+        Text(stringResource(R.string.about_source))
     }
     Spacer(modifier = Modifier.height(8.dp))
     TextButton(onClick = { open(PRIVACY_URL) }, modifier = Modifier.fillMaxWidth()) {
-        Text("Privacy policy")
+        Text(stringResource(R.string.about_privacy))
     }
 }
 
 /** Poradi je zamerne: git je nejpresnejsi, "nic" je posledni moznost. */
 private val SYNC_MODES = listOf(
-    "git" to "Git",
-    "other" to "Something else",
-    "none" to "I don't"
+    "git" to R.string.sync_mode_git,
+    "other" to R.string.sync_mode_other,
+    "none" to R.string.sync_mode_none
 )
 
 private val STALE_CHOICES = listOf(
-    6 to "6 hours",
-    24 to "1 day",
-    72 to "3 days",
-    168 to "a week"
+    6 to R.string.stale_6h,
+    24 to R.string.stale_1d,
+    72 to R.string.stale_3d,
+    168 to R.string.stale_1w
 )

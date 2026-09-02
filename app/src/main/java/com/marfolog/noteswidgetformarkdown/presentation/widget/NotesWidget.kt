@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
@@ -160,13 +161,13 @@ private fun UninitializedContent() {
     ) {
         Image(
             provider = ImageProvider(R.drawable.ic_setup),
-            contentDescription = "Setup",
+            contentDescription = LocalContext.current.getString(R.string.action_setup),
             modifier = GlanceModifier.size(48.dp),
             colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
         )
         Spacer(modifier = GlanceModifier.height(16.dp))
         Text(
-            text = "Setup Required",
+            text = LocalContext.current.getString(R.string.widget_setup_required),
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
@@ -175,7 +176,7 @@ private fun UninitializedContent() {
         )
         Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
-            text = "Tap to select your notes folder",
+            text = LocalContext.current.getString(R.string.widget_setup_hint),
             style = TextStyle(
                 fontSize = 14.sp,
                 color = GlanceTheme.colors.onSurfaceVariant
@@ -209,13 +210,13 @@ private fun PermissionLostContent() {
     ) {
         Image(
             provider = ImageProvider(R.drawable.ic_error),
-            contentDescription = "Error",
+            contentDescription = LocalContext.current.getString(R.string.action_error),
             modifier = GlanceModifier.size(48.dp),
             colorFilter = ColorFilter.tint(GlanceTheme.colors.error)
         )
         Spacer(modifier = GlanceModifier.height(16.dp))
         Text(
-            text = "Permission lost",
+            text = LocalContext.current.getString(R.string.widget_permission_lost),
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
@@ -224,7 +225,7 @@ private fun PermissionLostContent() {
         )
         Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
-            text = "Tap to re-select your folder",
+            text = LocalContext.current.getString(R.string.widget_permission_hint),
             style = TextStyle(
                 fontSize = 14.sp,
                 color = GlanceTheme.colors.onSurfaceVariant
@@ -364,7 +365,7 @@ private fun EmptyContent(modifier: GlanceModifier = GlanceModifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "No notes found",
+            text = LocalContext.current.getString(R.string.widget_no_notes),
             style = TextStyle(
                 fontSize = 14.sp,
                 color = GlanceTheme.colors.onSurface
@@ -382,7 +383,7 @@ private fun ErrorContent(message: String, modifier: GlanceModifier = GlanceModif
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 provider = ImageProvider(R.drawable.ic_error),
-                contentDescription = "Error",
+                contentDescription = LocalContext.current.getString(R.string.action_error),
                 modifier = GlanceModifier.size(32.dp),
                 colorFilter = ColorFilter.tint(GlanceTheme.colors.error)
             )

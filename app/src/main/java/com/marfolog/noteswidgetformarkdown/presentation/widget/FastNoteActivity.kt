@@ -4,8 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import androidx.activity.compose.setContent
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +63,7 @@ class FastNoteActivity : ComponentActivity() {
                     },
                     onSave = { noteText, onError ->
                         if (targetUri.isNullOrBlank()) {
-                            onError("Choose a Fast note target in settings first.")
+                            onError(getString(R.string.fast_note_pick_target_first))
                         } else {
                             lifecycleScope.launch {
                                 val appendFastNoteUseCase =
@@ -71,7 +73,7 @@ class FastNoteActivity : ComponentActivity() {
                                         if (saved) {
                                             Toast.makeText(
                                                 this@FastNoteActivity,
-                                                "Fast note saved locally",
+                                                getString(R.string.fast_note_saved),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                             // Use applicationContext: the widget
@@ -80,11 +82,11 @@ class FastNoteActivity : ComponentActivity() {
                                             NotesWidget.updateAll(applicationContext)
                                             finish()
                                         } else {
-                                            onError("Unable to write to the selected note.")
+                                            onError(getString(R.string.fast_note_write_failed))
                                         }
                                     }
                                     .onFailure { error ->
-                                        onError(error.message ?: "Unable to save Fast note.")
+                                        onError(error.message ?: getString(R.string.fast_note_failed))
                                     }
                             }
                         }
@@ -110,16 +112,16 @@ private fun FastNoteDialog(
     if (!hasTarget) {
         AlertDialog(
             onDismissRequest = onCancel,
-            title = { Text("Fast note target missing") },
-            text = { Text("Choose a Markdown file in settings before saving Fast notes.") },
+            title = { Text(stringResource(R.string.fast_note_target_missing)) },
+            text = { Text(stringResource(R.string.fast_note_target_hint)) },
             confirmButton = {
                 TextButton(onClick = onOpenSettings) {
-                    Text("Open settings")
+                    Text(stringResource(R.string.action_open_settings_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onCancel) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -134,10 +136,10 @@ private fun FastNoteDialog(
         },
         title = {
             Column {
-                Text("Fast note")
+                Text(stringResource(R.string.fast_note_title))
                 targetName?.let { name ->
                     Text(
-                        text = "adds a line to $name",
+                        text = stringResource(R.string.fast_note_adds_line_to, name),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -161,7 +163,7 @@ private fun FastNoteDialog(
                     noteText = it
                     errorMessage = null
                 },
-                label = { Text("Note") },
+                label = { Text(stringResource(R.string.fast_note_field_label)) },
                 // Only speak up when something went wrong. The old hint explained the sync model
                 // to someone who just wants to jot a line down.
                 supportingText = errorMessage?.let { message -> { Text(message) } },
@@ -183,7 +185,7 @@ private fun FastNoteDialog(
                     }
                 }
             ) {
-                Text(if (isSaving) "Saving..." else "Add")
+                Text(stringResource(if (isSaving) R.string.fast_note_saving else R.string.fast_note_add))
             }
         },
         dismissButton = {
@@ -191,7 +193,7 @@ private fun FastNoteDialog(
                 enabled = !isSaving,
                 onClick = onCancel
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
