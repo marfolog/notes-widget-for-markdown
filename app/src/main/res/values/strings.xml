@@ -128,10 +128,13 @@
     <string name="git_status_unreadable">Found .git but could not read it: %1$s</string>
     <string name="git_status_file_activity">Newest note changed %1$s</string>
     <string name="git_status_last_change">Last repo change</string>
-    <string name="git_status_branch"> · branch %1$s</string>
-    <string name="git_status_last_remote_contact">Last contact with remote: </string>
-    <string name="git_status_client_active">Sync client last active: </string>
+    <string name="git_status_branch">" · branch %1$s"</string>
+    <string name="git_status_last_remote_contact">"Last contact with remote: "</string>
+    <string name="git_status_client_active">"Sync client last active: "</string>
     <string name="git_problem_conflict">Unfinished merge (MERGE_HEAD present) — most likely a conflict waiting in your git client.</string>
     <string name="git_problem_rebase">A rebase was started and never finished — resolve it in your git client.</string>
     <string name="git_problem_diverged">Local branch differs from origin — changes are waiting to be pushed or pulled.</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 </resources>

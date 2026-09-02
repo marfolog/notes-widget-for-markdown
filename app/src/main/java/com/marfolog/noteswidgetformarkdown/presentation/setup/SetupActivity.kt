@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -997,7 +998,7 @@ internal fun SetupScreenContent(
                 FilterChip(
                     selected = ThemePreference.mode == mode,
                     onClick = { ThemePreference.set(appearanceContext, mode) },
-                    label = { Text(mode.name) }
+                    label = { Text(stringResource(themeModeLabel(mode))) }
                 )
             }
         }
@@ -1504,3 +1505,10 @@ private val STALE_CHOICES = listOf(
     72 to R.string.stale_3d,
     168 to R.string.stale_1w
 )
+
+@StringRes
+private fun themeModeLabel(mode: ThemePreference.Mode): Int = when (mode) {
+    ThemePreference.Mode.System -> R.string.theme_system
+    ThemePreference.Mode.Light -> R.string.theme_light
+    ThemePreference.Mode.Dark -> R.string.theme_dark
+}
