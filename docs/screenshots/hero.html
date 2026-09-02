@@ -62,7 +62,8 @@
     overflow: hidden;
     background: #000;
   }
-  .screen img { width: 100%; height: calc(100% + 75px); margin-top: -75px; object-fit: cover; display: block; }
+    /* Crop past the status bar: the wallpaper has a cable in it that reads as a render glitch. */
+  .screen img { width: 100%; height: calc(100% + 104px); margin-top: -104px; object-fit: cover; display: block; }
 
   /* Widget cards floating out of the phone. */
   .card {
