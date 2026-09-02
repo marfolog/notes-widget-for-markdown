@@ -52,4 +52,12 @@ class AppLogTest {
 
         assertFalse(redacted.contains("secret.md"))
     }
+
+    @Test
+    fun `a plain storage path is redacted too, not just a content uri`() {
+        val cleaned = AppLog.redactLocations("open failed /storage/emulated/0/Vault/therapy.md")
+
+        assertFalse(cleaned.contains("therapy"))
+        assertFalse(cleaned.contains("Vault"))
+    }
 }

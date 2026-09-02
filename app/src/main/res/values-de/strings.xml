@@ -55,7 +55,7 @@
     <string name="vault_root_change">Stammordner ändern</string>
     <string name="vault_root_select">Stammordner wählen</string>
     <string name="reporting_title">Berichte</string>
-    <string name="reporting_switch">Anonyme Nutzungs- und Absturzberichte senden</string>
+    <string name="reporting_switch">Nutzungs- und Absturzberichte senden</string>
     <string name="sync_section_title">Sync-Anzeige (optional)</string>
     <string name="sync_question">Wie synchronisierst du deine Notizen?</string>
     <string name="sync_no_chip">Keine Anzeige im Widget.</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 Tage</string>
     <string name="stale_1w">eine Woche</string>
     <string name="vault_root_desc">Nur nötig, wenn dein Notizordner nicht der Stamm des Vaults ist. Ohne ihn öffnet ein Tippen womöglich die falsche Notiz, und ein .git-Ordner eine Ebene höher bleibt unsichtbar.</string>
-    <string name="reporting_desc">Hilft, Abstürze zu finden, und zeigt, wie viele Leute die App nutzen. Enthält nie Notizinhalte, Dateinamen oder Ordnerpfade. Ausschalten stoppt jede Übermittlung sofort.</string>
+    <string name="reporting_desc">Hilft, Abstürze zu finden, und zeigt, wie viele Leute die App nutzen. Es ist so geschrieben, dass es keine Notizinhalte, Dateinamen oder Ordnerpfade enthält. Ausschalten stoppt die Übermittlung.</string>
     <string name="sync_section_desc">Das Widget kann eine kleine Anzeige einblenden, wann zuletzt synchronisiert wurde — so fällt dir auf, wenn es still stehen bleibt.</string>
-    <string name="sync_desc_git">Liest den .git-Ordner, den jeder beliebige Client hinterlässt — GitSync, Obsidian Git, Termux. Die App führt selbst nie git aus und schreibt nie hinein.</string>
+    <string name="sync_desc_git">Liest den .git-Ordner, den jeder beliebige Client hinterlässt — GitSync, Obsidian Git, Termux. Die App führt selbst kein git aus und schreibt nicht hinein.</string>
     <string name="sync_desc_other">Kein Sync-Werkzeug legt seinen Zustand im Ordner ab, also zeigt die Anzeige, wann sich zuletzt eine Notiz geändert hat. Das genügt, um einen toten Sync zu bemerken.</string>
     <string name="sync_warn_git_hint">Die Anzeige wird gelb. Richte dich danach, wie oft dein git-Client läuft — bei einem 15-Minuten-Takt ist ein ganzer stiller Tag schon verdächtig.</string>
     <string name="fast_note_target_folder_empty">In diesem Ordner liegen noch keine .md-Dateien. Lege mit der Taste + im Widget eine Notiz an und komm dann hierher zurück.</string>

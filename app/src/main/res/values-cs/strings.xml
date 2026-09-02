@@ -55,7 +55,7 @@
     <string name="vault_root_change">Změnit kořenovou složku</string>
     <string name="vault_root_select">Vybrat kořenovou složku</string>
     <string name="reporting_title">Hlášení</string>
-    <string name="reporting_switch">Odesílat anonymní údaje o používání a pádech</string>
+    <string name="reporting_switch">Odesílat údaje o používání a pádech</string>
     <string name="sync_section_title">Ukazatel synchronizace (nepovinné)</string>
     <string name="sync_question">Jak poznámky synchronizujete?</string>
     <string name="sync_no_chip">Widget nic neukáže.</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 dny</string>
     <string name="stale_1w">týden</string>
     <string name="vault_root_desc">Potřeba jen tehdy, když složka s poznámkami není kořen vaultu. Bez toho se po klepnutí může otevřít jiná poznámka a složka .git o úroveň výš zůstane neviditelná.</string>
-    <string name="reporting_desc">Pomáhá najít pády a ukazuje, kolik lidí aplikaci používá. Nikdy neobsahuje obsah poznámek, názvy souborů ani cesty ke složkám. Vypnutím se odesílání okamžitě zastaví.</string>
+    <string name="reporting_desc">Pomáhá najít pády a ukazuje, kolik lidí aplikaci používá. Je psané tak, aby neobsahovalo obsah poznámek, názvy souborů ani cesty ke složkám. Vypnutím se odesílání zastaví.</string>
     <string name="sync_section_desc">Widget umí ukázat malý štítek s časem poslední synchronizace, takže si všimnete, když se potichu zasekne.</string>
-    <string name="sync_desc_git">Čte složku .git, kterou po sobě nechá jakýkoli klient — GitSync, Obsidian Git, Termux. Aplikace sama git nikdy nespouští a nic do něj nezapisuje.</string>
+    <string name="sync_desc_git">Čte složku .git, kterou po sobě nechá jakýkoli klient — GitSync, Obsidian Git, Termux. Aplikace sama git nespouští a nic do něj nezapisuje.</string>
     <string name="sync_desc_other">Žádný synchronizační nástroj svůj stav do složky neukládá, takže štítek ukáže čas poslední změny poznámky. To stačí k tomu, abyste poznali mrtvou synchronizaci.</string>
     <string name="sync_warn_git_hint">Štítek zežloutne. Nastavte podle toho, jak často váš git klient běží — při patnáctiminutovém intervalu je celý den ticha už podezřelý.</string>
     <string name="fast_note_target_folder_empty">V této složce zatím nejsou žádné soubory .md. Vytvořte poznámku tlačítkem + na widgetu a pak se sem vraťte.</string>

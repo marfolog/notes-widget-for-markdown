@@ -25,9 +25,6 @@ object Telemetry {
 
     fun init(context: Context) {
         analytics = FirebaseAnalytics.getInstance(context)
-        applyOptOut(context, isEnabled(context))
-        // The audience for this app does not expect ad tracking, and it buys nothing here.
-        analytics?.setAnalyticsCollectionEnabled(true)
         // No ad identifier: the AD_ID permission is stripped in this flavour's manifest.
         analytics?.setConsent(
             mapOf(
@@ -37,6 +34,9 @@ object Telemetry {
                 FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to FirebaseAnalytics.ConsentStatus.GRANTED
             )
         )
+        // Last, so the user's choice is what survives. An earlier version set collection to true
+        // right after reading it, which turned every restart into a silent opt-in again.
+        applyOptOut(context, isEnabled(context))
     }
 
     /**

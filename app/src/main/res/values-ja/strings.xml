@@ -55,7 +55,7 @@
     <string name="vault_root_change">ルートフォルダを変更</string>
     <string name="vault_root_select">ルートフォルダを選ぶ</string>
     <string name="reporting_title">レポート</string>
-    <string name="reporting_switch">匿名の利用状況とクラッシュレポートを送信する</string>
+    <string name="reporting_switch">利用状況とクラッシュレポートを送信する</string>
     <string name="sync_section_title">同期状態の表示（任意）</string>
     <string name="sync_question">ノートはどうやって同期していますか？</string>
     <string name="sync_no_chip">ウィジェットには表示しません。</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 日</string>
     <string name="stale_1w">1 週間</string>
     <string name="vault_root_desc">ノートのフォルダが Vault のルートでない場合にだけ必要です。設定しないと、ノートをタップしたときに別のファイルが開くことがあり、一つ上にある .git フォルダも見えません。</string>
-    <string name="reporting_desc">クラッシュの発見に役立ち、何人が使っているかがわかります。ノートの中身、ファイル名、フォルダのパスは決して含まれません。オフにすると、送信はただちに止まります。</string>
+    <string name="reporting_desc">クラッシュの発見に役立ち、何人が使っているかがわかります。ノートの中身、ファイル名、フォルダのパスを含めない作りになっています。オフにすると送信は止まります。</string>
     <string name="sync_section_desc">ウィジェットに、最後に同期した時刻を示す小さな表示を出せます。同期が静かに止まったときに気づけます。</string>
-    <string name="sync_desc_git">どのクライアントが残した .git でも読み取ります — GitSync、Obsidian Git、Termux。アプリ自体が git を実行することも、書き込むこともありません。</string>
+    <string name="sync_desc_git">どのクライアントが残した .git でも読み取ります — GitSync、Obsidian Git、Termux。アプリ自体は git を実行せず、書き込みもしません。</string>
     <string name="sync_desc_other">同期ツールはどれもフォルダに状態を残さないため、表示はノートが最後に変わった時刻を示します。同期が止まったことに気づくには、それで十分です。</string>
     <string name="sync_warn_git_hint">表示が黄色になります。git クライアントが動く間隔に合わせてください — 15 分おきに動くなら、まる一日なにも起きないのはもう怪しい状態です。</string>
     <string name="fast_note_target_folder_empty">このフォルダにはまだ .md ファイルがありません。ウィジェットの + ボタンでノートを作ってから、ここに戻って選んでください。</string>

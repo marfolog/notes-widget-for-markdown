@@ -55,7 +55,7 @@
     <string name="vault_root_change">Changer de dossier racine</string>
     <string name="vault_root_select">Choisir le dossier racine</string>
     <string name="reporting_title">Rapports</string>
-    <string name="reporting_switch">Envoyer des rapports anonymes d\'usage et de plantage</string>
+    <string name="reporting_switch">Envoyer des rapports d\'usage et de plantage</string>
     <string name="sync_section_title">Indicateur de synchronisation (facultatif)</string>
     <string name="sync_question">Comment synchronisez-vous vos notes ?</string>
     <string name="sync_no_chip">Aucun indicateur sur le widget.</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 jours</string>
     <string name="stale_1w">une semaine</string>
     <string name="vault_root_desc">Utile seulement si votre dossier de notes n\'est pas la racine du coffre. Sans elle, toucher une note peut en ouvrir une autre, et un dossier .git situé un niveau au-dessus reste invisible.</string>
-    <string name="reporting_desc">Aide à trouver les plantages et indique combien de personnes utilisent l\'application. N\'inclut jamais le contenu des notes, ni les noms de fichiers, ni les chemins de dossiers. Désactiver arrête tout envoi immédiatement.</string>
+    <string name="reporting_desc">Aide à trouver les plantages et indique combien de personnes utilisent l\'application. Il est écrit pour ne pas inclure le contenu des notes, ni les noms de fichiers, ni les chemins de dossiers. Le désactiver arrête l\'envoi.</string>
     <string name="sync_section_desc">Le widget peut afficher un petit indicateur de la dernière synchronisation, pour que vous remarquiez si elle s\'arrête sans bruit.</string>
-    <string name="sync_desc_git">Lit le .git laissé par le client que vous utilisez — GitSync, Obsidian Git, Termux. L\'application n\'exécute jamais git et n\'y écrit jamais.</string>
+    <string name="sync_desc_git">Lit le .git laissé par le client que vous utilisez — GitSync, Obsidian Git, Termux. L\'application n\'exécute pas git et n\'y écrit pas.</string>
     <string name="sync_desc_other">Aucun outil de synchronisation n\'expose son état dans le dossier : l\'indicateur montre donc la dernière modification d\'une note. Cela suffit à repérer une synchronisation morte.</string>
     <string name="sync_warn_git_hint">L\'indicateur passe à l\'orange. Réglez-le selon la fréquence d\'exécution de votre client git — avec un intervalle de 15 minutes, une journée entière de silence est déjà suspecte.</string>
     <string name="fast_note_target_folder_empty">Ce dossier ne contient encore aucun fichier .md. Créez une note avec le bouton + du widget, puis revenez ici.</string>

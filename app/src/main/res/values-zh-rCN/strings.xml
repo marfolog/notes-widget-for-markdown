@@ -55,7 +55,7 @@
     <string name="vault_root_change">更改根文件夹</string>
     <string name="vault_root_select">选择根文件夹</string>
     <string name="reporting_title">报告</string>
-    <string name="reporting_switch">发送匿名使用情况和崩溃报告</string>
+    <string name="reporting_switch">发送使用情况和崩溃报告</string>
     <string name="sync_section_title">同步状态标签（可选）</string>
     <string name="sync_question">你如何同步笔记？</string>
     <string name="sync_no_chip">小组件上不显示标签。</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 天</string>
     <string name="stale_1w">一周</string>
     <string name="vault_root_desc">只有当笔记文件夹不是仓库根目录时才需要。缺少它时，点按笔记可能会打开错误的文件，上一级的 .git 文件夹也无法被看到。</string>
-    <string name="reporting_desc">有助于发现崩溃，并显示有多少人在使用本应用。绝不会包含笔记内容、文件名或文件夹路径。关闭后会立即停止一切上报。</string>
+    <string name="reporting_desc">有助于发现崩溃，并显示有多少人在使用本应用。其设计不包含笔记内容、文件名或文件夹路径。关闭后即停止上报。</string>
     <string name="sync_section_desc">小组件可以显示一个小标签，告诉你上次同步的时间，这样同步悄悄停下来时你能察觉。</string>
-    <string name="sync_desc_git">读取任意客户端留下的 .git — GitSync、Obsidian Git、Termux 都可以。本应用从不执行 git，也从不向其写入。</string>
+    <string name="sync_desc_git">读取任意客户端留下的 .git — GitSync、Obsidian Git、Termux 都可以。本应用不执行 git，也不向其写入。</string>
     <string name="sync_desc_other">没有任何同步工具会把状态写进文件夹，因此标签显示的是笔记的最后修改时间。这已足以察觉同步已经停摆。</string>
     <string name="sync_warn_git_hint">标签会变成琥珀色。按你的 git 客户端运行频率来设置 — 若每 15 分钟运行一次，整天毫无动静就已经可疑了。</string>
     <string name="fast_note_target_folder_empty">该文件夹中还没有 .md 文件。请先用小组件上的 + 按钮新建一条笔记，然后回到这里选择。</string>

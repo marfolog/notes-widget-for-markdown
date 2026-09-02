@@ -55,7 +55,7 @@
     <string name="vault_root_change">Cambiar carpeta raíz</string>
     <string name="vault_root_select">Elegir carpeta raíz</string>
     <string name="reporting_title">Informes</string>
-    <string name="reporting_switch">Enviar informes anónimos de uso y de fallos</string>
+    <string name="reporting_switch">Enviar informes de uso y de fallos</string>
     <string name="sync_section_title">Indicador de sincronización (opcional)</string>
     <string name="sync_question">¿Cómo sincronizas tus notas?</string>
     <string name="sync_no_chip">Sin indicador en el widget.</string>
@@ -99,9 +99,9 @@
     <string name="stale_3d">3 días</string>
     <string name="stale_1w">una semana</string>
     <string name="vault_root_desc">Solo hace falta si tu carpeta de notas no es la raíz del vault. Sin ella, tocar una nota puede abrir la equivocada, y una carpeta .git un nivel más arriba queda invisible.</string>
-    <string name="reporting_desc">Ayuda a encontrar fallos y muestra cuánta gente usa la app. Nunca incluye el contenido de las notas, ni nombres de archivo, ni rutas de carpetas. Al desactivarlo se detiene el envío de inmediato.</string>
+    <string name="reporting_desc">Ayuda a encontrar fallos y muestra cuánta gente usa la app. Está escrito para no incluir el contenido de las notas, ni nombres de archivo, ni rutas de carpetas. Al desactivarlo se detiene el envío.</string>
     <string name="sync_section_desc">El widget puede mostrar un pequeño indicador con la última sincronización, para que notes cuándo deja de funcionar en silencio.</string>
-    <string name="sync_desc_git">Lee el .git que deja cualquier cliente que uses: GitSync, Obsidian Git, Termux. La app nunca ejecuta git ni escribe en él.</string>
+    <string name="sync_desc_git">Lee el .git que deja cualquier cliente que uses: GitSync, Obsidian Git, Termux. La app no ejecuta git ni escribe en él.</string>
     <string name="sync_desc_other">Ninguna herramienta de sincronización deja su estado en la carpeta, así que el indicador muestra cuándo cambió una nota por última vez. Con eso basta para notar una sincronización muerta.</string>
     <string name="sync_warn_git_hint">El indicador se vuelve ámbar. Ajústalo a la frecuencia con la que se ejecuta tu cliente de git: con un intervalo de 15 minutos, un día entero en silencio ya es sospechoso.</string>
     <string name="fast_note_target_folder_empty">Esta carpeta aún no tiene archivos .md. Crea una nota con el botón + del widget y vuelve aquí.</string>

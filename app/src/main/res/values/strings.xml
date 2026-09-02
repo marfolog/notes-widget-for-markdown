@@ -64,7 +64,7 @@
     <string name="vault_root_change">Change Root Folder</string>
     <string name="vault_root_select">Select Root Folder</string>
     <string name="reporting_title">Reporting</string>
-    <string name="reporting_switch">Send anonymous usage and crash reports</string>
+    <string name="reporting_switch">Send usage and crash reports</string>
     <string name="sync_section_title">Sync status chip (optional)</string>
     <string name="sync_question">How do you sync your notes?</string>
     <string name="sync_no_chip">No chip on the widget.</string>
@@ -108,9 +108,9 @@
     <string name="stale_3d">3 days</string>
     <string name="stale_1w">a week</string>
     <string name="vault_root_desc">Only needed if your notes folder is not the top of your vault. Without it, tapping a note may open the wrong one, and a .git folder one level up stays invisible.</string>
-    <string name="reporting_desc">Helps find crashes and shows how many people use the app. Never includes note contents, file names or folder paths. Switching this off stops all reporting immediately.</string>
+    <string name="reporting_desc">Helps find crashes and shows how many people use the app. It is written not to include note contents, file names or folder paths. Switching it off stops reporting.</string>
     <string name="sync_section_desc">The widget can show a small chip telling you when your notes last synced, so you notice when syncing quietly stops.</string>
-    <string name="sync_desc_git">Reads .git left behind by whatever client you use — GitSync, Obsidian Git, Termux. The app never runs git itself and never writes to it.</string>
+    <string name="sync_desc_git">Reads .git left behind by whatever client you use — GitSync, Obsidian Git, Termux. The app does not run git itself and does not write to it.</string>
     <string name="sync_desc_other">No sync tool exposes its state in the folder, so the chip shows when a note last changed. That is enough to notice a sync that died.</string>
     <string name="sync_warn_git_hint">The chip turns amber. Match it to how often your git client runs — with a 15-minute schedule, a whole quiet day already means something broke.</string>
     <string name="fast_note_target_folder_empty">No .md files in this folder yet. Create a note with the + button on the widget, then come back and pick it here.</string>

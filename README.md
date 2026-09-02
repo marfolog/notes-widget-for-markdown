@@ -6,7 +6,7 @@
 
 <p align="center">
   Your Markdown notes on the Android home screen — and a chip that tells you when git sync broke.<br>
-  <sub>No account. No backend. The F-Droid build cannot reach the network at all.</sub>
+  <sub>No account, no backend. The <code>foss</code> build declares no <code>INTERNET</code> permission.</sub>
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ Obsidian.
 from `origin`. Nothing else on your phone tells you sync quietly stopped.
 
 **Notes that stay yours.** Plain `.md` files in a folder you pick, read through Android's Storage
-Access Framework. Nothing is copied, converted or uploaded.
+Access Framework. The app does not copy or convert them, and has nowhere to upload them to.
 
 **Cards you can arrange.** Per-note height, text size and colour; drag to reorder; swipe a card
 aside to delete the file. Light and dark can be forced or left to the system.
@@ -68,8 +68,8 @@ reading, previewing, ordering, deleting — works without Obsidian installed.
 
 ## Sync status
 
-If the vault is a git repository, the widget reports what git last did. The app **never runs git**
-and never touches the network. It only reads plain-text files every git client writes:
+If the vault is a git repository, the widget reports what git last did. The app does not run git and
+does not open network connections. It reads the plain-text files a git client leaves behind:
 
 | File | What it tells us |
 | --- | --- |
@@ -79,7 +79,7 @@ and never touches the network. It only reads plain-text files every git client w
 | `MERGE_HEAD`, `rebase-merge`, `rebase-apply` | a merge or rebase that stopped — in practice a conflict |
 | `HEAD`, `refs/**`, `packed-refs` | the current branch, and whether it matches `origin` |
 
-Commit contents, `config`, remote URLs and credentials are never read. Because this is ordinary git
+It does not read commit contents, `config`, remote URLs or credentials. Because this is ordinary git
 plumbing, it behaves the same with CLI git, Obsidian Git or Git Sync.
 
 Two things worth knowing. The reflog only moves when something actually transfers, so a quiet vault
@@ -102,9 +102,9 @@ phone.
 | Crash reports | none | Firebase Crashlytics |
 | Can be switched off | nothing to switch off | yes, in settings |
 
-**The foss build declares no `INTERNET` permission, so Android will not let it open a network
-connection of its own.** That is not a promise I am making — it is a property of the file you
-download, enforced by the operating system, and you can check it yourself:
+**The foss build declares no `INTERNET` permission.** Without it, Android does not grant the app a
+network connection of its own. That is a property of the file you download rather than an assurance
+from me, and you can check it on your copy:
 `aapt dump permissions app-foss-release.apk`. Opening a note still hands its location to Obsidian,
 which is what the tap is for.
 
@@ -117,10 +117,10 @@ It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` an
 them can move data off the device. It also wakes on screen unlock, so what you see is current by
 the time you look.
 
-The Play build reports app and crash events. It can be
-switched off in settings, and it never sends note contents, file names or folder paths — storage
-locations are stripped from crash breadcrumbs before they leave the device. No advertising ID is
-collected, and the ad-related permissions Firebase would normally add are removed from the manifest.
+The Play build reports app and crash events. It can be switched off in settings. It is written not
+to send note contents, file names or folder paths: storage locations are stripped from crash
+breadcrumbs before they are handed to Firebase. No advertising ID is collected, and the ad-related
+permissions Firebase would otherwise add are removed from the manifest.
 
 Neither build has an account, a server or a database. Files are read only in folders you picked.
 
@@ -196,7 +196,7 @@ settings — see Limitations.
 ## Feedback and contributing
 
 - **Something broken?** [Open a bug report](https://github.com/marfolog/notes-widget-for-markdown/issues/new?template=bug_report.yml).
-  The foss build reports nothing anywhere, so a report from you is the only way a crash is ever seen.
+  The foss build sends no reports, so a report from you is the only way a crash gets seen.
   The form asks for your launcher and sync client because widget bugs almost always depend on them.
 - **Want something?** [Open an idea](https://github.com/marfolog/notes-widget-for-markdown/issues/new?template=feature_request.yml)
   or bring it to [Discussions](https://github.com/marfolog/notes-widget-for-markdown/discussions)
@@ -212,8 +212,8 @@ I answer when I can. Sometimes that is the same day, sometimes it is a month, an
 project goes quiet for a while — it is written in evenings, next to a job. Issues stay open rather
 than being closed to keep the tracker tidy, and a quiet issue is not a rejected one.
 
-If it ever stops for good, **you lose nothing.** Your notes are your own files in your own folder.
-Uninstall the app and every one of them is still there, in Markdown, readable by anything. That is
+If it ever stops for good, your notes are unaffected — they are your own files in your own folder.
+Uninstall the app and they stay where they are, in Markdown, readable by anything else. That is
 the whole reason it reads a folder instead of keeping a database of its own — and it is the part
 no abandoned app can take away from you.
 
