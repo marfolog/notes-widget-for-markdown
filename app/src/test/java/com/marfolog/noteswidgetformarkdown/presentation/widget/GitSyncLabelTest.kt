@@ -88,6 +88,58 @@ class GitSyncLabelTest {
         assertEquals(R.string.sync_not_pushed, GitSyncLabel.format(status, now).textRes)
     }
 
+    @Test
+    fun `recent file activity without git is reported as updated and ok`() {
+        val status = GitSyncStatus.FileActivity(now - TimeUnit.HOURS.toMillis(2))
+
+        val label = GitSyncLabel.format(status, now)
+
+        assertEquals(GitSyncLabel.Severity.Ok, label.severity)
+        assertEquals(R.string.sync_updated, label.textRes)
+    }
+
+    @Test
+    fun `file activity honours the threshold from settings`() {
+        val status = GitSyncStatus.FileActivity(now - TimeUnit.DAYS.toMillis(2))
+
+        assertEquals(
+            GitSyncLabel.Severity.Stale,
+            GitSyncLabel.format(status, now, staleAfterHours = 24).severity
+        )
+        assertEquals(
+            GitSyncLabel.Severity.Ok,
+            GitSyncLabel.format(status, now, staleAfterHours = 72).severity
+        )
+    }
+
+    @Test
+    fun `unreadable git state is reported as off, not as a problem`() {
+        val label = GitSyncLabel.format(GitSyncStatus.Unavailable("no permission"), now)
+
+        assertEquals(GitSyncLabel.Severity.Off, label.severity)
+        assertEquals(R.string.sync_unknown, label.textRes)
+    }
+
+    @Test
+    fun `recent client check keeps colour ok while text still shows the old transfer`() {
+        // The client fetched with nothing to transfer: sync is alive (colour), but the last
+        // actual change is days old (text). The two must not get mixed up.
+        val status = tracked(now - TimeUnit.DAYS.toMillis(3))
+            .copy(lastClientActivityAtMillis = now - TimeUnit.HOURS.toMillis(1))
+
+        val label = GitSyncLabel.format(status, now)
+
+        assertEquals(GitSyncLabel.Severity.Ok, label.severity)
+        assertEquals("3 d", label.arg)
+    }
+
+    @Test
+    fun `age caps at 99 plus days`() {
+        val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(365)), now)
+
+        assertEquals("99+ d", label.arg)
+    }
+
     private fun tracked(atMillis: Long) = GitSyncStatus.Tracked(
         lastChangeAtMillis = atMillis,
         lastAction = "pull",

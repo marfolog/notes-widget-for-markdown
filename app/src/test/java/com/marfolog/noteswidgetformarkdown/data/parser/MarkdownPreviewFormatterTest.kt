@@ -2,6 +2,7 @@ package com.marfolog.noteswidgetformarkdown.data.parser
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MarkdownPreviewFormatterTest {
@@ -94,6 +95,29 @@ class MarkdownPreviewFormatterTest {
             """.trimIndent(),
             preview
         )
+    }
+
+    @Test
+    fun `note with only frontmatter yields an empty preview`() {
+        val preview = formatter.format(
+            """
+            ---
+            tags:
+              - inbox
+            ---
+            """.trimIndent()
+        )
+
+        assertEquals("", preview)
+    }
+
+    @Test
+    fun `unclosed frontmatter is not silently swallowed`() {
+        // With no closing delimiter we cannot tell frontmatter from content; dropping
+        // everything would blank the card, so the text must survive.
+        val preview = formatter.format("---\ntags: broken\nActual note text")
+
+        assertTrue(preview.contains("Actual note text"))
     }
 
     @Test

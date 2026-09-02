@@ -57,13 +57,22 @@ class ObsidianVaultLocator(private val context: Context) {
                 DocumentsContract.getTreeDocumentId(Uri.parse(notesFolderUri ?: return null))
             }.getOrNull() ?: return null
 
-            if (notesDocId == vaultDocumentId) {
-                return ""
-            }
-            if (!notesDocId.startsWith("$vaultDocumentId/")) {
-                return null
-            }
-            return notesDocId.removePrefix("$vaultDocumentId/")
+            return relativeDocumentPath(vaultDocumentId, notesDocId)
         }
+
+        /**
+         * The comparison itself, with no Android types in sight.
+         *
+         * Split out from [relativePath] so it can be unit tested: the wrapper only touches
+         * `Uri` and `DocumentsContract`, which are stubs on the JVM, and a bad result here used
+         * to send every widget tap to whichever note Obsidian had open last.
+         */
+        internal fun relativeDocumentPath(vaultDocumentId: String, notesDocumentId: String): String? =
+            when {
+                notesDocumentId == vaultDocumentId -> ""
+                notesDocumentId.startsWith("$vaultDocumentId/") ->
+                    notesDocumentId.removePrefix("$vaultDocumentId/")
+                else -> null
+            }
     }
 }

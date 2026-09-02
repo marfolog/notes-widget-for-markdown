@@ -99,6 +99,68 @@ class MarkdownFastNoteInserterTest {
     }
 
     @Test
+    fun `empty file becomes a single bullet`() {
+        assertEquals("- First thought\n", inserter.insert("", "First thought"))
+    }
+
+    @Test
+    fun `file with only frontmatter gets the bullet after it, not inside it`() {
+        val updated = inserter.insert(
+            """
+            ---
+            tags:
+              - inbox
+            ---
+            """.trimIndent(),
+            "New idea"
+        )
+
+        assertEquals(
+            """
+            ---
+            tags:
+              - inbox
+            ---
+            - New idea
+            """.trimIndent(),
+            updated
+        )
+    }
+
+    @Test
+    fun `unclosed frontmatter is treated as plain content`() {
+        // A half-written frontmatter block has no safe insert point inside it; falling back
+        // to the top of the file must not corrupt the YAML any further.
+        val updated = inserter.insert("---\ntags: broken", "New idea")
+
+        assertEquals("- New idea\n---\ntags: broken", updated)
+    }
+
+    @Test
+    fun `heading-like line inside frontmatter does not attract the bullet`() {
+        val updated = inserter.insert(
+            """
+            ---
+            # a yaml comment, not a heading
+            ---
+            Existing text
+            """.trimIndent(),
+            "New idea"
+        )
+
+        assertEquals(
+            """
+            ---
+            # a yaml comment, not a heading
+            ---
+            - New idea
+            Existing text
+            """.trimIndent(),
+            updated
+        )
+    }
+
+    @Test
     fun normalizesLineEndings() {
         val updated = inserter.insert("# Inbox\r\nExisting text", "Fast note")
 
