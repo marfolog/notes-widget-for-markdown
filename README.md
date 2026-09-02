@@ -39,8 +39,8 @@ from `origin`. Nothing else on your phone tells you sync quietly stopped.
 **Notes that stay yours.** Plain `.md` files in a folder you pick, read through Android's Storage
 Access Framework. Nothing is copied, converted or uploaded.
 
-**Cards you can arrange.** Per-note height, text size and colour; drag to reorder; delete a file
-straight from settings. New notes appear at the top within seconds of landing on disk.
+**Cards you can arrange.** Per-note height, text size and colour; drag to reorder; swipe a card
+aside to delete the file. Light and dark can be forced or left to the system.
 
 ## Install
 
@@ -55,11 +55,13 @@ Every release lists a SHA-256 so you can check what you downloaded.
 
 ## How to use it
 
-1. Open the app and pick the **root of your vault** — the folder holding `.obsidian` and, if you sync
-   with git, `.git`.
-2. Pick the **notes folder** the widget should show. It can be the root or any subfolder.
-3. Add either widget to your home screen and resize it.
-4. Tap the pencil on the widget to come back and set card colours, sizes and order.
+1. Open the app and pick the **notes folder** — the one the widget should show. It can be the root
+   of your vault or any subfolder. Everything else stays hidden until you have.
+2. Add either widget to your home screen and resize it.
+3. Come back to set card colours, sizes and order, and to say how you sync.
+
+The app works the vault out on its own by looking for `.obsidian`, so the root folder only has to be
+picked when that fails.
 
 Tapping a note opens it in Obsidian and the **+** button creates one there. Everything else —
 reading, previewing, ordering, deleting — works without Obsidian installed.
@@ -82,8 +84,11 @@ plumbing, it behaves the same with CLI git, Obsidian Git or Git Sync.
 
 Two things worth knowing. The reflog only moves when something actually transfers, so a quiet vault
 is normal rather than broken. And Storage Access Framework cannot look above a folder you granted —
-if `.git` sits one level up, the app asks for that folder too. Not using git? Switch the chip off in
-settings and nothing under `.git` is read at all.
+if `.git` sits one level up, the app asks for that folder too.
+
+Settings asks how you sync: **Git**, **Something else**, or **I don't**. Without git there is no
+state to read, so the chip falls back to when a note last changed — enough to notice a sync that
+died. You also choose how long the silence has to last before the chip turns amber.
 
 ## Privacy
 
@@ -109,9 +114,10 @@ I can point at is the missing network permission above, and the dependency list 
 [`docs/dependencies-foss.txt`](docs/dependencies-foss.txt), so you can judge for yourself.
 It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` and
 `FOREGROUND_SERVICE` — those come from WorkManager, which schedules the widget refresh, and none of
-them can move data off the device.
+them can move data off the device. It also wakes on screen unlock, so what you see is current by
+the time you look.
 
-The Play build reports app and crash events, so installs outside Play are visible at all. It can be
+The Play build reports app and crash events. It can be
 switched off in settings, and it never sends note contents, file names or folder paths — storage
 locations are stripped from crash breadcrumbs before they leave the device. No advertising ID is
 collected, and the ad-related permissions Firebase would normally add are removed from the manifest.
@@ -131,7 +137,8 @@ Full text: [Privacy Policy](https://folmbuild.cz/notes-widget-privacy/).
 - Reports sync state, never performs it — pulling and pushing stays with your client.
 - No editing inside the widget; opening and creating go through Obsidian deep links.
 - Android widgets cannot render full Markdown, so previews are simplified.
-- English only for now; strings are still hardcoded in Kotlin.
+- Translated into Czech, German, Spanish, French, Chinese and Japanese. Only the Czech and the
+  English were written by someone who speaks the language well.
 - For Obsidian Sync, Syncthing and similar there is no real status — those clients keep their state
   in private app storage no other app can read. The chip falls back to when a note last changed.
 
@@ -176,12 +183,13 @@ no account, no cloud, and platform APIs over file-access hacks.
 <details>
 <summary><b>Roadmap</b></summary>
 
-Next: first signed public release · strings moved to `strings.xml` so it can be translated · a
-"last changed" time for folders that are not git repositories · configurable non-Obsidian editors ·
-better empty and error states.
+Nothing is promised. Things that would make sense if the project carries on: F-Droid metadata ·
+configurable non-Obsidian editors · a grid layout for the card widget · nested folders · dark
+variants of the card colours, which stay light at night · an accessibility pass over widget
+contrast and touch targets.
 
-Later: F-Droid metadata · a grid layout for the card widget · nested folders · an accessibility pass
-over widget contrast and touch targets.
+The one worth doing first is making refreshes prompt without asking anyone to touch battery
+settings — see Limitations.
 
 </details>
 
