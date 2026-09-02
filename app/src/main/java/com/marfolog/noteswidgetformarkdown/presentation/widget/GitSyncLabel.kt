@@ -22,14 +22,39 @@ object GitSyncLabel {
     data class Label(val text: String, val severity: Severity)
 
     /**
-     * Clients only touch the reflog when something actually transfers, so a quiet vault is
-     * normal, not broken. Three days is long enough that silence really is suspicious.
+     * Den ticha uz stoji za pozornost: bezny klient se hlasi po minutach az hodinach, takze
+     * cely den bez jedineho prenosu i bez jedine zmeny poznamky je podezrely. Uzivatel si prah
+     * muze prehodit v nastaveni.
      */
-    private val STALE_AFTER_MILLIS = TimeUnit.HOURS.toMillis(72)
+    val DEFAULT_STALE_HOURS = 24
 
-    fun format(status: GitSyncStatus, nowMillis: Long): Label = when (status) {
+    fun format(
+        status: GitSyncStatus,
+        nowMillis: Long,
+        staleAfterHours: Int = DEFAULT_STALE_HOURS
+    ): Label {
+        val staleAfterMillis = TimeUnit.HOURS.toMillis(staleAfterHours.toLong())
+        return formatInternal(status, nowMillis, staleAfterMillis)
+    }
+
+    private fun formatInternal(
+        status: GitSyncStatus,
+        nowMillis: Long,
+        STALE_AFTER_MILLIS: Long
+    ): Label = when (status) {
         is GitSyncStatus.NotTracked -> Label("no sync info", Severity.Off)
         is GitSyncStatus.Unavailable -> Label("sync unknown", Severity.Off)
+        is GitSyncStatus.FileActivity -> {
+            // Bez gitu nevime, jestli sync bezi — vime jen, kdy se naposled neco zmenilo.
+            // Ticho delsi nez prah je jediny signal, ktery muzeme nabidnout.
+            val age = nowMillis - status.lastChangeAtMillis
+            val text = "updated ${formatAge(status.lastChangeAtMillis, age)}"
+            if (age in 0..STALE_AFTER_MILLIS) {
+                Label(text, Severity.Ok)
+            } else {
+                Label(text, Severity.Stale)
+            }
+        }
         is GitSyncStatus.Tracked -> {
             // The text answers "what arrived and when"; the colour answers "is sync alive",
             // which includes the client merely checking with nothing to transfer.

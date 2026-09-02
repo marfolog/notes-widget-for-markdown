@@ -18,15 +18,28 @@ class GitSyncLabelTest {
     }
 
     @Test
-    fun `a quiet day is still healthy`() {
-        val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(2)), now)
+    fun `a few quiet hours are still healthy`() {
+        val label = GitSyncLabel.format(tracked(now - TimeUnit.HOURS.toMillis(6)), now)
 
         assertEquals(GitSyncLabel.Severity.Ok, label.severity)
-        assertEquals("synced 2 d", label.text)
     }
 
     @Test
-    fun `silence beyond three days is stale`() {
+    fun `the threshold from settings decides, not a hardcoded one`() {
+        val twoDaysAgo = tracked(now - TimeUnit.DAYS.toMillis(2))
+
+        assertEquals(
+            GitSyncLabel.Severity.Stale,
+            GitSyncLabel.format(twoDaysAgo, now, staleAfterHours = 24).severity
+        )
+        assertEquals(
+            GitSyncLabel.Severity.Ok,
+            GitSyncLabel.format(twoDaysAgo, now, staleAfterHours = 168).severity
+        )
+    }
+
+    @Test
+    fun `silence beyond the default day is stale`() {
         val label = GitSyncLabel.format(tracked(now - TimeUnit.DAYS.toMillis(4)), now)
 
         assertEquals(GitSyncLabel.Severity.Stale, label.severity)

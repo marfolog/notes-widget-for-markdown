@@ -37,7 +37,15 @@ class GitSyncStatusReader(
                 .map { it.uri.toString() })
             .distinct()
 
-        candidates.firstNotNullOfOrNull { uri -> readFrom(uri) } ?: GitSyncStatus.NotTracked
+        // Repozitar bez jedineho commitu neni duvod prestat hledat — dal muze byt ten pravy.
+        // Cteme lenive, at pri kazdem obnoveni widgetu neprochazime vsechny povolene slozky.
+        var fallback: GitSyncStatus? = null
+        for (uri in candidates) {
+            val status = readFrom(uri) ?: continue
+            if (status !is GitSyncStatus.Unavailable) return@withContext status
+            if (fallback == null) fallback = status
+        }
+        fallback ?: GitSyncStatus.NotTracked
     }
 
     /** Returns null when this tree simply has no `.git`, so the next candidate can be tried. */

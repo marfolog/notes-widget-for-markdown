@@ -15,6 +15,15 @@ sealed interface GitSyncStatus {
     data class Unavailable(val reason: String) : GitSyncStatus
 
     /**
+     * Folder is synced by something other than git — Syncthing, a cloud drive, a paid sync
+     * service. None of them leave readable state behind, so the only honest signal is when a
+     * note last changed.
+     *
+     * @param lastChangeAtMillis mtime of the newest note in the folder
+     */
+    data class FileActivity(val lastChangeAtMillis: Long) : GitSyncStatus
+
+    /**
      * @param lastChangeAtMillis when HEAD last moved (commit, pull, checkout…)
      * @param lastAction reflog action, e.g. `pull` or `commit`
      * @param lastFetchAtMillis when the client last talked to the remote, if known

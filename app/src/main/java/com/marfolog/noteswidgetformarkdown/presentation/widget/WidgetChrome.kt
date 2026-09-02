@@ -2,12 +2,14 @@ package com.marfolog.noteswidgetformarkdown.presentation.widget
 
 import android.content.Intent
 import android.net.Uri
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
@@ -132,7 +134,10 @@ internal fun BottomBar(
 
 @Composable
 internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
-    val label = GitSyncLabel.format(gitSyncStatus, System.currentTimeMillis())
+    val staleHours = LocalContext.current
+        .getSharedPreferences(SetupActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        .getInt(SetupActivity.KEY_STALE_HOURS, GitSyncLabel.DEFAULT_STALE_HOURS)
+    val label = GitSyncLabel.format(gitSyncStatus, System.currentTimeMillis(), staleHours)
     // Explicit traffic-light colors: the theme's primary is not readable as "healthy".
     val color = when (label.severity) {
         GitSyncLabel.Severity.Ok -> ColorProvider(Color(0xFF4CAF50))

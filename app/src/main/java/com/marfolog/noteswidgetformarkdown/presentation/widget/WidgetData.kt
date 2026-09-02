@@ -44,11 +44,10 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
         ?: prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null)
 
     val cardSettingsStore = NoteCardSettingsStore(context)
-    val gitSyncStatus = if (prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true)) {
-        GitSyncStatusReader(context).read(prefs.getString(SetupActivity.KEY_VAULT_URI, null))
-    } else {
-        null
-    }
+    // Jak uzivatel synchronizuje. Stara volba "zobrazovat cip" se prevede na rezim, at se
+    // nikomu po aktualizaci nic nezmeni pod rukama.
+    val syncMode = prefs.getString(SetupActivity.KEY_SYNC_MODE, null)
+        ?: if (prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true)) "git" else "none"
 
     val state: WidgetState = if (folderUri.isNullOrEmpty()) {
         WidgetState.Uninitialized
@@ -67,6 +66,18 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
                 WidgetState.Error(message)
             }
         }
+    }
+
+    // Mimo git nemame co cist, tak vezmeme cas nejnovejsi poznamky. Az po nacteni seznamu,
+    // aby se slozka nechodila prochazet dvakrat.
+    val gitSyncStatus: GitSyncStatus? = when (syncMode) {
+        "git" -> GitSyncStatusReader(context).read(prefs.getString(SetupActivity.KEY_VAULT_URI, null))
+        "other" -> (state as? WidgetState.Success)
+            ?.notes
+            ?.maxOfOrNull { it.lastModified }
+            ?.takeIf { it > 0 }
+            ?.let { GitSyncStatus.FileActivity(it) }
+        else -> null
     }
 
     AppLog.d(

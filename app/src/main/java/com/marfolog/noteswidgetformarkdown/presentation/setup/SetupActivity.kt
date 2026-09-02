@@ -1,6 +1,7 @@
 package com.marfolog.noteswidgetformarkdown.presentation.setup
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,18 +12,30 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -31,7 +44,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,9 +55,15 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -58,13 +79,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.delay
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import com.marfolog.noteswidgetformarkdown.BuildConfig
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
 import com.marfolog.noteswidgetformarkdown.data.repository.GitSyncStatusReader
@@ -79,14 +107,18 @@ import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardTextSize
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
+import com.marfolog.noteswidgetformarkdown.presentation.widget.GitSyncLabel
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import com.marfolog.noteswidgetformarkdown.ui.theme.NoteCardPalette
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
+import com.marfolog.noteswidgetformarkdown.ui.theme.ThemePreference
 import sh.calvin.reorderable.ReorderableColumn
 import kotlinx.coroutines.flow.firstOrNull
+import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
@@ -96,12 +128,32 @@ class SetupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        ThemePreference.load(this)
         setContent {
-            NotesWidgetForMarkdownTheme {
+            NotesWidgetForMarkdownTheme(
+                darkTheme = when (ThemePreference.mode) {
+                    ThemePreference.Mode.Light -> false
+                    ThemePreference.Mode.Dark -> true
+                    ThemePreference.Mode.System -> isSystemInDarkTheme()
+                }
+            ) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        TopAppBar(title = { Text("Notes Widget Settings") })
+                        TopAppBar(
+                            title = {
+                                Column {
+                                    Text("Notes Widget Settings")
+                                    // Verze primo v hlavicce: pri hlaseni chyby ji uzivatel
+                                    // nemusi hledat v systemovem nastaveni.
+                                    Text(
+                                        text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        )
                     }
                 ) { innerPadding ->
                     SetupScreen(modifier = Modifier.padding(innerPadding))
@@ -113,6 +165,9 @@ class SetupActivity : ComponentActivity() {
     companion object {
         internal const val AREA = "Setup"
         const val PREFS_NAME = "app_prefs"
+        const val KEY_GUIDE_DONE = "guide_done"
+        const val KEY_SYNC_MODE = "sync_mode"
+        const val KEY_STALE_HOURS = "sync_stale_hours"
         const val KEY_VAULT_URI = "vault_uri"
         const val KEY_NOTES_URI = "notes_uri"
         const val KEY_VAULT_NAME = "vault_name"
@@ -179,6 +234,18 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
     var showGitStatus by rememberSaveable {
         mutableStateOf(prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true))
+    }
+    // Stara volba "zobrazovat cip" se prevede na rezim, at se po aktualizaci nikomu nic nezmeni.
+    var syncMode by rememberSaveable {
+        mutableStateOf(
+            prefs.getString(SetupActivity.KEY_SYNC_MODE, null)
+                ?: if (showGitStatus) "git" else "none"
+        )
+    }
+    var staleHours by rememberSaveable {
+        mutableIntStateOf(
+            prefs.getInt(SetupActivity.KEY_STALE_HOURS, GitSyncLabel.DEFAULT_STALE_HOURS)
+        )
     }
     var gitReloadTrigger by remember { mutableIntStateOf(0) }
 
@@ -302,14 +369,40 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
 
     val vaultDisplayName = vaultName
+    // Nazev musi byt neprazdny vzdy, kdyz je slozka vybrana — zbytek nastaveni se podle nej
+    // zobrazuje. Kdyz na ni prijdeme o opravneni, DocumentFile.name vrati null, tak vezmeme
+    // aspon posledni kus cesty.
     val notesDisplayName = notesUri?.let { uriString ->
         runCatching {
             DocumentFile.fromTreeUri(context, Uri.parse(uriString))?.name
-        }.getOrNull()
+        }.getOrNull() ?: Uri.decode(uriString.substringAfterLast('/')).substringAfterLast('/')
+    }
+
+    // Pruvodce: zadne cislo kroku se neuklada, krok se odvozuje z toho, co uz je nastaveno.
+    // Diky tomu prezije otoceni displeje i navrat z file pickeru bez dalsiho stavu.
+    var guideDone by rememberSaveable {
+        mutableStateOf(prefs.getBoolean(SetupActivity.KEY_GUIDE_DONE, false))
+    }
+    // Kdo appku uz pouziva a jen ji aktualizoval, zadneho pruvodce nedostane.
+    LaunchedEffect(Unit) {
+        if (!guideDone && notesUri != null) {
+            prefs.edit().putBoolean(SetupActivity.KEY_GUIDE_DONE, true).apply()
+            guideDone = true
+        }
+    }
+    val dismissGuide: () -> Unit = {
+        prefs.edit().putBoolean(SetupActivity.KEY_GUIDE_DONE, true).apply()
+        guideDone = true
+    }
+    val guideStep: GuideStep? = when {
+        guideDone -> null
+        notesUri == null -> GuideStep.PickFolder
+        else -> GuideStep.Save
     }
 
     val onSave: () -> Unit = {
-        Toast.makeText(context, "Settings saved!", Toast.LENGTH_SHORT).show()
+        dismissGuide()
+        Toast.makeText(context, "Widget updated", Toast.LENGTH_SHORT).show()
 
         scope.launch {
             NotesWidget.updateAll(context)
@@ -318,9 +411,12 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
 
     SetupScreenContent(
+        guideStep = guideStep,
+        onSkipGuide = dismissGuide,
         vaultName = vaultDisplayName,
         onSelectVault = { vaultPicker.launch(null) },
         notesFolderName = notesDisplayName,
+        notesFolderPath = notesUri?.let { humanFolderPath(it) },
         onSelectNotesFolder = { notesPicker.launch(null) },
         derivedPath = derivedPath,
         notes = notesForSettings,
@@ -374,8 +470,21 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             expandedNoteUri = if (expandedNoteUri == note.fileUri) null else note.fileUri
         },
         onDeleteRequested = { note -> noteToDelete = note },
+        syncMode = syncMode,
+        onSyncModeChanged = { mode ->
+            syncMode = mode
+            prefs.edit().putString(SetupActivity.KEY_SYNC_MODE, mode).apply()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
+        staleHours = staleHours,
+        onStaleHoursChanged = { hours ->
+            staleHours = hours
+            prefs.edit().putInt(SetupActivity.KEY_STALE_HOURS, hours).apply()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
         gitStatusText = gitStatusText(gitStatus),
         gitIsTracked = gitStatus is GitSyncStatus.Tracked,
+        gitIsBroken = gitStatus is GitSyncStatus.Unavailable,
         onSelectGitFolder = { gitPicker.launch(parentFolderHint()) },
         detectedVaultName = detectedVaultName,
         telemetryAvailable = Telemetry.ENABLED,
@@ -455,13 +564,28 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Ctelna cesta ke slozce ze SAF tree URI. Z "primary:Documents/vault/Quick" udela
+ * "Internal storage/Documents/vault/Quick". Kdyz se to nepovede, vrati null a zobrazi se
+ * aspon nazev slozky.
+ */
+private fun humanFolderPath(treeUri: String): String? = runCatching {
+    val docId = DocumentsContract.getTreeDocumentId(Uri.parse(treeUri))
+    val volume = docId.substringBefore(':')
+    val path = docId.substringAfter(':', "")
+    val root = if (volume.equals("primary", ignoreCase = true)) "Internal storage" else volume
+    if (path.isEmpty()) root else "$root/$path"
+}.getOrNull()
+
 private fun gitStatusText(status: GitSyncStatus): String = when (status) {
     is GitSyncStatus.NotTracked ->
-        "No .git folder found in the folders this app can access. If your vault is synced by " +
-            "Obsidian Git or a similar client, select the folder that contains .git — usually " +
-            "one level above your notes folder."
+        "No .git folder here — that is fine if you sync another way. If you do use Obsidian Git, " +
+            "pick the folder that contains .git, usually one level above your notes."
     is GitSyncStatus.Unavailable ->
         "Found .git but could not read it: ${status.reason}"
+    is GitSyncStatus.FileActivity ->
+        "Newest note changed " + SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
+            .format(java.util.Date(status.lastChangeAtMillis))
     is GitSyncStatus.Tracked -> buildString {
         // This is when HEAD last moved — a pull, a commit, a checkout. Not "when the note
         // was written", and not "when the client last ran".
@@ -506,6 +630,7 @@ internal fun SetupScreenContent(
     vaultName: String?,
     onSelectVault: () -> Unit,
     notesFolderName: String?,
+    notesFolderPath: String? = null,
     onSelectNotesFolder: () -> Unit,
     derivedPath: String,
     notes: List<NoteSummary> = emptyList(),
@@ -523,27 +648,28 @@ internal fun SetupScreenContent(
     onDeleteRequested: (NoteSummary) -> Unit = {},
     gitStatusText: String = "",
     gitIsTracked: Boolean = false,
+    // Cervene se hlasi jen nalezeny, ale necitelny .git. Zadny git neni chyba — spousta lidi
+    // synchronizuje jinak.
+    gitIsBroken: Boolean = false,
     onSelectGitFolder: () -> Unit = {},
     showGitStatus: Boolean = true,
     onShowGitStatusChanged: (Boolean) -> Unit = {},
+    syncMode: String = "git",
+    onSyncModeChanged: (String) -> Unit = {},
+    staleHours: Int = GitSyncLabel.DEFAULT_STALE_HOURS,
+    onStaleHoursChanged: (Int) -> Unit = {},
     detectedVaultName: String? = null,
     telemetryAvailable: Boolean = false,
     telemetryEnabled: Boolean = false,
     onTelemetryChanged: (Boolean) -> Unit = {},
     canSave: Boolean,
     onSave: () -> Unit,
+    guideStep: GuideStep? = null,
+    onSkipGuide: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_foreground),
-            contentDescription = null,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 8.dp, bottom = 24.dp)
-                .size(280.dp)
-                .alpha(0.055f)
-        )
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        DriftingLogo(containerWidth = maxWidth, containerHeight = maxHeight)
 
         Column(
             modifier = Modifier
@@ -551,9 +677,14 @@ internal fun SetupScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
+        if (guideStep != null) {
+            GuideBanner(step = guideStep, onSkip = onSkipGuide)
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
         // Section 1: the only folder anyone has to pick
         Text(
-            text = "Notes Folder",
+            text = if (notesFolderName == null) "Start here — Notes Folder" else "Notes Folder",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -566,28 +697,73 @@ internal fun SetupScreenContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         if (notesFolderName != null) {
+            // Samotny nazev slozky rikal min nez cesta, ktera ho obsahuje taky.
             Text(
-                text = notesFolderName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                text = notesFolderPath ?: notesFolderName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "The + button on the widget creates new notes here.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = onSelectNotesFolder, modifier = Modifier.fillMaxWidth()) {
-            Text(text = if (notesFolderName != null) "Change Notes Folder" else "Select Notes Folder")
+        if (notesFolderName == null) {
+            Button(
+                onClick = onSelectNotesFolder,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Select Notes Folder")
+            }
+        } else {
+            OutlinedButton(onClick = onSelectNotesFolder, modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Change Notes Folder")
+            }
         }
+
+        // Vsechno dalsi ma smysl az nad vybranou slozkou. Dokud neni, byla by to jen rada
+        // zasedlych tlacitek a odstavcu o necem, co jeste neexistuje.
+        if (notesFolderName != null) {
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
 
+        Text(
+            text = "Fast Note Target",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Fast notes are saved locally into this Markdown file. Sync remains handled by your notes setup.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        FastNoteTargetSection(
+            notes = notes,
+            notesLoadError = notesLoadError,
+            selectedNoteUri = fastNoteTargetUri,
+            onTargetSelected = onFastNoteTargetSelected,
+            folderSelected = notesFolderName != null
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Section 2: only needed when the vault could not be worked out
-        if (notesFolderName == null) {
-            // Nothing to say yet — everything below depends on the folder above.
-        } else if (detectedVaultName != null) {
+        if (detectedVaultName != null) {
             Text(
-                text = "Vault detected: $detectedVaultName",
+                text = "Obsidian vault \"$detectedVaultName\" detected, so tapping a note on the " +
+                    "widget opens the right file. Nothing to set up here.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -619,7 +795,11 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = onSelectVault, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = onSelectVault,
+            enabled = notesFolderName != null,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(text = if (vaultName != null) "Change Root Folder" else "Select Root Folder")
         }
 
@@ -662,115 +842,114 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Section 3: Git sync status — meaningless before a folder is picked
-        if (notesFolderName != null) {
+        // Section 3: Git sync status
         Text(
-            text = "Git Sync Status",
+            text = "Sync status chip (optional)",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "The app never runs git itself. It only reads .git to show in the widget when " +
-                "your vault was last pulled or committed.",
+            text = "The widget can show a small chip telling you when your notes last synced, so " +
+                "you notice when syncing quietly stops.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Show in widget",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            Switch(checked = showGitStatus, onCheckedChange = onShowGitStatusChanged)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Turn this off if you sync by other means — Syncthing, Obsidian Sync, " +
-                "or manual copying. The widget then shows no sync chip at all.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = gitStatusText,
+            text = "How do you sync your notes?",
             style = MaterialTheme.typography.bodyMedium,
-            color = if (gitIsTracked) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.error
-            }
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
-        OutlinedButton(onClick = onSelectGitFolder, modifier = Modifier.fillMaxWidth()) {
-            Text(text = if (gitIsTracked) "Change Git Folder" else "Select Folder Containing .git")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // Section 4: Derived info
-        Text(
-            text = "New Notes Path",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        val vaultLabel = detectedVaultName ?: vaultName
-        if (notesFolderName != null) {
-            val displayPath = when {
-                vaultLabel == null -> notesFolderName
-                derivedPath.isEmpty() -> "$vaultLabel/ (root folder)"
-                else -> "$vaultLabel/$derivedPath"
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SYNC_MODES.forEach { (mode, label) ->
+                FilterChip(
+                    selected = syncMode == mode,
+                    onClick = { onSyncModeChanged(mode) },
+                    label = { Text(label) }
+                )
             }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = when (syncMode) {
+                "git" -> "Reads .git left behind by whatever client you use — GitSync, Obsidian " +
+                    "Git, Termux. The app never runs git itself and never writes to it."
+                "other" -> "No sync tool exposes its state in the folder, so the chip shows when " +
+                    "a note last changed. That is enough to notice a sync that died."
+                else -> "No chip on the widget."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        if (syncMode != "none") {
+            Spacer(modifier = Modifier.height(12.dp))
+            // "Nothing new" znamena v kazdem rezimu neco jineho, tak se to rovnou pojmenuje.
             Text(
-                text = "New notes will be created in: $displayPath",
+                text = if (syncMode == "git") {
+                    "Warn me when nothing syncs for:"
+                } else {
+                    "Warn me when no note changes for:"
+                },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
-        } else {
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Pick a notes folder to see where new notes will go.",
+                text = if (syncMode == "git") {
+                    "The chip turns amber. Match it to how often your git client runs — with a " +
+                        "15-minute schedule, a whole quiet day already means something broke."
+                } else {
+                    "The chip turns amber. Pick roughly how often you normally write notes."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                STALE_CHOICES.forEach { (hours, label) ->
+                    FilterChip(
+                        selected = staleHours == hours,
+                        onClick = { onStaleHoursChanged(hours) },
+                        label = { Text(label) }
+                    )
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Fast Note Target",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Fast notes are saved locally into this Markdown file. Sync remains handled by your notes setup.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
         Spacer(modifier = Modifier.height(12.dp))
-
-        FastNoteTargetSection(
-            notes = notes,
-            notesLoadError = notesLoadError,
-            selectedNoteUri = fastNoteTargetUri,
-            onTargetSelected = onFastNoteTargetSelected
+        if (syncMode != "none") {
+        Text(
+            text = if (notesFolderName == null) {
+                "Checked once you pick a notes folder above."
+            } else {
+                gitStatusText
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (gitIsBroken) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        if (syncMode == "git") {
+        OutlinedButton(
+            onClick = onSelectGitFolder,
+            enabled = notesFolderName != null,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = if (gitIsTracked) "Change Git Folder" else "Select Folder Containing .git")
+        }
+        }
+        }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
+        Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -803,13 +982,52 @@ internal fun SetupScreenContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Appearance",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Applies to this screen and the Fast note dialog. Widget card colours are set separately.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        val appearanceContext = LocalContext.current
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ThemePreference.Mode.entries.forEach { mode ->
+                FilterChip(
+                    selected = ThemePreference.mode == mode,
+                    onClick = { ThemePreference.set(appearanceContext, mode) },
+                    label = { Text(mode.name) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        AboutSection()
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         // Save button
         Button(
             onClick = onSave,
             enabled = canSave,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save & Apply")
+            Text("Done")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -822,7 +1040,8 @@ private fun FastNoteTargetSection(
     notes: List<NoteSummary>,
     notesLoadError: String?,
     selectedNoteUri: String?,
-    onTargetSelected: (NoteSummary) -> Unit
+    onTargetSelected: (NoteSummary) -> Unit,
+    folderSelected: Boolean = false
 ) {
     when {
         notesLoadError != null -> {
@@ -833,8 +1052,15 @@ private fun FastNoteTargetSection(
             )
         }
         notes.isEmpty() -> {
+            // Prazdna slozka a nevybrana slozka jsou dve ruzne situace a uzivatel v kazde dela
+            // neco jineho.
             Text(
-                text = "Select a notes folder with .md files to choose a Fast note target.",
+                text = if (folderSelected) {
+                    "No .md files in this folder yet. Create a note with the + button on the " +
+                        "widget, then come back and pick it here."
+                } else {
+                    "Select a notes folder with .md files to choose a Fast note target."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -879,6 +1105,11 @@ private fun CardSettingsSection(
     onToggleExpanded: (NoteSummary) -> Unit,
     onDeleteRequested: (NoteSummary) -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = remember(context) { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    var hintPending by rememberSaveable { mutableStateOf(!prefs.getBoolean(KEY_SWIPE_HINT_SHOWN, false)) }
+    val hintOffset = remember { Animatable(0f) }
+
     when {
         notesLoadError != null -> {
             Text(
@@ -889,19 +1120,35 @@ private fun CardSettingsSection(
         }
         notes.isEmpty() -> {
             Text(
-                text = "Select a notes folder with .md files to configure cards.",
+                text = "No notes to set up yet — this folder has no .md files.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         else -> {
+            // Prvni radek trikrat popojede do strany, at je gesto videt. Pak uz nikdy.
+            LaunchedEffect(hintPending, notes.isEmpty()) {
+                if (!hintPending || notes.isEmpty()) return@LaunchedEffect
+                delay(600)
+                repeat(3) {
+                    hintOffset.animateTo(-64f, tween(260))
+                    hintOffset.animateTo(0f, tween(260))
+                    delay(120)
+                }
+                prefs.edit().putBoolean(KEY_SWIPE_HINT_SHOWN, true).apply()
+                hintPending = false
+            }
             ReorderableColumn(
                 list = notes,
                 onSettle = onReorder,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) { _, note, isDragging ->
+            ) { index, note, isDragging ->
                 val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
                 ReorderableItem {
+                SwipeToDelete(
+                    onDelete = { onDeleteRequested(note) },
+                    hintOffset = if (index == 0) hintOffset.value else 0f
+                ) {
                 NoteCardSettingsRow(
                     note = note,
                     appearance = appearance,
@@ -909,12 +1156,12 @@ private fun CardSettingsSection(
                     isDragging = isDragging,
                     dragHandleModifier = Modifier.draggableHandle(),
                     onToggleExpanded = { onToggleExpanded(note) },
-                    onDeleteRequested = { onDeleteRequested(note) },
                     onSizeSelected = { size -> onCardSizeSelected(note, size) },
                     onColorSelected = { color -> onCardColorSelected(note, color) },
                     onTextSizeSelected = { textSize -> onCardTextSizeSelected(note, textSize) },
                     onCustomColorChanged = { colorHex -> onCardCustomColorChanged(note, colorHex) }
                 )
+                }
                 }
             }
         }
@@ -929,7 +1176,6 @@ private fun NoteCardSettingsRow(
     isDragging: Boolean,
     dragHandleModifier: Modifier,
     onToggleExpanded: () -> Unit,
-    onDeleteRequested: () -> Unit,
     onSizeSelected: (NoteCardSize) -> Unit,
     onColorSelected: (NoteCardColor) -> Unit,
     onTextSizeSelected: (NoteCardTextSize) -> Unit,
@@ -959,13 +1205,6 @@ private fun NoteCardSettingsRow(
                         .weight(1f)
                         .clickable(onClick = onToggleExpanded)
                 )
-                IconButton(onClick = onDeleteRequested) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete note file",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
                 Icon(
                     imageVector = Icons.Default.DragHandle,
                     contentDescription = "Drag to reorder",
@@ -1064,3 +1303,212 @@ private fun NoteCardSettingsRow(
 
 private fun cardColorPreview(color: NoteCardColor): Color =
     NoteCardPalette.background(color) ?: Color(0xFFE7E0EC)
+
+private const val KEY_SWIPE_HINT_SHOWN = "card_swipe_hint_shown"
+
+/**
+ * Prejeti prstem po karte na kteroukoli stranu vyvola smazani. Potvrzeni resi dialog vys,
+ * takze se karta vzdy vrati zpatky — nic nemizi pod rukou.
+ *
+ * [hintOffset] je jen posun pro uvodni napovedu; gesto samo bezi pres stav dismiss boxu.
+ */
+@Composable
+private fun SwipeToDelete(
+    onDelete: () -> Unit,
+    hintOffset: Float,
+    content: @Composable () -> Unit
+) {
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value != SwipeToDismissBoxValue.Settled) onDelete()
+            false
+        }
+    )
+    Box(modifier = Modifier.offset { IntOffset(hintOffset.toInt(), 0) }) {
+        SwipeToDismissBox(
+            state = state,
+            backgroundContent = { DeleteSwipeBackground(state.dismissDirection) },
+            content = { content() }
+        )
+    }
+}
+
+@Composable
+private fun DeleteSwipeBackground(direction: SwipeToDismissBoxValue) {
+    val alignment = if (direction == SwipeToDismissBoxValue.EndToStart) {
+        Alignment.CenterEnd
+    } else {
+        Alignment.CenterStart
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 20.dp),
+        contentAlignment = alignment
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete note file",
+            tint = MaterialTheme.colorScheme.onErrorContainer
+        )
+    }
+}
+
+/** Dva kroky, ktere musi kazdy projit. Vic jich neni — zbytek obrazovky je ladeni. */
+internal enum class GuideStep { PickFolder, Save }
+
+/**
+ * Pomalu pulzujici ramecek kolem tlacitka, ktere je na rade. Bez prekryvu pres obrazovku:
+ * uzivatel muze delat cokoli jineho, jen vidi, kudy vede cesta.
+ */
+@Composable
+private fun GuideBanner(step: GuideStep, onSkip: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Setup — step ${if (step == GuideStep.PickFolder) 1 else 2} of 2",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            GuideLine("Pick the folder your notes live in", done = step != GuideStep.PickFolder)
+            GuideLine("Add the widget to your home screen", done = false)
+            Spacer(modifier = Modifier.height(4.dp))
+            TextButton(onClick = onSkip, modifier = Modifier.align(Alignment.End)) {
+                Text("Skip")
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideLine(text: String, done: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 2.dp)
+    ) {
+        Icon(
+            imageVector = if (done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+/**
+ * Logo appky jako vodoznak. Lita krizem po obrazovce a odrazi se od okraju — vodorovne a svisle
+ * ma jinou periodu, takze drahy se nikdy neopakuji uplne stejne.
+ */
+@Composable
+private fun BoxScope.DriftingLogo(containerWidth: Dp, containerHeight: Dp) {
+    val logoSize = 260.dp
+    val travelX = (containerWidth - logoSize).coerceAtLeast(0.dp)
+    val travelY = (containerHeight - logoSize).coerceAtLeast(0.dp)
+    val transition = rememberInfiniteTransition(label = "logoDrift")
+    val progressX by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(9_000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "logoDriftX"
+    )
+    val progressY by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(13_000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "logoDriftY"
+    )
+    // Logo je svetle, takze na svetlem pozadi by bylo bila na bile — tam se prebarvi na tmavou
+    // navy z ikony. Na tmavem pozadi se necha, jak je.
+    //
+    // Tma se pozna z pouziteho schematu, ne ze systemoveho nastaveni: uzivatel si v appce muze
+    // vybrat opak toho, co ma v telefonu, a logo by pak splynulo s pozadim.
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    Image(
+        painter = painterResource(R.drawable.ic_launcher_foreground),
+        contentDescription = null,
+        colorFilter = if (dark) null else ColorFilter.tint(androidx.compose.ui.graphics.Color(0xFF061B2A)),
+        modifier = Modifier
+            .align(Alignment.TopStart)
+            .offset(x = travelX * progressX, y = travelY * progressY)
+            .size(logoSize)
+            .alpha(if (dark) 0.14f else 0.10f)
+    )
+}
+
+private const val REPO_URL = "https://github.com/marfolog/notes-widget-for-markdown"
+private const val ISSUES_URL = "$REPO_URL/issues/new/choose"
+private const val DISCUSSIONS_URL = "$REPO_URL/discussions"
+private const val PRIVACY_URL = "https://folmbuild.cz/notes-widget-privacy/"
+
+/**
+ * Odkazy ven. Otevirat je muze prohlizec, takze to funguje i ve foss variante, ktera sama
+ * opravneni k internetu nema.
+ */
+@Composable
+private fun AboutSection() {
+    val context = LocalContext.current
+    fun open(url: String) {
+        runCatching {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }.onFailure {
+            Toast.makeText(context, "No browser found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    Text(
+        text = "Something broken, or just using it?",
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = "This app is made by one person in their spare time. Bug reports are read, and " +
+            "knowing someone out there uses it is what keeps it going.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+
+    OutlinedButton(onClick = { open(ISSUES_URL) }, modifier = Modifier.fillMaxWidth()) {
+        Text("Report a bug")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    OutlinedButton(onClick = { open(DISCUSSIONS_URL) }, modifier = Modifier.fillMaxWidth()) {
+        Text("Say hi — tell me you use it")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    OutlinedButton(onClick = { open(REPO_URL) }, modifier = Modifier.fillMaxWidth()) {
+        Text("Source code on GitHub")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    TextButton(onClick = { open(PRIVACY_URL) }, modifier = Modifier.fillMaxWidth()) {
+        Text("Privacy policy")
+    }
+}
+
+/** Poradi je zamerne: git je nejpresnejsi, "nic" je posledni moznost. */
+private val SYNC_MODES = listOf(
+    "git" to "Git",
+    "other" to "Something else",
+    "none" to "I don't"
+)
+
+private val STALE_CHOICES = listOf(
+    6 to "6 hours",
+    24 to "1 day",
+    72 to "3 days",
+    168 to "a week"
+)

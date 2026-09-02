@@ -2,10 +2,12 @@ package com.marfolog.noteswidgetformarkdown.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFB9EBDD)
-val PurpleGrey80 = Color(0xFFC0D9D4)
-val Pink80 = Color(0xFFE6CFC5)
+// Modra rodina odvozena od pruhu ve widgetu (#2196F3). Nastaveni ma vypadat jako widget,
+// proto se dynamicka barva systemu zamerne nepouziva — viz Theme.kt.
+val BlueLightPrimary = Color(0xFF1565C0)
+val BlueLightSecondary = Color(0xFF4E6273)
+val BlueLightTertiary = Color(0xFF5A5B7E)
 
-val Purple40 = Color(0xFF006B5C)
-val PurpleGrey40 = Color(0xFF4B635D)
-val Pink40 = Color(0xFF7A5548)
+val BlueDarkPrimary = Color(0xFF9CCAFF)
+val BlueDarkSecondary = Color(0xFFB6C9DA)
+val BlueDarkTertiary = Color(0xFFC3C3EB)
