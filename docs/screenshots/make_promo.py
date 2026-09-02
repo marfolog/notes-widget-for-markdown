@@ -9,8 +9,8 @@ Sizes follow what stores expect: a 1024x500 feature graphic and 1080x1920 (9:16)
 """
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
-SRC = '/private/tmp/claude-501/-Users-marfo-StudioProjects-notes-widget-for-markdown/f0612569-8fa6-49f3-8d25-1ab89435317b/scratchpad'
-OUT = '/Users/marfo/StudioProjects/notes-widget-for-markdown/docs/screenshots'
+SRC = 'docs/screenshots'   # raw device screenshots
+OUT = 'docs/screenshots'   # generated store images
 SHOT = 'k1.png'
 
 FONT_BOLD = '/System/Library/Fonts/Supplemental/Arial Bold.ttf'
