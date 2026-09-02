@@ -98,8 +98,15 @@ phone.
 | Can be switched off | nothing to switch off | yes, in settings |
 
 **The foss build declares no `INTERNET` permission, so Android will not let it open a network
-connection of its own.** Verify with `aapt dump permissions app-foss-release.apk`. Opening a note
-still hands its location to Obsidian — that is what the tap is for.
+connection of its own.** That is not a promise I am making — it is a property of the file you
+download, enforced by the operating system, and you can check it yourself:
+`aapt dump permissions app-foss-release.apk`. Opening a note still hands its location to Obsidian,
+which is what the tap is for.
+
+The app is built on roughly 190 third-party libraries, almost all of them AndroidX. I have not
+audited them and cannot vouch for what any of them does — nobody shipping an Android app can. What
+I can point at is the missing network permission above, and the dependency list in
+[`docs/dependencies-foss.txt`](docs/dependencies-foss.txt), so you can judge for yourself.
 It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` and
 `FOREGROUND_SERVICE` — those come from WorkManager, which schedules the widget refresh, and none of
 them can move data off the device.
@@ -186,6 +193,21 @@ Pull requests are welcome. Most useful right now: testing against real vaults, M
 cases, and launcher compatibility reports — widgets behave differently on Pixel, One UI and Nova,
 and I can only test one. Please open an issue before a large pull request.
 
+## No warranty
+
+This is a free, MIT-licensed hobby project maintained by one person in his spare time. It comes
+**as is, without warranty of any kind**, and you use it at your own risk. Two things deserve saying
+plainly rather than hiding in the licence text:
+
+- **Deleting a note from settings deletes the file.** There is no trash to recover it from. If your
+  vault is not backed up or version-controlled, it is gone.
+- **The sync chip is informational.** It reports what it can read from `.git`, and it can be wrong
+  or out of date — a client may write state the app does not understand. Never treat a green chip
+  as proof that your notes are safely synced; check your git client when it matters.
+
+Nothing here excludes liability where the law does not allow it to be excluded.
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). That licence also disclaims warranty and liability; the section above
+just says the same thing in plain words.

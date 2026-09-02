@@ -2,4 +2,50 @@
     <string name="app_name">Notes Widget for Markdown</string>
     <string name="widget_description">Displays your Markdown notes in a scrollable widget</string>
     <string name="list_widget_description">Compact list of note names with their last change</string>
+
+    <!-- Widget buttons. Kept short: they are spoken by TalkBack, not shown as labels. -->
+    <string name="action_refresh">Refresh notes</string>
+    <string name="action_open_settings">Open widget settings</string>
+    <string name="action_add_note">Add note</string>
+    <string name="action_add_fast_note">Add fast note</string>
+    <string name="action_setup">Set up</string>
+    <string name="action_error">Error</string>
+
+    <!-- Widget states -->
+    <string name="widget_setup_required">Setup Required</string>
+    <string name="widget_setup_hint">Tap to select your notes folder</string>
+    <string name="widget_permission_lost">Permission lost</string>
+    <string name="widget_permission_hint">Tap to re-select your folder</string>
+    <string name="widget_no_notes">No notes found</string>
+    <string name="widget_pick_folder_hint">Tap the pencil to pick your notes folder</string>
+    <string name="widget_permission_lost_short">Folder permission lost — open settings</string>
+    <string name="widget_new_note_name">New Note</string>
+
+    <!--
+      Sync chip. One or two words each: the chip is a few characters wide, and a translation that
+      does not fit is simply cut off.
+    -->
+    <string name="sync_no_info">no sync info</string>
+    <string name="sync_unknown">sync unknown</string>
+    <string name="sync_stuck">sync stuck</string>
+    <string name="sync_not_pushed">not pushed</string>
+    <string name="sync_synced">synced %1$s</string>
+    <string name="sync_days_one">1 d</string>
+    <string name="sync_days">%1$d d</string>
+    <string name="sync_days_many">99+ d</string>
+
+    <!-- Fast note -->
+    <string name="fast_note_title">Fast note</string>
+    <string name="fast_note_saving">Saving…</string>
+    <string name="fast_note_saved">Fast note saved locally</string>
+    <string name="fast_note_saved_hint">Saved locally. Sync remains handled by your notes setup.</string>
+    <string name="fast_note_target_missing">Fast note target missing</string>
+    <string name="fast_note_target_hint">Choose a Markdown file in settings before saving Fast notes.</string>
+    <string name="fast_note_pick_target_first">Choose a Fast note target in settings first.</string>
+    <string name="fast_note_write_failed">Unable to write to the selected note.</string>
+    <string name="fast_note_failed">Unable to save Fast note.</string>
+
+    <string name="action_cancel">Cancel</string>
+    <string name="action_open_settings_button">Open settings</string>
+    <string name="no_app_opens_notes">No app can open this note. Is Obsidian installed?</string>
 </resources>
