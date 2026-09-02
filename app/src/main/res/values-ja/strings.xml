@@ -128,4 +128,5 @@
     <string name="theme_system">システムに従う</string>
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>
+    <string name="about_sponsor">支援する — 一度きり、まったくの任意です</string>
 </resources>
