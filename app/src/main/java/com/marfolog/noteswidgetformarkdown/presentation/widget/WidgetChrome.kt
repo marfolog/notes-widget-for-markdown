@@ -100,8 +100,11 @@ internal fun RoundIconButton(
 
 // region Bottom Bar (actions + sync status)
 
-/** Translucent blue so the bar reads as a layer above the notes, not a solid block. */
-internal val BAR_TINT = ColorProvider(Color(0x552196F3))
+/**
+ * Translucent so the notes stay visible under the bar. Glance cannot apply alpha to a theme colour,
+ * so the two variants are spelled out: a light veil on light backgrounds, a dark one at night.
+ */
+internal val BAR_TINT: ColorProvider = ColorProvider(R.color.widget_bar_tint)
 
 @Composable
 internal fun BottomBar(
@@ -112,18 +115,13 @@ internal fun BottomBar(
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .padding(top = 8.dp),
+            .padding(top = 8.dp)
+            .cornerRadius(20.dp)
+            .background(BAR_TINT)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = GlanceModifier
-                .cornerRadius(16.dp)
-                .background(BAR_TINT)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            QuickActions(vaultName, noteFolderPath)
-        }
+        QuickActions(vaultName, noteFolderPath)
         Box(modifier = GlanceModifier.defaultWeight()) {}
         // Hidden entirely when the user syncs by other means.
         gitSyncStatus?.let { SyncStatus(it) }
@@ -152,8 +150,6 @@ internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
 
     Row(
         modifier = GlanceModifier
-            .cornerRadius(16.dp)
-            .background(BAR_TINT)
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .clickable(actionStartActivity(setupIntent)),
         verticalAlignment = Alignment.CenterVertically
@@ -169,7 +165,7 @@ internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
             text = label.text,
             style = TextStyle(
                 fontSize = 12.sp,
-                color = GlanceTheme.colors.onSurfaceVariant
+                color = GlanceTheme.colors.onSurface
             ),
             maxLines = 1
         )
@@ -252,12 +248,17 @@ internal fun ConfiguredScaffold(
     gitSyncStatus: GitSyncStatus?,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        Box(modifier = GlanceModifier.defaultWeight().fillMaxWidth()) {
-            content()
-            WidgetActionButtons()
+    Box(modifier = GlanceModifier.fillMaxSize()) {
+        content()
+        WidgetActionButtons()
+        // The bar floats over the list rather than pushing it up, and is translucent so the notes
+        // stay readable underneath — it should feel like a layer on the widget, not a wall.
+        Box(
+            modifier = GlanceModifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            BottomBar(vaultName, noteFolderPath, gitSyncStatus)
         }
-        BottomBar(vaultName, noteFolderPath, gitSyncStatus)
     }
 }
 

@@ -10,4 +10,10 @@
     <color name="brand_icon_background">#061B2A</color>
     <color name="brand_icon_foreground">#EAF7F0</color>
     <color name="brand_mint">#77D5BF</color>
+    <!--
+      The action bar floats over the notes, so it is translucent and they stay readable underneath.
+      Glance cannot apply alpha to a theme colour, but it can take a colour resource — and a
+      resource is what gives us a night variant for free.
+    -->
+    <color name="widget_bar_tint">#CCFFFFFF</color>
 </resources>
