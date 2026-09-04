@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 import androidx.core.content.ContextCompat
 import com.marfolog.noteswidgetformarkdown.di.appModule
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
@@ -31,12 +30,13 @@ class NotesWidgetApp : Application() {
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != Intent.ACTION_USER_PRESENT) return
+            AppLog.d("App", "Unlock received at ${System.currentTimeMillis()}")
             val pending = goAsync()
             appScope.launch {
                 try {
                     NotesWidget.updateAll(context.applicationContext)
                 } catch (t: Throwable) {
-                    Log.w(TAG, "Widget refresh on unlock failed", t)
+                    AppLog.w("App", "Widget refresh on unlock failed", t)
                 } finally {
                     pending.finish()
                 }
@@ -48,6 +48,7 @@ class NotesWidgetApp : Application() {
         super.onCreate()
         Telemetry.init(this)
         AppLog.i("App", "Started, telemetry=${Telemetry.ENABLED}")
+        AppLog.d("App", "Process created at ${System.currentTimeMillis()}")
         startKoin {
             androidContext(this@NotesWidgetApp)
             modules(appModule)
@@ -61,7 +62,4 @@ class NotesWidgetApp : Application() {
         )
     }
 
-    companion object {
-        private const val TAG = "NotesWidgetApp"
-    }
 }

@@ -10,9 +10,9 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.documentfile.provider.DocumentFile
-import android.util.Log
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
+import com.marfolog.noteswidgetformarkdown.util.AppLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,22 +32,35 @@ class NotesFolderObserverJob : JobService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onStartJob(params: JobParameters): Boolean {
+        AppLog.d(AREA, "onStartJob fired at ${System.currentTimeMillis()}")
+        // Re-arm first, not after the work: content-trigger jobs are one-shot, so if the
+        // process dies mid-refresh (or the next trigger event races this one) with the
+        // re-arm still at the end, the folder goes unwatched until something else calls
+        // schedule() again — the "Job didn't exist in JobStore" warnings this leaves behind
+        // are the symptom, not the cause.
+        schedule(applicationContext)
         scope.launch {
             runCatching {
-                if (notesChangedSinceLastRun(applicationContext)) {
+                val changed = notesChangedSinceLastRun(applicationContext)
+                AppLog.d(AREA, "notesChangedSinceLastRun=$changed")
+                if (changed) {
                     NotesWidget.updateAll(applicationContext)
                 }
-            }.onFailure { Log.w(TAG, "Refresh on folder change failed", it) }
-            schedule(applicationContext)
+            }.onFailure { AppLog.w(AREA, "Refresh on folder change failed", it) }
             jobFinished(params, false)
         }
         return true
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        AppLog.d(AREA, "onDestroy — process is going away")
+    }
+
     override fun onStopJob(params: JobParameters): Boolean = true
 
     companion object {
-        private const val TAG = "NotesFolderObserver"
+        private const val AREA = "Observer"
         private const val JOB_ID = 4711
 
         /** Coalesce bursts — a sync client writing ten files should cause one refresh. */
@@ -76,9 +89,14 @@ class NotesFolderObserverJob : JobService() {
                     .filter { it.isFile && it.name?.endsWith(".md", ignoreCase = true) == true }
                 val newest = markdown.maxOfOrNull { it.lastModified() } ?: 0L
                 "${markdown.size}:$newest"
-            }.getOrNull() ?: return true
+            }.getOrNull() ?: run {
+                AppLog.d(AREA, "Fingerprint check failed, assuming changed")
+                return true
+            }
 
-            if (fingerprint == prefs.getString(KEY_FOLDER_FINGERPRINT, null)) {
+            val previous = prefs.getString(KEY_FOLDER_FINGERPRINT, null)
+            AppLog.d(AREA, "Fingerprint now=$fingerprint previous=$previous")
+            if (fingerprint == previous) {
                 return false
             }
             prefs.edit().putString(KEY_FOLDER_FINGERPRINT, fingerprint).apply()
@@ -101,7 +119,7 @@ class NotesFolderObserverJob : JobService() {
                     DocumentsContract.getTreeDocumentId(treeUri)
                 )
             }.getOrElse {
-                Log.w(TAG, "Could not build observation URI for $folderUri", it)
+                AppLog.w(AREA, "Could not build observation URI for $folderUri", it)
                 return
             }
 
@@ -129,8 +147,9 @@ class NotesFolderObserverJob : JobService() {
                 .build()
 
             runCatching {
-                context.getSystemService(JobScheduler::class.java)?.schedule(job)
-            }.onFailure { Log.w(TAG, "Could not schedule folder observer", it) }
+                val result = context.getSystemService(JobScheduler::class.java)?.schedule(job)
+                AppLog.d(AREA, "schedule() result=$result at ${System.currentTimeMillis()}")
+            }.onFailure { AppLog.w(AREA, "Could not schedule folder observer", it) }
         }
     }
 }
