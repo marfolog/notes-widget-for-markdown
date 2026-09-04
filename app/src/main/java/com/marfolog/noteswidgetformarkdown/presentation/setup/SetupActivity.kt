@@ -74,6 +74,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -1214,6 +1215,15 @@ private fun CardSettingsSection(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) { index, note, isDragging ->
                 val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+                // ReorderableColumn has no notion of item identity — it is a plain Column
+                // walking `list` by index, so remembered state (the swipe-to-dismiss state
+                // below included) stays tied to a *position*. When the list shrinks or
+                // reorders, Compose reuses that position's composition for whatever note now
+                // sits there, and a swipe state from the note that used to be there can carry
+                // over — a swipe recorded against note 14 lands on note 16. Keying on the
+                // file uri forces Compose to throw away and rebuild that state whenever the
+                // note occupying this slot actually changes.
+                key(note.fileUri) {
                 ReorderableItem {
                 SwipeToDelete(
                     onDelete = { onDeleteRequested(note) },
@@ -1231,6 +1241,7 @@ private fun CardSettingsSection(
                     onTextSizeSelected = { textSize -> onCardTextSizeSelected(note, textSize) },
                     onCustomColorChanged = { colorHex -> onCardCustomColorChanged(note, colorHex) }
                 )
+                }
                 }
                 }
             }
