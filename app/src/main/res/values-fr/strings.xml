@@ -133,4 +133,14 @@
     <string name="consent_body">Les rapports de plantage me montrent ce qui casse, et les chiffres d\'usage pour combien de personnes l\'application existe. Ils n\'incluent jamais vos notes, leurs noms ni vos chemins de dossiers. Vous pourrez changer cela dans les réglages.</string>
     <string name="consent_yes">Oui, les envoyer</string>
     <string name="consent_no">Non merci</string>
+    <string name="open_with_title">Ouvrir les notes avec</string>
+    <string name="open_with_desc">Toucher une note dans le widget l\'ouvre ici.</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">Application par défaut</string>
+    <string name="open_with_ask">Demander à chaque fois</string>
+    <string name="open_with_hint_obsidian">Un lien direct vers Obsidian. Il faut que le coffre soit bien identifié, l\'application s\'en charge.</string>
+    <string name="open_with_hint_default">Passe le fichier à ce que vous avez défini pour le Markdown. Fonctionne avec n\'importe quel éditeur et peut réenregistrer dans le même fichier.</string>
+    <string name="open_with_hint_ask">Android demande à chaque fois avec quoi l\'ouvrir.</string>
+    <string name="open_note_with">Ouvrir la note avec</string>
+    <string name="new_note_failed">Impossible de créer la note</string>
 </resources>

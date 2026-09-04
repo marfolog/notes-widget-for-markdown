@@ -315,14 +315,7 @@ private fun NoteCard(
     noteFolderPath: String?,
     appearance: NoteCardAppearance
 ) {
-    val obsidianUri = buildString {
-        append("obsidian://open?")
-        if (!vaultName.isNullOrEmpty()) {
-            append("vault=${Uri.encode(vaultName)}&")
-        }
-        append("file=${Uri.encode(vaultRelativePath(noteFolderPath, note.fileName))}")
-    }
-    val obsidianIntent = Intent(Intent.ACTION_VIEW, Uri.parse(obsidianUri))
+    val openIntent = noteOpenIntent(LocalContext.current, note, vaultName, noteFolderPath)
 
     Column(
         modifier = GlanceModifier
@@ -330,7 +323,7 @@ private fun NoteCard(
             .height(appearance.size.heightDp.dp)
             .cornerRadius(16.dp)
             .background(appearance.backgroundColor())
-            .clickable(actionStartActivity(obsidianIntent))
+            .clickable(actionStartActivity(openIntent))
             .padding(12.dp)
     ) {
         Text(

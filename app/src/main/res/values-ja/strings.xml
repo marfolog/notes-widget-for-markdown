@@ -133,4 +133,14 @@
     <string name="consent_body">クラッシュレポートは何が壊れたかを、利用状況はどれだけの人に使われているかを教えてくれます。ノートの中身、その名前、フォルダのパスが含まれることはありません。あとから設定で変更できます。</string>
     <string name="consent_yes">はい、送信する</string>
     <string name="consent_no">いいえ</string>
+    <string name="open_with_title">ノートを開くアプリ</string>
+    <string name="open_with_desc">ウィジェットでノートをタップすると、ここで開きます。</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">既定のアプリ</string>
+    <string name="open_with_ask">毎回たずねる</string>
+    <string name="open_with_hint_obsidian">Obsidian へのディープリンクです。Vault を正しく判別する必要がありますが、それはアプリが行います。</string>
+    <string name="open_with_hint_default">Markdown に設定しているアプリへファイルを渡します。どのエディタでも動き、同じファイルに保存し直せます。</string>
+    <string name="open_with_hint_ask">開くアプリを毎回 Android がたずねます。</string>
+    <string name="open_note_with">ノートを開く</string>
+    <string name="new_note_failed">ノートを作成できませんでした</string>
 </resources>

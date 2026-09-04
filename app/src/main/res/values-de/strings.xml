@@ -133,4 +133,14 @@
     <string name="consent_body">Absturzberichte zeigen mir, was kaputtgeht, Nutzungszahlen, für wie viele Leute die App da ist. Sie enthalten nie deine Notizen, deren Namen oder deine Ordnerpfade. Du kannst das später in den Einstellungen ändern.</string>
     <string name="consent_yes">Ja, senden</string>
     <string name="consent_no">Nein, danke</string>
+    <string name="open_with_title">Notizen öffnen mit</string>
+    <string name="open_with_desc">Ein Tippen auf eine Notiz im Widget öffnet sie hier.</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">Standard-App</string>
+    <string name="open_with_ask">Jedes Mal fragen</string>
+    <string name="open_with_hint_obsidian">Ein Deeplink nach Obsidian. Braucht den richtig erkannten Vault, das übernimmt die App.</string>
+    <string name="open_with_hint_default">Übergibt die Datei an das, was du für Markdown eingestellt hast. Funktioniert mit jedem Editor und kann in dieselbe Datei zurückschreiben.</string>
+    <string name="open_with_hint_ask">Android fragt jedes Mal, womit geöffnet werden soll.</string>
+    <string name="open_note_with">Notiz öffnen mit</string>
+    <string name="new_note_failed">Notiz konnte nicht erstellt werden</string>
 </resources>

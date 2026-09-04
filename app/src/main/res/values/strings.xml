@@ -142,4 +142,14 @@
     <string name="consent_body">Crash reports show me what breaks, and usage numbers show how many people the app is for. They never include your notes, their names or your folder paths. You can change this later in settings.</string>
     <string name="consent_yes">Yes, send them</string>
     <string name="consent_no">No thanks</string>
+    <string name="open_with_title">Open notes with</string>
+    <string name="open_with_desc">Tapping a note on the widget opens it here.</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">Default app</string>
+    <string name="open_with_ask">Ask every time</string>
+    <string name="open_with_hint_obsidian">A deep link into Obsidian. Needs the vault to be worked out correctly, which the app does for you.</string>
+    <string name="open_with_hint_default">Hands the file to whatever you have set for Markdown. Works with any editor, and it can save back to the same file.</string>
+    <string name="open_with_hint_ask">Android asks which app to use each time.</string>
+    <string name="open_note_with">Open note with</string>
+    <string name="new_note_failed">Could not create the note</string>
 </resources>

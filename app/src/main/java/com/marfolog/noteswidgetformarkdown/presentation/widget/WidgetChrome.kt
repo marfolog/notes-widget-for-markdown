@@ -186,19 +186,6 @@ internal fun SyncStatus(gitSyncStatus: GitSyncStatus) {
 
 @Composable
 internal fun QuickActions(vaultName: String?, noteFolderPath: String?) {
-    val filePath = vaultRelativePath(noteFolderPath, "New Note")
-    val newNoteUri = buildString {
-        append("obsidian://new?")
-        if (!vaultName.isNullOrEmpty()) {
-            append("vault=")
-            append(Uri.encode(vaultName))
-            append("&")
-        }
-        append("file=")
-        append(Uri.encode(filePath))
-        append("&content=")
-    }
-
     Box(
         modifier = GlanceModifier
             .size(44.dp)
@@ -206,10 +193,7 @@ internal fun QuickActions(vaultName: String?, noteFolderPath: String?) {
             .background(GlanceTheme.colors.primary)
             .clickable(
                 actionStartActivity(
-                    Intent(
-                        androidx.glance.LocalContext.current,
-                        TrampolineActivity::class.java
-                    ).putExtra(TrampolineActivity.EXTRA_URI, newNoteUri)
+                    Intent(androidx.glance.LocalContext.current, AddNoteActivity::class.java)
                 )
             ),
         contentAlignment = Alignment.Center

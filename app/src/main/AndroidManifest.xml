@@ -30,6 +30,11 @@
             android:theme="@style/Theme.Translucent" />
 
         <activity
+            android:name=".presentation.widget.AddNoteActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Translucent" />
+
+        <activity
             android:name=".presentation.widget.FastNoteActivity"
             android:exported="false"
             android:theme="@style/Theme.Translucent" />

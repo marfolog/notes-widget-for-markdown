@@ -133,4 +133,14 @@
     <string name="consent_body">崩溃报告让我知道哪里出了问题，使用数据让我知道有多少人在用。其中绝不包含你的笔记、笔记名称或文件夹路径。之后可以随时在设置中更改。</string>
     <string name="consent_yes">好，发送</string>
     <string name="consent_no">不用了</string>
+    <string name="open_with_title">用什么打开笔记</string>
+    <string name="open_with_desc">在小组件上点按笔记时，会用这里选择的方式打开。</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">默认应用</string>
+    <string name="open_with_ask">每次都询问</string>
+    <string name="open_with_hint_obsidian">直接跳转到 Obsidian。需要正确识别仓库，这由应用完成。</string>
+    <string name="open_with_hint_default">把文件交给你为 Markdown 设置的应用。任何编辑器都能用，并且可以写回同一个文件。</string>
+    <string name="open_with_hint_ask">每次由 Android 询问用哪个应用打开。</string>
+    <string name="open_note_with">打开笔记</string>
+    <string name="new_note_failed">无法创建笔记</string>
 </resources>

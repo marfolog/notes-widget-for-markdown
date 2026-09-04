@@ -133,4 +133,14 @@
     <string name="consent_body">Los informes de fallos me muestran qué se rompe, y las cifras de uso para cuánta gente es la app. Nunca incluyen tus notas, sus nombres ni las rutas de tus carpetas. Puedes cambiarlo luego en los ajustes.</string>
     <string name="consent_yes">Sí, enviarlos</string>
     <string name="consent_no">No, gracias</string>
+    <string name="open_with_title">Abrir las notas con</string>
+    <string name="open_with_desc">Tocar una nota en el widget la abre aquí.</string>
+    <string name="open_with_obsidian">Obsidian</string>
+    <string name="open_with_default">App predeterminada</string>
+    <string name="open_with_ask">Preguntar cada vez</string>
+    <string name="open_with_hint_obsidian">Un enlace directo a Obsidian. Necesita identificar bien el vault, de eso se encarga la app.</string>
+    <string name="open_with_hint_default">Entrega el archivo a lo que tengas configurado para Markdown. Funciona con cualquier editor y puede guardar en el mismo archivo.</string>
+    <string name="open_with_hint_ask">Android pregunta cada vez con qué abrirla.</string>
+    <string name="open_note_with">Abrir la nota con</string>
+    <string name="new_note_failed">No se pudo crear la nota</string>
 </resources>

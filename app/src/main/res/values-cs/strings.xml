@@ -133,4 +133,14 @@
     <string name="consent_body">Hlášení o pádech mi ukážou, co se rozbilo, a čísla o používání, pro kolik lidí ta aplikace je. Nikdy neobsahují vaše poznámky, jejich názvy ani cesty ke složkám. Změnit to jde kdykoli v nastavení.</string>
     <string name="consent_yes">Ano, odesílat</string>
     <string name="consent_no">Ne, děkuji</string>
+    <string name="open_with_title">Otevírat poznámky v</string>
+    <string name="open_with_desc">Klepnutí na poznámku ve widgetu ji otevře tady.</string>
+    <string name="open_with_obsidian">Obsidianu</string>
+    <string name="open_with_default">Výchozí aplikaci</string>
+    <string name="open_with_ask">Zeptat se pokaždé</string>
+    <string name="open_with_hint_obsidian">Odkaz přímo do Obsidianu. Potřebuje správně určený vault, o to se aplikace postará sama.</string>
+    <string name="open_with_hint_default">Předá soubor tomu, co máte nastavené pro Markdown. Funguje s jakýmkoli editorem a umí uložit zpátky do stejného souboru.</string>
+    <string name="open_with_hint_ask">Android se pokaždé zeptá, čím to otevřít.</string>
+    <string name="open_note_with">Otevřít poznámku v</string>
+    <string name="new_note_failed">Poznámku se nepodařilo vytvořit</string>
 </resources>
