@@ -46,13 +46,12 @@ class AddNoteActivity : ComponentActivity() {
             val createNoteUseCase = get<CreateNoteUseCase>(CreateNoteUseCase::class.java)
             val created = createNoteUseCase(folderUri, title, "")
 
-            created.onSuccess { ok ->
-                if (!ok) {
-                    AppLog.w(AREA, "Note creation returned false")
-                    finish()
-                    return@onSuccess
-                }
-                openNewNote(folderUri, title)
+            created.onSuccess { noteUri ->
+                // The provider's own uri, not a guess built from the title: on a name collision
+                // — which a stale listFiles() cache can hide from uniqueTitle() — the provider is
+                // free to pick a different name than the one asked for, and looking the file back
+                // up by that name would find someone else's file instead of the one just written.
+                openNewNote(folderUri, noteUri)
             }.onFailure { error ->
                 AppLog.e(AREA, "Failed to create note", error)
                 Toast.makeText(this@AddNoteActivity, R.string.new_note_failed, Toast.LENGTH_SHORT).show()
@@ -62,34 +61,34 @@ class AddNoteActivity : ComponentActivity() {
     }
 
     /**
-     * `New Note.md`, then `New Note 2.md`, `New Note 3.md`… SAF providers vary in how they
-     * handle a name collision — some silently pick their own suffix, some overwrite. Checking
-     * first means the widget never overwrites something that was already there.
+     * `New Note.md`, then `New Note 2.md`, `New Note 3.md`… This is a best-effort suggestion,
+     * not a guarantee — [listFiles] can be a stale SAF cache, so the name asked for might
+     * already exist by the time the file is actually created. That is fine: the code that opens
+     * the note afterwards uses the uri the provider hands back, not this guess, so a collision
+     * here costs nothing worse than a gap in the numbering.
      */
     private fun uniqueTitle(folderUri: String): String {
         val folder = DocumentFile.fromTreeUri(this, Uri.parse(folderUri))
         val existingNames = folder?.listFiles()?.mapNotNull { it.name }.orEmpty().toSet()
-        val base = getString(R.string.widget_new_note_name)
-        if ("$base.md" !in existingNames) return base
-        var n = 2
-        while ("$base $n.md" in existingNames) n++
-        return "$base $n"
+        return nextAvailableTitle(getString(R.string.widget_new_note_name), existingNames)
     }
 
-    private suspend fun openNewNote(folderUri: String, title: String) {
-        val folder = DocumentFile.fromTreeUri(this, Uri.parse(folderUri))
-        val note = folder?.findFile("$title.md")
-        if (note == null) {
-            AppLog.w(AREA, "Created note not found right after creating it")
+    private suspend fun openNewNote(folderUri: String, noteUri: String) {
+        val note = DocumentFile.fromSingleUri(this, Uri.parse(noteUri))
+        if (note == null || !note.exists()) {
+            AppLog.w(AREA, "Created note uri does not resolve to a file")
             finish()
             return
         }
+        // The file's own name, not the one that was asked for — see the comment where this is
+        // called for why those can differ.
+        val actualTitle = note.name?.removeSuffix(".md").orEmpty()
         val summary = NoteSummary(
-            id = note.uri.toString(),
-            title = title,
+            id = noteUri,
+            title = actualTitle,
             preview = "",
-            fileUri = note.uri.toString(),
-            fileName = "$title.md",
+            fileUri = noteUri,
+            fileName = note.name.orEmpty(),
             lastModified = note.lastModified()
         )
 
@@ -103,8 +102,13 @@ class AddNoteActivity : ComponentActivity() {
             ?.let { ObsidianVaultLocator.relativePath(it.documentId, folderUri) }
             ?: prefs.getString(SetupActivity.KEY_NOTE_FOLDER_PATH, null)
 
+        val intent = noteOpenIntent(this, summary, vaultName, noteFolderPath)
+        AppLog.d(
+            AREA,
+            "Opening: uri=${intent.data} vaultName=$vaultName folderPath=$noteFolderPath title=$actualTitle"
+        )
         runCatching {
-            startActivity(noteOpenIntent(this, summary, vaultName, noteFolderPath))
+            startActivity(intent)
         }.onFailure { e ->
             if (e is ActivityNotFoundException) {
                 Toast.makeText(this, R.string.no_app_opens_notes, Toast.LENGTH_LONG).show()
@@ -120,4 +124,15 @@ class AddNoteActivity : ComponentActivity() {
     private companion object {
         const val AREA = "AddNote"
     }
+}
+
+/**
+ * Pure so it can be tested without a device: no Android types, no SAF. `existingNames` includes
+ * the `.md` extension, matching what [DocumentFile.getName] returns.
+ */
+internal fun nextAvailableTitle(base: String, existingNames: Set<String>): String {
+    if ("$base.md" !in existingNames) return base
+    var n = 2
+    while ("$base $n.md" in existingNames) n++
+    return "$base $n"
 }

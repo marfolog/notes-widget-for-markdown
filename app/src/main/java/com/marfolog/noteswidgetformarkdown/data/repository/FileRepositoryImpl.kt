@@ -6,6 +6,7 @@ import android.provider.DocumentsContract
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownFastNoteInserter
+import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownPreviewFormatter
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.repository.FileRepository
@@ -55,7 +56,8 @@ class FileRepositoryImpl(
             }
             .mapNotNull { docFile -> fileToNoteSummary(docFile) }
 
-        Log.d(TAG, "Loaded ${notes.size} notes in ${System.currentTimeMillis() - startedAt}ms")
+        AppLog.d("Files", "Loaded ${notes.size} notes in ${System.currentTimeMillis() - startedAt}ms from $folderUri")
+        AppLog.d("Files", notes.joinToString { "${it.fileName}@${it.lastModified}" })
         emit(notes)
     }.flowOn(Dispatchers.IO)
 
@@ -63,20 +65,24 @@ class FileRepositoryImpl(
         folderUri: String,
         title: String,
         content: String
-    ): Result<Boolean> = runCatching {
+    ): Result<String> = runCatching {
         val treeUri = Uri.parse(folderUri)
         val folder = DocumentFile.fromTreeUri(context, treeUri)
-            ?: return@runCatching false
+            ?: throw IllegalStateException("Folder not found")
 
         val fileName = "$title.md"
+        // The provider may not return a file named exactly this — on a name collision (which a
+        // stale listFiles() cache can hide from the caller) it is free to pick its own name
+        // instead of failing. The uri it hands back is what actually exists; the name asked for
+        // might not.
         val newFile = folder.createFile("text/markdown", fileName)
-            ?: return@runCatching false
+            ?: throw IllegalStateException("Provider did not create the file")
 
         contentResolver.openOutputStream(newFile.uri)?.use { stream ->
             stream.write(content.toByteArray(Charsets.UTF_8))
-        } ?: return@runCatching false
+        } ?: throw IllegalStateException("Could not open the new file for writing")
 
-        true
+        newFile.uri.toString()
     }
 
     override suspend fun appendFastNote(fileUri: String, noteText: String): Result<Boolean> = withContext(Dispatchers.IO) {
@@ -125,6 +131,13 @@ class FileRepositoryImpl(
             val deleted = DocumentsContract.deleteDocument(contentResolver, Uri.parse(fileUri))
             Log.d(TAG, "Delete of $fileUri returned $deleted")
             deleted
+        }.recoverCatching { error ->
+            // The provider throws instead of returning false when the file is already gone —
+            // e.g. the list in Settings was loaded before the file was removed some other way.
+            // The caller only wants the file not to exist, and it already doesn't: treat this
+            // as success instead of surfacing a "delete failed" error for something that isn't
+            // there to fail.
+            if (error.isMissingFile()) true else throw error
         }
     }
 
@@ -166,3 +179,20 @@ class FileRepositoryImpl(
         private const val PREVIEW_SOURCE_LINE_COUNT = 36
     }
 }
+
+/**
+ * Pure so it can be tested without a device. `DocumentsContract.deleteDocument` throws instead
+ * of returning false when the target is already gone, wrapped in an `IllegalArgumentException`
+ * whose cause is a `FileNotFoundException` — or, on some providers, no wrapping at all. Callers
+ * only care whether the file is now absent, and it already is, so this is treated as success
+ * rather than a delete failure.
+ *
+ * Deliberately narrow: only exceptions that specifically say "the file isn't there" are treated
+ * as success. Anything else — a revoked permission, a provider crash, disk full — must still
+ * surface as a real failure. Silently swallowing those would hide a genuine problem behind a
+ * "deleted successfully" that never happened.
+ */
+internal fun Throwable.isMissingFile(): Boolean =
+    this is java.io.FileNotFoundException ||
+        cause is java.io.FileNotFoundException ||
+        (this is IllegalArgumentException && message?.contains("Missing file") == true)
