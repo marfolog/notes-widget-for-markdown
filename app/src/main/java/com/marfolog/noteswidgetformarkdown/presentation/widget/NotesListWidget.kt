@@ -5,6 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -12,6 +17,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.action.actionStartActivity
@@ -45,25 +51,47 @@ class NotesListWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val startedAt = System.currentTimeMillis()
-        val data = loadWidgetData(context)
 
+        // Same cache both flavours share — see WidgetDataCache. Seeding from it means a refresh
+        // shows what was already there while it reloads, instead of going blank every time.
         provideContent {
+            var data by remember { mutableStateOf(WidgetDataCache.last) }
+            var isLoading by remember { mutableStateOf(true) }
+            LaunchedEffect(Unit) {
+                val fresh = loadWidgetData(context)
+                WidgetDataCache.last = fresh
+                data = fresh
+                isLoading = false
+            }
             WidgetTheme {
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxSize()
-                        .background(GlanceTheme.colors.widgetBackground)
-                        .padding(12.dp)
-                ) {
-                    ConfiguredScaffold(data.vaultName, data.noteFolderPath, data.gitSyncStatus) {
-                        when (val state = data.state) {
-                            is WidgetState.Success -> NoteNameList(
-                                notes = state.notes,
-                                vaultName = data.vaultName,
-                                noteFolderPath = data.noteFolderPath,
-                                cardSettings = data.cardSettings
-                            )
-                            else -> StatusMessage(state)
+                val current = data
+                if (current == null) {
+                    Box(
+                        modifier = GlanceModifier
+                            .fillMaxSize()
+                            .background(GlanceTheme.colors.widgetBackground)
+                            .padding(12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = GlanceTheme.colors.primary)
+                    }
+                } else {
+                    Box(
+                        modifier = GlanceModifier
+                            .fillMaxSize()
+                            .background(GlanceTheme.colors.widgetBackground)
+                            .padding(12.dp)
+                    ) {
+                        ConfiguredScaffold(current.vaultName, current.noteFolderPath, current.gitSyncStatus, isLoading) {
+                            when (val state = current.state) {
+                                is WidgetState.Success -> NoteNameList(
+                                    notes = state.notes,
+                                    vaultName = current.vaultName,
+                                    noteFolderPath = current.noteFolderPath,
+                                    cardSettings = current.cardSettings
+                                )
+                                else -> StatusMessage(state)
+                            }
                         }
                     }
                 }
@@ -78,6 +106,7 @@ class NotesListWidget : GlanceAppWidget() {
         suspend fun updateAll(context: Context) {
             val manager = GlanceAppWidgetManager(context)
             manager.getGlanceIds(NotesListWidget::class.java).forEach { id ->
+                forceFreshGlanceSession(context, manager, id)
                 NotesListWidget().update(context, id)
             }
         }

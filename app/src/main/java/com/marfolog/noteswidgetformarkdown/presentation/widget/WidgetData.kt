@@ -30,6 +30,20 @@ internal data class WidgetData(
     val gitSyncStatus: GitSyncStatus?
 )
 
+/**
+ * Last data either widget flavour has successfully shown, kept outside any one Glance session.
+ *
+ * Every refresh now deliberately kills and restarts the session (see forceFreshGlanceSession),
+ * which throws away whatever a `remember` inside provideContent was holding. Without this, that
+ * meant every single refresh — even a sub-second one — showed a full loading screen, because the
+ * new composition genuinely had no data to show yet. Holding the last result here lets a fresh
+ * composition start from what was already on screen and reload quietly in the background instead.
+ */
+internal object WidgetDataCache {
+    @Volatile
+    var last: WidgetData? = null
+}
+
 internal suspend fun loadWidgetData(context: Context): WidgetData {
     val prefs = context.getSharedPreferences(SetupActivity.PREFS_NAME, Context.MODE_PRIVATE)
     val folderUri = prefs.getString(SetupActivity.KEY_NOTES_URI, null)

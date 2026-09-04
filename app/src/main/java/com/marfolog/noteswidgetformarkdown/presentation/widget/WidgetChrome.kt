@@ -14,6 +14,7 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
@@ -47,7 +48,7 @@ import com.marfolog.noteswidgetformarkdown.ui.theme.NoteCardPalette
 // region Widget Action Buttons (Top-Right)
 
 @Composable
-internal fun WidgetActionButtons() {
+internal fun WidgetActionButtons(isLoading: Boolean = false) {
     val setupIntent = Intent(
         androidx.glance.LocalContext.current,
         SetupActivity::class.java
@@ -60,11 +61,25 @@ internal fun WidgetActionButtons() {
         contentAlignment = Alignment.TopEnd
     ) {
         Column(horizontalAlignment = Alignment.End) {
-            RoundIconButton(
-                icon = R.drawable.ic_refresh,
-                contentDescription = LocalContext.current.getString(R.string.action_refresh),
-                onClickModifier = GlanceModifier.clickable(actionRunCallback<RefreshWidgetAction>())
-            )
+            if (isLoading) {
+                // Same slot the refresh button sits in, so a refresh in flight reads as "in
+                // progress" without the rest of the widget going blank to show it.
+                Box(
+                    modifier = GlanceModifier.size(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = GlanceModifier.size(20.dp),
+                        color = GlanceTheme.colors.onSurface
+                    )
+                }
+            } else {
+                RoundIconButton(
+                    icon = R.drawable.ic_refresh,
+                    contentDescription = LocalContext.current.getString(R.string.action_refresh),
+                    onClickModifier = GlanceModifier.clickable(actionRunCallback<RefreshWidgetAction>())
+                )
+            }
             Spacer(modifier = GlanceModifier.height(8.dp))
             RoundIconButton(
                 icon = R.drawable.ic_edit,
@@ -242,12 +257,13 @@ internal fun ConfiguredScaffold(
     vaultName: String?,
     noteFolderPath: String?,
     gitSyncStatus: GitSyncStatus?,
+    isLoading: Boolean = false,
     content: @Composable () -> Unit
 ) {
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Box(modifier = GlanceModifier.defaultWeight().fillMaxWidth()) {
             content()
-            WidgetActionButtons()
+            WidgetActionButtons(isLoading)
         }
         BottomBar(vaultName, noteFolderPath, gitSyncStatus)
     }
