@@ -49,10 +49,13 @@ internal fun noteOpenIntent(
     noteFolderPath: String?
 ): Intent = when (OpenWith.current(context)) {
 
+    // CLEAR_TOP matters when Obsidian is already running: without it, some launches just bring
+    // its existing window forward without delivering the new file — the app opens, but stays on
+    // whatever note it already had up, which reads as "the wrong note opened".
     OpenWith.Obsidian -> Intent(
         Intent.ACTION_VIEW,
         Uri.parse(obsidianDeepLink(vaultName, noteFolderPath, note.fileName))
-    )
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
     OpenWith.DefaultApp -> fileIntent(note)
 
