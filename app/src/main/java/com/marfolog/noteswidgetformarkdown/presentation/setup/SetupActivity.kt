@@ -111,6 +111,7 @@ import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.GitSyncLabel
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
+import com.marfolog.noteswidgetformarkdown.presentation.widget.OpenWith
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
@@ -168,6 +169,7 @@ class SetupActivity : ComponentActivity() {
         internal const val AREA = "Setup"
         const val PREFS_NAME = "app_prefs"
         const val KEY_GUIDE_DONE = "guide_done"
+        const val KEY_OPEN_WITH = "open_with"
         const val KEY_SYNC_MODE = "sync_mode"
         const val KEY_STALE_HOURS = "sync_stale_hours"
         const val KEY_VAULT_URI = "vault_uri"
@@ -241,6 +243,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         mutableStateOf(prefs.getBoolean(SetupActivity.KEY_SHOW_GIT_STATUS, true))
     }
     // Stara volba "zobrazovat cip" se prevede na rezim, at se po aktualizaci nikomu nic nezmeni.
+    var openWith by remember { mutableStateOf(OpenWith.current(context)) }
     var syncMode by rememberSaveable {
         mutableStateOf(
             prefs.getString(SetupActivity.KEY_SYNC_MODE, null)
@@ -484,6 +487,12 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             expandedNoteUri = if (expandedNoteUri == note.fileUri) null else note.fileUri
         },
         onDeleteRequested = { note -> noteToDelete = note },
+        openWith = openWith,
+        onOpenWithChanged = { mode ->
+            openWith = mode
+            prefs.edit().putString(SetupActivity.KEY_OPEN_WITH, mode.storageValue).apply()
+            scope.launch { NotesWidget.updateAll(context) }
+        },
         syncMode = syncMode,
         onSyncModeChanged = { mode ->
             syncMode = mode
@@ -682,6 +691,8 @@ internal fun SetupScreenContent(
     onSelectGitFolder: () -> Unit = {},
     showGitStatus: Boolean = true,
     onShowGitStatusChanged: (Boolean) -> Unit = {},
+    openWith: OpenWith = OpenWith.Obsidian,
+    onOpenWithChanged: (OpenWith) -> Unit = {},
     syncMode: String = "git",
     onSyncModeChanged: (String) -> Unit = {},
     staleHours: Int = GitSyncLabel.DEFAULT_STALE_HOURS,
@@ -756,6 +767,47 @@ internal fun SetupScreenContent(
         // Vsechno dalsi ma smysl az nad vybranou slozkou. Dokud neni, byla by to jen rada
         // zasedlych tlacitek a odstavcu o necem, co jeste neexistuje.
         if (notesFolderName != null) {
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.open_with_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.open_with_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.horizontalScroll(rememberScrollState())
+        ) {
+            OPEN_WITH_CHOICES.forEach { (mode, labelRes) ->
+                FilterChip(
+                    selected = openWith == mode,
+                    onClick = { onOpenWithChanged(mode) },
+                    label = { Text(stringResource(labelRes)) }
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(
+                when (openWith) {
+                    OpenWith.Obsidian -> R.string.open_with_hint_obsidian
+                    OpenWith.DefaultApp -> R.string.open_with_hint_default
+                    OpenWith.AskEveryTime -> R.string.open_with_hint_ask
+                }
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
@@ -1539,3 +1591,9 @@ private fun themeModeLabel(mode: ThemePreference.Mode): Int = when (mode) {
     ThemePreference.Mode.Light -> R.string.theme_light
     ThemePreference.Mode.Dark -> R.string.theme_dark
 }
+
+private val OPEN_WITH_CHOICES = listOf(
+    OpenWith.Obsidian to R.string.open_with_obsidian,
+    OpenWith.DefaultApp to R.string.open_with_default,
+    OpenWith.AskEveryTime to R.string.open_with_ask
+)
