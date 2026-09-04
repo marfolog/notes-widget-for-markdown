@@ -55,9 +55,13 @@ jobs:
             exit 1
           fi
 
-      - name: Publish the release
+      # Draft, not published: pushing the tag builds and signs the real artifact, but nobody
+      # sees it until it has actually been installed and checked on a device. Publish it by
+      # hand from the GitHub UI once that has happened.
+      - name: Publish the release as a draft
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
           files: |
             out/*.apk
             out/SHA256SUMS.txt
