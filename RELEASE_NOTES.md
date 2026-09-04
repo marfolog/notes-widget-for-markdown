@@ -1,16 +1,15 @@
-# v1.0.0
+# v1.1.0
 
-First public release.
-
-- Two widgets over a folder you pick: note cards with a Markdown preview, or a compact list of names
-- Sync chip reading the vault's `.git`: last pull or commit, a stuck merge, an unpushed branch
-- Not on git? Say so in settings and the chip falls back to when a note last changed
-- Choose how long silence has to last before the chip turns amber
-- Per-note height, text size and colour; drag to reorder; swipe a card aside to delete the file
-- Fast note appends a line to a chosen file
-- Tapping a note opens it in Obsidian
-- Czech, German, Spanish, French, Chinese and Japanese
-- Light and dark, forced or left to the system
+- New notes are created directly in the selected folder instead of being asked of Obsidian — a
+  note could previously land in the vault root when the vault couldn't be located, reported on
+  Reddit and reproduced by granting access to a subfolder only
+- Choose how a tapped note opens: Obsidian, the device's default Markdown app, or ask every time
+- Fixed: deleting a note that no longer existed (e.g. removed some other way) kept failing with
+  the same error on every retry instead of just disappearing from the list
+- Fixed: swiping a note to delete it could remove the wrong file after the list changed
+- Fixed: the widget could stop redrawing after its first refresh until something restarted the
+  app process — refresh now reliably shows the current state, with a small spinner while it loads
+- Widget refresh diagnostics are logged under one filterable tag for easier bug reports
 
 Two builds: `foss` has no `INTERNET` permission, `play` adds analytics and crash reporting that can
 be switched off. Take `foss` unless you want to send crash reports.
