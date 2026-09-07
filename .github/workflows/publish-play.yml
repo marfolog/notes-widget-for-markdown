@@ -1,0 +1,61 @@
+name: Publish to Play
+
+# Pushes the play flavour to a Google Play testing track. This is a separate concern from
+# release.yml: that workflow builds signed APKs and drafts a GitHub Release for people who
+# sideload; this one builds a signed Android App Bundle and hands it to Google Play, which
+# insists on an .aab rather than an .apk. Triggered by hand rather than on tag push, so it can
+# be re-run for a tag that was already released, or skipped entirely for a build that never
+# needs Play at all.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to build and publish (e.g. v1.1.0)'
+        required: true
+
+env:
+  # Which Play testing track to push to. The Play Developer API still uses the pre-rename track
+  # ids internally: "internal", "alpha" (closed testing), "beta" (open testing), "production".
+  # Check Play Console → Testing → Closed testing for the exact track id before switching this,
+  # since Console now allows multiple named closed tracks and the id shown there may differ.
+  PLAY_TRACK: internal
+
+permissions:
+  contents: read
+
+jobs:
+  publish-play:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore the keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+
+      - name: Build the signed play bundle
+        env:
+          RELEASE_STORE_FILE: ${{ runner.temp }}/release.jks
+          RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew :app:bundlePlayRelease
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.marfolog.noteswidgetformarkdown
+          releaseFiles: app/build/outputs/bundle/playRelease/app-play-release.aab
+          track: ${{ env.PLAY_TRACK }}
+          status: completed
