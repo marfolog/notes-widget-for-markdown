@@ -2,6 +2,23 @@
 
 All notable public changes will be documented in this file.
 
+## v1.4.0 - 2026-11-02
+
+- Widget settings can hide the add and fast note buttons at the bottom of the widget. Without them the bottom bar shrinks to the sync or rating chip, or goes away entirely, so the notes get the room. Works for both widget types; refresh and settings stay.
+- Card Appearance has an "All cards" section: one size, text size and colour for every card. A card set up on its own keeps its look and can go back to the shared one with "Use the look of all cards". Nothing changes until you pick something.
+- Release build: R8 now shrinks and obfuscates the use case and repository classes like the rest of the app.
+- Play build: debug builds never send usage events, so test runs do not mix with real use.
+- A first-launch guide replaces the setup banner in settings: a welcome screen, the reporting question (Play build only), picking the notes folder (with how many notes it holds and a warning when there are none), choosing whether the widget shows the add buttons, and adding the widget straight from the app where the launcher allows it, with the manual steps where it does not. The folder and the two choices cannot be skipped; the widget can be added later. Anyone who already has a notes folder never sees the guide.
+- "Show add buttons" is now a section of its own at the very top of settings.
+
+### Changed
+
+- Rating requests follow a saved note, a quick note or a new one, no sooner than two days after the first start. The Play build first asks for Google's in-app review card, once; five days later the app's own dialog follows, with "Rate on Google Play" and "Later" (the foss build shows its own dialog first, with a GitHub star). "Later", or closing the dialog, brings it back once, ten days on; the second "Later" ends it. For a new note the dialog comes before the editor opens. Rating from anywhere ends all of it.
+- The "★ Rate" chip on the widget first appears three days after the first start instead of seven; its windows after that are unchanged.
+- Settings no longer open the feedback form on their own; "Send feedback" still opens it.
+- The "Show add buttons", rating reminder and reporting switches in settings react to a tap anywhere on their row.
+- Play build: the reporting question is the second step of the guide. Whoever has not answered yet, such as people who updated, is asked on a later visit to settings or right after a saved quick note, the reporting question before the rating, and never again once answered.
+
 ## v1.3.1 - 2026-10-21
 
 - Fast notes: choose bullet or checkbox right in the fast note dialog; it is the same setting as in settings.

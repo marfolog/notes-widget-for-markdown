@@ -1,0 +1,3 @@
+- Hide the add buttons at the bottom of the widget to make room for notes
+- Set the size, text size and colour of all cards at once
+- A card set up on its own keeps its look, or goes back to the shared one
