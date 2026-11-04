@@ -38,6 +38,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.marfolog.noteswidgetformarkdown.R
+import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetPalette
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
@@ -83,13 +84,13 @@ class NotesListWidget : GlanceAppWidget() {
                             .background(widgetBackground(backgroundPercent))
                             .padding(12.dp)
                     ) {
-                        ConfiguredScaffold(current.vaultName, current.noteFolderPath, current.bottomBarChip, backgroundPercent, isLoading) {
+                        ConfiguredScaffold(current.vaultName, current.noteFolderPath, current.bottomBarChip, backgroundPercent, isLoading, current.showAddButtons) {
                             when (val state = current.state) {
                                 is WidgetState.Success -> NoteNameList(
                                     notes = state.notes,
                                     vaultName = current.vaultName,
                                     noteFolderPath = current.noteFolderPath,
-                                    cardSettings = current.cardSettings,
+                                    cardAppearances = current.cardAppearances,
                                     extraNoteFolders = current.extraNoteFolders
                                 )
                                 else -> StatusMessage(state, backgroundPercent)
@@ -120,12 +121,12 @@ private fun NoteNameList(
     notes: List<NoteSummary>,
     vaultName: String?,
     noteFolderPath: String?,
-    cardSettings: Map<String, NoteCardAppearance>,
+    cardAppearances: CardAppearances,
     extraNoteFolders: Map<String, String>
 ) {
     LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
         items(notes, itemId = { note ->
-            val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+            val appearance = cardAppearances.of(note.fileUri)
             "${note.id}:${appearance.color.storageValue}:${appearance.customColorHex.orEmpty()}"
                 .hashCode()
                 .toLong()
@@ -135,7 +136,7 @@ private fun NoteNameList(
                     note = note,
                     vaultName = vaultName,
                     noteFolderPath = noteFolderPathFor(note, noteFolderPath, extraNoteFolders),
-                    appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+                    appearance = cardAppearances.of(note.fileUri)
                 )
                 Spacer(modifier = GlanceModifier.height(4.dp))
             }

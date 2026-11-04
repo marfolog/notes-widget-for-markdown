@@ -85,7 +85,6 @@ class ConsentPromptTest {
         val dueNow = buildSet {
             if (due()) add(AutoPrompt.Consent)
             add(AutoPrompt.WhatsNew)
-            add(AutoPrompt.Feedback)
         }
 
         assertEquals(AutoPrompt.Consent, PromptBudget.pick(dueNow, openedAt, null, promptedThisVisit = false))

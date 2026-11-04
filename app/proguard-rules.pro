@@ -8,10 +8,6 @@
 -keep class com.marfolog.noteswidgetformarkdown.NotesWidgetApp { *; }
 -keep class com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob { *; }
 
-# Koin resolves these by class reference at runtime.
--keep class com.marfolog.noteswidgetformarkdown.domain.usecase.** { *; }
--keep class com.marfolog.noteswidgetformarkdown.domain.repository.** { *; }
-
 # Crashlytics stack traces are worth reading; keep line numbers and original file names.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile

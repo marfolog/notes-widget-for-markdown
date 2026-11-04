@@ -59,10 +59,13 @@ import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteStyle
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.AppendFastNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
+import com.marfolog.noteswidgetformarkdown.presentation.consent.ReportingConsentDialog
 import com.marfolog.noteswidgetformarkdown.presentation.setup.FastNoteStyleChooser
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
 import com.marfolog.noteswidgetformarkdown.util.AppLog
+import com.marfolog.noteswidgetformarkdown.util.AfterNoteChoice
+import com.marfolog.noteswidgetformarkdown.util.AfterNotePrompt
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.util.UsageEvent
@@ -74,8 +77,12 @@ import org.koin.java.KoinJavaComponent.get
 
 class FastNoteActivity : ComponentActivity() {
 
-    /** Off once the line is saved, so a rating dialog from Play is not drawn over a stale form. */
+    /** Off once the line is saved, so the rating dialog is not drawn over a stale form. */
     private var dialogVisible by mutableStateOf(true)
+    private var askForRating by mutableStateOf(false)
+    private var askForConsent by mutableStateOf(false)
+    private lateinit var afterNote: AfterNoteAsk
+    private var noteSaved = false
     private var targetUri by mutableStateOf<String?>(null)
     private var targetName by mutableStateOf<String?>(null)
     private var targetExists by mutableStateOf<Boolean?>(null)
@@ -85,6 +92,18 @@ class FastNoteActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Turned or recreated after the line was saved, with a dialog on screen: show that dialog
+        // again, never the empty form, which would offer to save the same line a second time.
+        val restoredAfterSave = savedInstanceState?.getBoolean(STATE_NOTE_SAVED) == true
+        if (restoredAfterSave) {
+            noteSaved = true
+            dialogVisible = false
+            askForRating = savedInstanceState?.getBoolean(STATE_ASK_RATING) == true
+            askForConsent = savedInstanceState?.getBoolean(STATE_ASK_CONSENT) == true
+        } else {
+            afterNote = AfterNoteAsk(this, lifecycleScope, UsageEvent.FROM_AFTER_FAST_NOTE)
+        }
 
         val prefs = getSharedPreferences(SetupActivity.PREFS_NAME, MODE_PRIVATE)
         val notesFolderUri = prefs.getString(SetupActivity.KEY_NOTES_URI, null)
@@ -104,6 +123,18 @@ class FastNoteActivity : ComponentActivity() {
 
         setContent {
             NotesWidgetForMarkdownTheme {
+                if (askForRating) {
+                    AfterNoteRatingHost(
+                        from = UsageEvent.FROM_AFTER_FAST_NOTE,
+                        onClose = { choice ->
+                            if (choice == AfterNoteChoice.Rate) RatingPrompt.openRatePage(this)
+                            finish()
+                        }
+                    )
+                }
+                if (askForConsent) {
+                    ReportingConsentDialog(onAnswered = { finish() })
+                }
                 if (dialogVisible) {
                     FastNoteWindow(onDismissRequest = { if (!saving) finish() }) {
                         when (val step = fastNoteStep(targetUri, targetExists, notesFolderUri, folderNotes)) {
@@ -141,6 +172,9 @@ class FastNoteActivity : ComponentActivity() {
                 }
             }
         }
+
+        // Restored after the save with nothing left to show, such as a review card that was on its way.
+        if (restoredAfterSave && !askForRating && !askForConsent) finish()
     }
 
     private fun usableTarget(target: String): DocumentFile? = runCatching {
@@ -207,11 +241,11 @@ class FastNoteActivity : ComponentActivity() {
                         // Use applicationContext: the widget render is async and outlives this
                         // Activity, which finish() destroys.
                         NotesWidget.updateAll(applicationContext)
-                        // A note just saved is a fair moment to ask. Not time yet returns at once,
-                        // so this closes as fast as it always did; otherwise finish waits for Play.
+                        // A note just saved is a fair moment to ask; most of the time it is not
+                        // time yet and this closes as fast as it always did.
                         dialogVisible = false
-                        RatingPrompt.maybeAsk(this@FastNoteActivity)
-                        finish()
+                        noteSaved = true
+                        afterSave()
                     } else {
                         saving = false
                         onError(getString(R.string.fast_note_write_failed))
@@ -224,8 +258,34 @@ class FastNoteActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * After a saved note a single thing may follow: the reporting question, Google's review card or
+     * the app's own rating dialog. A failed save never gets here, the form stays up with its error.
+     */
+    private suspend fun afterSave() {
+        when (afterNote.decide(saved = true)) {
+            AfterNotePrompt.Consent -> askForConsent = true
+            AfterNotePrompt.Rating -> askForRating = true
+            AfterNotePrompt.NativeReview -> {
+                afterNote.launchNativeReview()
+                finish()
+            }
+            AfterNotePrompt.None -> finish()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_NOTE_SAVED, noteSaved)
+        outState.putBoolean(STATE_ASK_RATING, askForRating)
+        outState.putBoolean(STATE_ASK_CONSENT, askForConsent)
+    }
+
     private companion object {
         const val AREA = "FastNote"
+        const val STATE_NOTE_SAVED = "note_saved"
+        const val STATE_ASK_RATING = "ask_rating"
+        const val STATE_ASK_CONSENT = "ask_consent"
     }
 }
 

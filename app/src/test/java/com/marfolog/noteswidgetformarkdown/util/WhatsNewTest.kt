@@ -37,6 +37,49 @@ class WhatsNewTest {
     }
 
     @Test
+    fun `1_4_0 lists the look of all cards, the add buttons are asked about on a page of their own`() {
+        assertEquals(
+            listOf(WhatsNewItem(WhatsNewIcon.Palette, R.string.whats_new_140_card_default)),
+            WhatsNew.itemsFor("1.4.0")
+        )
+    }
+
+    @Test
+    fun `whoever never set the add buttons starts the 1_4 dialog with that question`() {
+        assertEquals(WhatsNewPage.ButtonsChoice, WhatsNew.firstPage("1.4.0", buttonsChoice = null))
+        assertTrue(WhatsNew.needsButtonsChoice("1.4.0", buttonsChoice = null))
+    }
+
+    @Test
+    fun `whoever switched the buttons in settings by hand starts with the news`() {
+        assertEquals(WhatsNewPage.News, WhatsNew.firstPage("1.4.0", buttonsChoice = false))
+        assertEquals(WhatsNewPage.News, WhatsNew.firstPage("1.4.0", buttonsChoice = true))
+        assertFalse(WhatsNew.needsButtonsChoice("1.4.0", buttonsChoice = true))
+    }
+
+    @Test
+    fun `a patch release of 1_4 and the foss build ask the same question`() {
+        assertTrue(WhatsNew.needsButtonsChoice("1.4.1", buttonsChoice = null))
+        assertTrue(WhatsNew.needsButtonsChoice("1.4.0-foss", buttonsChoice = null))
+    }
+
+    @Test
+    fun `releases before and after 1_4 never ask about the buttons`() {
+        assertFalse(WhatsNew.needsButtonsChoice("1.3.1", buttonsChoice = null))
+        assertFalse(WhatsNew.needsButtonsChoice("1.5.0", buttonsChoice = null))
+    }
+
+    @Test
+    fun `the pages are reported as buttons and news`() {
+        assertEquals(listOf("buttons", "news"), WhatsNewPage.entries.map { it.eventValue })
+    }
+
+    @Test
+    fun `someone who updated to 1_4_0 after seeing 1_3 sees the new list`() {
+        assertTrue(show(versionName = "1.4.0", updatedToVersion = "1.4.0", seenVersion = "1.3.1"))
+    }
+
+    @Test
     fun `the foss build of a release finds the same list`() {
         assertEquals(WhatsNew.itemsFor("1.3.0"), WhatsNew.itemsFor("1.3.0-foss"))
         assertEquals("1.3.0", WhatsNew.release("1.3.0-foss"))

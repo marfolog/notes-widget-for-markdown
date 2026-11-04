@@ -135,23 +135,27 @@ internal fun BottomBar(
     vaultName: String?,
     noteFolderPath: String?,
     chip: BottomBarChip,
-    backgroundPercent: Int
+    backgroundPercent: Int,
+    showAddButtons: Boolean
 ) {
+    if (!showsBottomBar(showAddButtons, chip)) return
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
             .padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        WidgetSurface(backgroundPercent, cornerRadius = 16.dp) {
-            Row(
-                modifier = GlanceModifier
-                    .cornerRadius(16.dp)
-                    .background(ChromeColors.bar)
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                QuickActions(vaultName, noteFolderPath)
+        if (showAddButtons) {
+            WidgetSurface(backgroundPercent, cornerRadius = 16.dp) {
+                Row(
+                    modifier = GlanceModifier
+                        .cornerRadius(16.dp)
+                        .background(ChromeColors.bar)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    QuickActions(vaultName, noteFolderPath)
+                }
             }
         }
         Box(modifier = GlanceModifier.defaultWeight()) {}
@@ -335,6 +339,7 @@ internal fun ConfiguredScaffold(
     bottomBarChip: BottomBarChip,
     backgroundPercent: Int,
     isLoading: Boolean = false,
+    showAddButtons: Boolean = true,
     content: @Composable () -> Unit
 ) {
     Column(modifier = GlanceModifier.fillMaxSize()) {
@@ -342,7 +347,7 @@ internal fun ConfiguredScaffold(
             content()
             WidgetActionButtons(isLoading)
         }
-        BottomBar(vaultName, noteFolderPath, bottomBarChip, backgroundPercent)
+        BottomBar(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, showAddButtons)
     }
 }
 

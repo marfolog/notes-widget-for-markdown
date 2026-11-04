@@ -5,7 +5,7 @@ import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import java.util.concurrent.TimeUnit
 
 /** Dialogs settings open on their own, highest priority first. */
-enum class AutoPrompt { Consent, WhatsNew, Feedback }
+enum class AutoPrompt { Consent, WhatsNew }
 
 /**
  * How often settings may interrupt with a dialog nobody asked for: one per visit at most, and
@@ -13,6 +13,10 @@ enum class AutoPrompt { Consent, WhatsNew, Feedback }
  * the others wait. Dialogs the user opens themselves are not counted.
  *
  * A clock earlier than the last automatic dialog reads as "not yet".
+ *
+ * A dialog the user has to answer, such as the add buttons question of 1.4, is not held back by
+ * the quiet days, only by the one-per-visit rule: waiting three days for a required choice would
+ * leave it unanswered for three days.
  */
 object PromptBudget {
 
@@ -24,18 +28,30 @@ object PromptBudget {
         due: Set<AutoPrompt>,
         nowMillis: Long,
         lastAutoPromptAtMillis: Long?,
-        promptedThisVisit: Boolean
+        promptedThisVisit: Boolean,
+        exemptFromGap: Set<AutoPrompt> = emptySet()
     ): AutoPrompt? {
         if (promptedThisVisit) return null
-        if (lastAutoPromptAtMillis != null && nowMillis - lastAutoPromptAtMillis < MIN_GAP_MILLIS) return null
-        return AutoPrompt.entries.firstOrNull { it in due }
+        val quiet = lastAutoPromptAtMillis != null && nowMillis - lastAutoPromptAtMillis < MIN_GAP_MILLIS
+        val candidates = if (quiet) due.intersect(exemptFromGap) else due
+        return AutoPrompt.entries.firstOrNull { it in candidates }
     }
 
-    fun pick(context: Context, due: Set<AutoPrompt>, nowMillis: Long, promptedThisVisit: Boolean): AutoPrompt? =
-        pick(store(context), due, nowMillis, promptedThisVisit)
+    fun pick(
+        context: Context,
+        due: Set<AutoPrompt>,
+        nowMillis: Long,
+        promptedThisVisit: Boolean,
+        exemptFromGap: Set<AutoPrompt> = emptySet()
+    ): AutoPrompt? = pick(store(context), due, nowMillis, promptedThisVisit, exemptFromGap)
 
-    internal fun pick(store: KeyValueStore, due: Set<AutoPrompt>, nowMillis: Long, promptedThisVisit: Boolean) =
-        pick(due, nowMillis, store.getLong(KEY_LAST_AUTO_PROMPT_AT), promptedThisVisit)
+    internal fun pick(
+        store: KeyValueStore,
+        due: Set<AutoPrompt>,
+        nowMillis: Long,
+        promptedThisVisit: Boolean,
+        exemptFromGap: Set<AutoPrompt> = emptySet()
+    ) = pick(due, nowMillis, store.getLong(KEY_LAST_AUTO_PROMPT_AT), promptedThisVisit, exemptFromGap)
 
     fun markShown(context: Context, nowMillis: Long) = markShown(store(context), nowMillis)
 

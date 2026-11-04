@@ -7,6 +7,19 @@ data class NoteCardAppearance(
     val customColorHex: String? = null
 )
 
+/**
+ * How every card on the widget looks: a card set up on its own keeps all of its settings, any
+ * other card takes the widget's default.
+ */
+data class CardAppearances(
+    val own: Map<String, NoteCardAppearance> = emptyMap(),
+    val default: NoteCardAppearance = NoteCardAppearance()
+) {
+    fun of(noteId: String): NoteCardAppearance = own[noteId] ?: default
+
+    fun hasOwn(noteId: String): Boolean = noteId in own
+}
+
 enum class NoteCardSize(
     val storageValue: String,
     val label: String,

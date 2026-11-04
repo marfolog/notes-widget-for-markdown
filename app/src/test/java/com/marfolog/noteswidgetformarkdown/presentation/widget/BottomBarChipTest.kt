@@ -69,4 +69,24 @@ class BottomBarChipTest {
     fun `the rate chip shows first and the hint fades in after it`() {
         assertTrue(RateAlternate.Hint.startsWithRate)
     }
+
+    @Test
+    fun `add buttons keep the bar even without a chip`() {
+        assertTrue(showsBottomBar(addButtons = true, chip = BottomBarChip.None))
+    }
+
+    @Test
+    fun `without add buttons the bar stays for a sync chip`() {
+        assertTrue(showsBottomBar(addButtons = false, chip = BottomBarChip.Sync(synced)))
+    }
+
+    @Test
+    fun `without add buttons the bar stays for a rate chip`() {
+        assertTrue(showsBottomBar(addButtons = false, chip = BottomBarChip.Rate(RateAlternate.Hint)))
+    }
+
+    @Test
+    fun `without add buttons and without a chip the bar is gone`() {
+        assertFalse(showsBottomBar(addButtons = false, chip = BottomBarChip.None))
+    }
 }

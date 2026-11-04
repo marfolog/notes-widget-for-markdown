@@ -5,6 +5,12 @@ import com.marfolog.noteswidgetformarkdown.R
 
 enum class WhatsNewIcon { Palette, Checklist, Chat, Translate }
 
+/** The pages of the dialog, in order: the question some releases open with, then the news. */
+enum class WhatsNewPage(val eventValue: String) {
+    ButtonsChoice(UsageEvent.WHATS_NEW_STEP_BUTTONS),
+    News(UsageEvent.WHATS_NEW_STEP_NEWS)
+}
+
 data class WhatsNewItem(val icon: WhatsNewIcon, @StringRes val textRes: Int)
 
 /**
@@ -15,6 +21,9 @@ data class WhatsNewItem(val icon: WhatsNewIcon, @StringRes val textRes: Int)
 object WhatsNew {
 
     internal val RELEASES: Map<String, List<WhatsNewItem>> = mapOf(
+        "1.4.0" to listOf(
+            WhatsNewItem(WhatsNewIcon.Palette, R.string.whats_new_140_card_default)
+        ),
         "1.3.0" to listOf(
             WhatsNewItem(WhatsNewIcon.Palette, R.string.whats_new_130_background),
             WhatsNewItem(WhatsNewIcon.Checklist, R.string.whats_new_130_fast_note),
@@ -22,6 +31,19 @@ object WhatsNew {
             WhatsNewItem(WhatsNewIcon.Translate, R.string.whats_new_130_languages)
         )
     )
+
+    /** The release line whose dialog opens by asking about the add buttons. */
+    private const val BUTTONS_CHOICE_LINE = "1.4"
+
+    /**
+     * Whoever never set the add buttons, in settings or anywhere else, has to answer before the news
+     * of 1.4: the buttons used to be fixed, and hiding them is something to decide, not to discover.
+     */
+    internal fun needsButtonsChoice(versionName: String, buttonsChoice: Boolean?): Boolean =
+        line(versionName) == BUTTONS_CHOICE_LINE && buttonsChoice == null
+
+    internal fun firstPage(versionName: String, buttonsChoice: Boolean?): WhatsNewPage =
+        if (needsButtonsChoice(versionName, buttonsChoice)) WhatsNewPage.ButtonsChoice else WhatsNewPage.News
 
     /** "1.3.0-foss" and "1.3.0" are the same release. */
     fun release(versionName: String): String = versionName.substringBefore('-').trim()

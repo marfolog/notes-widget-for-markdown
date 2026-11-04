@@ -36,6 +36,9 @@ object UsageEvent {
 
     const val RATE_CHIP_SHOWN = "rate_chip_shown"
     const val RATE_CHIP_TAPPED = "rate_chip_tapped"
+    const val RATE_DIALOG_SHOWN = "rate_dialog_shown"
+    const val RATE_NATIVE_REQUESTED = "rate_native_requested"
+    const val RATE_NATIVE_FINISHED = "rate_native_finished"
     const val RATE_DIALOG_CHOICE = "rate_dialog_choice"
 
     const val FEEDBACK_DIALOG_SHOWN = "feedback_dialog_shown"
@@ -56,9 +59,16 @@ object UsageEvent {
     const val PARAM_WINDOW = "window"
     const val PARAM_CHOICE = "choice"
     const val PARAM_VERSION = "version"
+    const val PARAM_DURATION = "duration"
 
+    const val STEP_CONSENT = "consent"
     const val STEP_FOLDER = "folder"
+    const val STEP_BUTTONS = "buttons"
     const val STEP_WIDGET = "widget"
+    const val STEP_FINISHED = "finished"
+
+    const val WHATS_NEW_STEP_BUTTONS = "buttons"
+    const val WHATS_NEW_STEP_NEWS = "news"
 
     const val WIDGET_CARDS = "cards"
     const val WIDGET_LIST = "list"
@@ -69,6 +79,12 @@ object UsageEvent {
     const val FROM_LAUNCHER = "launcher"
     const val FROM_SYNC_CHIP = "sync_chip"
     const val FROM_FAST_NOTE_ERROR = "fast_note_error"
+    const val FROM_RATE_CHIP = "rate_chip"
+    const val FROM_AFTER_FAST_NOTE = "after_fast_note"
+    const val FROM_AFTER_NEW_NOTE = "after_new_note"
+    const val FROM_ONBOARDING = "onboarding"
+    const val FROM_WHATS_NEW = "whats_new"
+    const val FROM_SETTINGS = "settings"
 
     const val SETTING_OPEN_WITH = "open_with"
     const val SETTING_SYNC_MODE = "sync_mode"
@@ -79,6 +95,10 @@ object UsageEvent {
     const val SETTING_FAST_NOTE_STYLE = "fast_note_style"
     const val SETTING_WIDGET_BACKGROUND = "widget_background"
     const val SETTING_WIDGET_COLOR = "widget_color"
+    const val SETTING_ADD_BUTTONS = "add_buttons"
+    const val SETTING_DEFAULT_CARD_SIZE = "default_card_size"
+    const val SETTING_DEFAULT_CARD_TEXT_SIZE = "default_card_text_size"
+    const val SETTING_DEFAULT_CARD_COLOR = "default_card_color"
 
     const val BUTTON_REPORT_BUG = "report_bug"
     const val BUTTON_RATE = "rate"
@@ -104,7 +124,27 @@ object UsageEvent {
 
     private val KNOWN_OPENED_FROM = setOf(FROM_WIDGET, FROM_SYNC_CHIP, FROM_FAST_NOTE_ERROR)
 
+    /**
+     * How long Google's rating card took, in three buckets: Google does not say whether it was shown,
+     * but one that was not ends at once and one someone interacted with takes seconds.
+     */
+    fun nativeDuration(millis: Long): String = when {
+        millis < 1_000 -> "lt1s"
+        millis <= 5_000 -> "1to5s"
+        else -> "gt5s"
+    }
+
     fun onOff(enabled: Boolean): String = if (enabled) "on" else "off"
+
+    /**
+     * The add buttons choice as the parameters of [SETTING_CHANGED]: one setting, told apart by
+     * where it was changed ([FROM_ONBOARDING], [FROM_WHATS_NEW] or [FROM_SETTINGS]).
+     */
+    fun addButtonsChanged(shown: Boolean, from: String): Array<Pair<String, String>> = arrayOf(
+        PARAM_SETTING to SETTING_ADD_BUTTONS,
+        PARAM_VALUE to onOff(shown),
+        PARAM_FROM to from
+    )
 
     fun yesNo(value: Boolean): String = if (value) "yes" else "no"
 

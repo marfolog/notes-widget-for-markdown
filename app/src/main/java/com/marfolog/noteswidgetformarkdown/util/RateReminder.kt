@@ -82,9 +82,15 @@ object RateReminder {
 
     internal fun markRateTapped(store: KeyValueStore) = store.putBoolean(KEY_RATE_TAPPED, true)
 
+    /** Rate tapped anywhere: the chip, "What's new", settings or the dialog after a saved note. */
+    internal fun rateTapped(store: KeyValueStore): Boolean = store.getBoolean(KEY_RATE_TAPPED, false)
+
     fun markNeverAgain(context: Context) = markNeverAgain(store(context))
 
     internal fun markNeverAgain(store: KeyValueStore) = store.putBoolean(KEY_NEVER_AGAIN, true)
+
+    /** "Don't ask again" on the widget's chip, which every other request for a rating respects too. */
+    internal fun neverAskedAgain(store: KeyValueStore): Boolean = store.getBoolean(KEY_NEVER_AGAIN, false)
 
     internal fun setEnabled(store: KeyValueStore, enabled: Boolean) = store.putBoolean(KEY_ENABLED, enabled)
 

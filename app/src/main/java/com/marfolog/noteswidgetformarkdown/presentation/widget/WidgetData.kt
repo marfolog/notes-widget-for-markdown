@@ -6,7 +6,7 @@ import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStor
 import com.marfolog.noteswidgetformarkdown.data.repository.GitSyncStatusReader
 import com.marfolog.noteswidgetformarkdown.data.repository.ObsidianVaultLocator
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
-import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
+import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
@@ -28,11 +28,12 @@ internal data class WidgetData(
     val state: WidgetState,
     val vaultName: String?,
     val noteFolderPath: String?,
-    val cardSettings: Map<String, NoteCardAppearance>,
+    val cardAppearances: CardAppearances,
     val gitSyncStatus: GitSyncStatus?,
     /** Vault-relative folder of each extra note inside the vault, keyed by its uri. */
     val extraNoteFolders: Map<String, String> = emptyMap(),
-    val bottomBarChip: BottomBarChip = BottomBarChip.None
+    val bottomBarChip: BottomBarChip = BottomBarChip.None,
+    val showAddButtons: Boolean = true
 )
 
 /**
@@ -133,10 +134,11 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
         state = state,
         vaultName = vaultName,
         noteFolderPath = noteFolderPath,
-        cardSettings = cardSettingsStore.getAll(),
+        cardAppearances = CardAppearances(cardSettingsStore.getAll(), CardDefaults.get(context)),
         gitSyncStatus = gitSyncStatus,
         extraNoteFolders = extraNoteFolders,
-        bottomBarChip = bottomBarChip
+        bottomBarChip = bottomBarChip,
+        showAddButtons = AddButtons.isShown(context)
     )
 }
 

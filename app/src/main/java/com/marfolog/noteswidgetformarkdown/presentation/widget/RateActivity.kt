@@ -3,9 +3,7 @@ package com.marfolog.noteswidgetformarkdown.presentation.widget
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -24,6 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.lifecycleScope
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
+import com.marfolog.noteswidgetformarkdown.util.AfterNoteRating
 import com.marfolog.noteswidgetformarkdown.util.ProjectLinks
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
@@ -33,8 +33,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Behind the "★ Rate" chip on the widget. Only ever opens a page — the store in the Play build,
- * GitHub in the foss one. Google forbids starting its in-app review from a button, so that stays
- * where it was: after a saved fast note, and only when Play agrees.
+ * GitHub in the foss one.
  */
 class RateActivity : ComponentActivity() {
 
@@ -42,7 +41,10 @@ class RateActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) Telemetry.event(UsageEvent.RATE_CHIP_TAPPED)
+        if (savedInstanceState == null) {
+            Telemetry.event(UsageEvent.RATE_CHIP_TAPPED)
+            Telemetry.event(UsageEvent.RATE_DIALOG_SHOWN, UsageEvent.PARAM_FROM to UsageEvent.FROM_RATE_CHIP)
+        }
 
         setContent {
             NotesWidgetForMarkdownTheme {
@@ -58,13 +60,20 @@ class RateActivity : ComponentActivity() {
     private fun onChoice(choice: RateChoice) {
         if (choiceMade) return
         choiceMade = true
-        Telemetry.event(UsageEvent.RATE_DIALOG_CHOICE, UsageEvent.PARAM_CHOICE to choice.eventValue)
+        Telemetry.event(
+            UsageEvent.RATE_DIALOG_CHOICE,
+            UsageEvent.PARAM_CHOICE to choice.eventValue,
+            UsageEvent.PARAM_FROM to UsageEvent.FROM_RATE_CHIP
+        )
         when (choice) {
             RateChoice.Rate -> {
                 RateReminder.markRateTapped(this)
                 RatingPrompt.openRatePage(this)
             }
-            RateChoice.Idea -> ProjectLinks.open(this, ProjectLinks.NEW_IDEA_URL)
+            RateChoice.Idea -> {
+                AfterNoteRating.markAnswered(this)
+                ProjectLinks.open(this, ProjectLinks.NEW_IDEA_URL)
+            }
             RateChoice.Never -> RateReminder.markNeverAgain(this)
             RateChoice.Later -> Unit
         }
@@ -109,20 +118,24 @@ private fun RateDialog(bodyRes: Int, rateButtonRes: Int, onChoice: (RateChoice) 
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = { onChoice(RateChoice.Rate) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(rateButtonRes))
+                    OneLineLabel(stringResource(rateButtonRes))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 FilledTonalButton(onClick = { onChoice(RateChoice.Idea) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.rate_dialog_idea))
+                    OneLineLabel(stringResource(R.string.rate_dialog_idea))
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { onChoice(RateChoice.Never) }) {
-                        Text(stringResource(R.string.rate_dialog_never))
-                    }
-                    TextButton(onClick = { onChoice(RateChoice.Later) }) {
-                        Text(stringResource(R.string.rate_dialog_later))
-                    }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = { onChoice(RateChoice.Later) },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    OneLineLabel(stringResource(R.string.rate_dialog_later))
+                }
+                TextButton(
+                    onClick = { onChoice(RateChoice.Never) },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    OneLineLabel(stringResource(R.string.rate_dialog_never))
                 }
             }
         }

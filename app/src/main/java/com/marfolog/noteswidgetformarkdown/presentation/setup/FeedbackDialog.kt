@@ -34,7 +34,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.util.FeedbackForm
-import com.marfolog.noteswidgetformarkdown.util.FeedbackReminder
 import com.marfolog.noteswidgetformarkdown.util.FeedbackSendResult
 import com.marfolog.noteswidgetformarkdown.util.FeedbackSender
 import com.marfolog.noteswidgetformarkdown.util.FeedbackThumbs
@@ -92,14 +91,8 @@ internal fun FeedbackDialogHost(onClose: () -> Unit) {
             errorRes = null
             sender.send(form)
         },
-        onLater = {
-            FeedbackReminder.markSnoozed(context, System.currentTimeMillis())
-            close(UsageEvent.CHOICE_LATER)
-        },
-        onNever = {
-            FeedbackReminder.markNeverAgain(context)
-            close(UsageEvent.CHOICE_NEVER)
-        }
+        onLater = { close(UsageEvent.CHOICE_LATER) },
+        onNever = { close(UsageEvent.CHOICE_NEVER) }
     )
 }
 

@@ -26,49 +26,11 @@ class FeedbackReminderTest {
     private val installedAt = 1_760_000_000_000L
     private val store = InMemoryStore().also { RateReminder.recordStart(it, installedAt) }
 
-    private fun offer(nowMillis: Long, openedFrom: String? = null) = FeedbackReminder.shouldOffer(
-        store = store,
-        nowMillis = nowMillis,
-        setupComplete = true,
-        openedFrom = openedFrom
-    )
-
     @Test
-    fun `the week is counted from the same first start the rate chip uses`() {
-        assertFalse(offer(installedAt + 6 * day))
-        assertTrue(offer(installedAt + 7 * day))
-    }
-
-    @Test
-    fun `a fresh store without a first start never offers`() {
-        val empty = InMemoryStore()
-        assertFalse(
-            FeedbackReminder.shouldOffer(empty, installedAt + 30 * day, true, null)
-        )
-    }
-
-    @Test
-    fun `not now comes back on a visit the next day`() {
-        val snoozedAt = installedAt + 8 * day
-        FeedbackReminder.markSnoozed(store, snoozedAt)
-
-        assertFalse(offer(snoozedAt + day / 2))
-        assertTrue(offer(snoozedAt + day))
-    }
-
-    @Test
-    fun `do not ask again sticks`() {
-        FeedbackReminder.markNeverAgain(store)
-
-        assertFalse(offer(installedAt + 300 * day))
-    }
-
-    @Test
-    fun `sending answers the question and starts the one a day limit`() {
+    fun `sending starts the one a day limit`() {
         val sentAt = installedAt + 9 * day
         FeedbackReminder.markSent(store, sentAt)
 
-        assertFalse(offer(sentAt + 300 * day))
         assertEquals(sentAt, store.values["feedback_last_sent_at"])
         assertFalse(FeedbackReminder.canSend(store, sentAt + day - 1))
         assertTrue(FeedbackReminder.canSend(store, sentAt + day))

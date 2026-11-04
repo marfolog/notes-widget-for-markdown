@@ -57,8 +57,8 @@ class RateReminderTest {
     fun `the chip window follows the recorded dates`() {
         RateReminder.recordStart(store, installedAt)
 
-        assertNull(RateReminder.openWindow(store, installedAt + 6 * day))
-        assertEquals(0, RateReminder.openWindow(store, installedAt + 7 * day))
+        assertNull(RateReminder.openWindow(store, installedAt + 2 * day))
+        assertEquals(0, RateReminder.openWindow(store, installedAt + 3 * day))
     }
 
     @Test
@@ -69,7 +69,7 @@ class RateReminderTest {
     @Test
     fun `rate, dont ask again and the settings switch each hide the chip`() {
         RateReminder.recordStart(store, installedAt)
-        val inWindow = installedAt + 8 * day
+        val inWindow = installedAt + 4 * day
 
         RateReminder.setEnabled(store, false)
         assertNull(RateReminder.openWindow(store, inWindow))
@@ -102,10 +102,10 @@ class RateReminderTest {
     }
 
     @Test
-    fun `setting is hidden on a fresh install and appears a week later, whatever the chip state`() {
+    fun `setting is hidden on a fresh install and appears three days later, whatever the chip state`() {
         RateReminder.recordStart(store, installedAt)
-        assertFalse(RateReminder.isSettingAvailable(store, installedAt + 7 * day - 1))
-        assertTrue(RateReminder.isSettingAvailable(store, installedAt + 7 * day))
+        assertFalse(RateReminder.isSettingAvailable(store, installedAt + 3 * day - 1))
+        assertTrue(RateReminder.isSettingAvailable(store, installedAt + 3 * day))
 
         RateReminder.markRateTapped(store)
         RateReminder.markNeverAgain(store)

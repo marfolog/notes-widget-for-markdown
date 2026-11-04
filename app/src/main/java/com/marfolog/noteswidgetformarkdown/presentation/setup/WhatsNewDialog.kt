@@ -21,14 +21,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.marfolog.noteswidgetformarkdown.BuildConfig
 import com.marfolog.noteswidgetformarkdown.R
+import com.marfolog.noteswidgetformarkdown.presentation.onboarding.ButtonsChoiceCards
+import com.marfolog.noteswidgetformarkdown.presentation.widget.AddButtons
+import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
@@ -36,12 +46,43 @@ import com.marfolog.noteswidgetformarkdown.util.UsageEvent
 import com.marfolog.noteswidgetformarkdown.util.WhatsNew
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewIcon
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewItem
+import com.marfolog.noteswidgetformarkdown.util.WhatsNewPage
+import com.marfolog.noteswidgetformarkdown.util.WhatsNewReminder
+import kotlinx.coroutines.launch
 
-/** Carries out the three ways out of the "What's new" dialog. */
+/**
+ * The "What's new" dialog: the page [WhatsNew.firstPage] says, then the news. The page is saved with
+ * the activity, so a rotation or a killed process comes back to the page it left. The screen behind
+ * it is told of a choice about the buttons, so its switch does not go on showing the old one.
+ */
 @Composable
-internal fun WhatsNewDialogHost(onClose: () -> Unit) {
+internal fun WhatsNewDialogHost(onButtonsChosen: (shown: Boolean) -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val release = WhatsNew.release(BuildConfig.VERSION_NAME)
+    var page by rememberSaveable { mutableStateOf(WhatsNew.firstPage(BuildConfig.VERSION_NAME, AddButtons.choice(context))) }
+    var reportedPage by rememberSaveable { mutableStateOf<WhatsNewPage?>(null) }
+
+    LaunchedEffect(page) {
+        if (reportedPage == page) return@LaunchedEffect
+        reportedPage = page
+        Telemetry.event(
+            UsageEvent.WHATS_NEW_SHOWN,
+            UsageEvent.PARAM_VERSION to release,
+            UsageEvent.PARAM_STEP to page.eventValue
+        )
+    }
+
+    fun chooseButtons(shown: Boolean) {
+        AddButtons.setShown(context, shown)
+        Telemetry.event(UsageEvent.SETTING_CHANGED, *UsageEvent.addButtonsChanged(shown, UsageEvent.FROM_WHATS_NEW))
+        // Seen only now: leaving the question open must bring the dialog back, not lose it.
+        WhatsNewReminder.markShown(context, System.currentTimeMillis())
+        // The widget changes with the choice, and the rate chip keeps its distance from this dialog.
+        scope.launch { NotesWidget.updateAll(context) }
+        onButtonsChosen(shown)
+        page = WhatsNewPage.News
+    }
 
     fun close(choice: String) {
         Telemetry.event(
@@ -52,18 +93,52 @@ internal fun WhatsNewDialogHost(onClose: () -> Unit) {
         onClose()
     }
 
-    WhatsNewDialog(
-        release = release,
-        items = WhatsNew.itemsFor(release),
-        rateButtonRes = RatingPrompt.RATE_BUTTON_RES,
-        footerRes = RatingPrompt.WHATS_NEW_FOOTER_RES,
-        onRate = {
-            RateReminder.markRateTapped(context)
-            RatingPrompt.openRatePage(context)
-            close(UsageEvent.CHOICE_RATE)
+    when (page) {
+        WhatsNewPage.ButtonsChoice -> WhatsNewButtonsDialog(release = release, onChoose = ::chooseButtons)
+        WhatsNewPage.News -> WhatsNewDialog(
+            release = release,
+            items = WhatsNew.itemsFor(release),
+            rateButtonRes = RatingPrompt.RATE_BUTTON_RES,
+            footerRes = RatingPrompt.WHATS_NEW_FOOTER_RES,
+            onRate = {
+                RateReminder.markRateTapped(context)
+                RatingPrompt.openRatePage(context)
+                close(UsageEvent.CHOICE_RATE)
+            },
+            onLater = { close(UsageEvent.CHOICE_LATER) },
+            onDismiss = { close(UsageEvent.CHOICE_DISMISSED) }
+        )
+    }
+}
+
+/** A question, not a notice: nothing closes it but an answer, and neither answer is preselected. */
+@Composable
+private fun WhatsNewButtonsDialog(release: String, onChoose: (shown: Boolean) -> Unit) {
+    AlertDialog(
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        title = { Text(stringResource(R.string.whats_new_title, release)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(stringResource(R.string.whats_new_buttons_intro), style = MaterialTheme.typography.bodyMedium)
+                ButtonsChoiceCards(
+                    choice = null,
+                    onChoose = onChoose,
+                    showTitleRes = R.string.whats_new_buttons_keep,
+                    hideTitleRes = R.string.whats_new_buttons_hide,
+                    compact = true
+                )
+                Text(
+                    text = stringResource(R.string.onboarding_buttons_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         },
-        onLater = { close(UsageEvent.CHOICE_LATER) },
-        onDismiss = { close(UsageEvent.CHOICE_DISMISSED) }
+        confirmButton = {}
     )
 }
 

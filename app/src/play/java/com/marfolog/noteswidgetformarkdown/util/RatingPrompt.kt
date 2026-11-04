@@ -5,22 +5,32 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import androidx.annotation.StringRes
-import com.marfolog.noteswidgetformarkdown.R
 import com.google.android.play.core.ktx.launchReview
 import com.google.android.play.core.ktx.requestReview
+import com.google.android.play.core.review.ReviewInfo
+import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.marfolog.noteswidgetformarkdown.R
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Play flavour: asks Google Play to show its in-app rating dialog, now and then.
- *
- * [maybeAsk] only tells Play that this would be a fair moment, and Play decides whether the dialog
- * actually appears. The app never learns whether it did, or what was rated. The app's own rate
- * chip and settings link only ever open the store page — Google does not allow the in-app review
- * to be started from a button. The foss flavour ships a twin of this file that points at GitHub.
+ * Play flavour: where a rating goes. Every way to rate the app itself — the widget chip, the dialog
+ * after a saved note, "What's new" and settings — opens the store page; the app never sees what was
+ * rated. Besides that, [NativeReview] is Google's own in-app review card. The foss flavour ships a
+ * twin of this file that points at GitHub and has no such card.
  */
 object RatingPrompt {
+
+    const val NATIVE_REVIEW_AVAILABLE = true
+
+    @StringRes
+    val AFTER_NOTE_TITLE_RES = R.string.after_note_rating_title_play
 
     @StringRes
     val RATE_BODY_RES = R.string.rate_dialog_body_play
@@ -36,41 +46,31 @@ object RatingPrompt {
     val ABOUT_RATE_RES = R.string.about_rate
 
     private const val AREA = "Rating"
-    private const val PREFS = "app_prefs"
-    private const val KEY_LAST_REQUEST_AT = "rating_last_request_at"
-
-    /** Play normally answers in well under a second; a save must not hang on a slow one. */
-    private const val REQUEST_TIMEOUT_MILLIS = 3_000L
-
-    /**
-     * Returns once Play is done with its flow, so a caller that finishes right after does not cut
-     * the dialog off. Returns straight away when it is not time yet — a plain prefs read — and on
-     * every failure: no Play Store, an old one, no network, none of it is the user's problem.
-     */
-    suspend fun maybeAsk(activity: Activity) {
-        val prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val now = System.currentTimeMillis()
-        val eligible = RatingEligibility.isEligible(
-            nowMillis = now,
-            firstSeenAtMillis = RateReminder.firstSeenAt(activity),
-            lastRequestAtMillis = prefs.getLong(KEY_LAST_REQUEST_AT, -1L).takeIf { it >= 0 }
-        )
-        if (!eligible) return
-
-        runCatching {
-            val manager = ReviewManagerFactory.create(activity)
-            val reviewInfo = withTimeoutOrNull(REQUEST_TIMEOUT_MILLIS) { manager.requestReview() }
-                ?: return
-            if (activity.isFinishing || activity.isDestroyed) return
-            // Stored before launching, so the cooldown holds even if Play shows nothing — there
-            // is no way to tell, and asking again tomorrow would only feel like nagging.
-            prefs.edit().putLong(KEY_LAST_REQUEST_AT, now).apply()
-            AppLog.d(AREA, "Handing the rating prompt to Play")
-            manager.launchReview(activity, reviewInfo)
-        }.onFailure { AppLog.d(AREA, "Rating prompt not available: ${it.javaClass.simpleName}") }
-    }
 
     fun openRatePage(context: Context) = openStorePage(context)
+
+    /** The store page as an intent: the web address, which the Play Store app opens itself. */
+    fun ratePageIntent(context: Context): Intent =
+        ProjectLinks.viewIntent("https://play.google.com/store/apps/details?id=${context.packageName}")
+
+    /**
+     * Asks Play for the review ahead of time, when an activity starts, so launching it after a save
+     * does not hold the save up. Nothing is shown until [NativeReview.launch].
+     */
+    fun prepareNativeReview(activity: Activity, scope: CoroutineScope): NativeReview {
+        val manager = ReviewManagerFactory.create(activity)
+        val info = scope.async {
+            try {
+                manager.requestReview()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLog.d(AREA, "Review not available: ${e.javaClass.simpleName}")
+                null
+            }
+        }
+        return NativeReview(manager, info)
+    }
 
     /** The Play Store app if there is one, the web page otherwise. */
     fun openStorePage(context: Context) {
@@ -86,5 +86,40 @@ object RatingPrompt {
             runCatching { context.startActivity(web) }
                 .onFailure { AppLog.d(AREA, "Nothing can open the store page") }
         }
+    }
+}
+
+/**
+ * Google's in-app review card, requested ahead of time and launched when a note has been saved.
+ * Google never says whether the card was shown, or what was rated; the app only knows how long the
+ * flow took. It is never started from a button and nothing is drawn over it.
+ */
+class NativeReview internal constructor(
+    private val manager: ReviewManager,
+    private val info: Deferred<ReviewInfo?>
+) {
+
+    /**
+     * Launches the card if Play handed it over within [waitMillis]; returns false when it did not.
+     * That is no reason to ask again: the caller counts the attempt either way. [onFinished] runs
+     * right after the card, with how long it took.
+     */
+    suspend fun launch(
+        activity: Activity,
+        waitMillis: Long,
+        onFinished: (durationMillis: Long) -> Unit
+    ): Boolean {
+        val reviewInfo = withTimeoutOrNull(waitMillis) { info.await() } ?: return false
+        if (activity.isFinishing || activity.isDestroyed) return false
+        val startedAt = SystemClock.elapsedRealtime()
+        try {
+            manager.launchReview(activity, reviewInfo)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            AppLog.d("Rating", "Review flow failed: ${e.javaClass.simpleName}")
+        }
+        onFinished(SystemClock.elapsedRealtime() - startedAt)
+        return true
     }
 }

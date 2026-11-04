@@ -3,6 +3,7 @@ package com.marfolog.noteswidgetformarkdown.util
 import android.content.Context
 import com.marfolog.noteswidgetformarkdown.BuildConfig
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import com.marfolog.noteswidgetformarkdown.presentation.widget.AddButtons
 
 /** What the "What's new" dialog remembers between starts. The rules are in [WhatsNew]. */
 object WhatsNewReminder {
@@ -42,7 +43,14 @@ object WhatsNewReminder {
         setupComplete = setupComplete
     )
 
-    /** Stored the moment it appears, so neither a crash nor a rotation can bring it back. */
+    /** Whether the dialog starts with the add buttons question, which it must not lose by being left. */
+    fun needsButtonsChoice(context: Context): Boolean =
+        WhatsNew.needsButtonsChoice(BuildConfig.VERSION_NAME, AddButtons.choice(context))
+
+    /**
+     * Stored the moment it appears, so neither a crash nor a rotation can bring it back. When the
+     * dialog starts with a question, the moment it has been answered instead.
+     */
     fun markShown(context: Context, nowMillis: Long) = markShown(store(context), BuildConfig.VERSION_NAME, nowMillis)
 
     internal fun markShown(store: KeyValueStore, versionName: String, nowMillis: Long) {

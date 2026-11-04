@@ -118,7 +118,7 @@ phone.
 | Analytics | none | Firebase, app usage only |
 | Crash reports | none | Firebase Crashlytics |
 | Can be switched off | nothing to switch off | yes, in settings |
-| Rating prompt | none; the ★ Rate chip and settings link to GitHub | Google Play's own dialog, at most every 90 days; the ★ Rate chip and settings link to the store |
+| Rating prompt | the app's own dialog after a saved note; it and the ★ Rate chip link to GitHub | Google's in-app review once, then the app's own dialog after a saved note; the dialog and the ★ Rate chip link to the store |
 | Feedback you type | opens a GitHub discussion in your browser, the app sends nothing | Firebase Firestore, only when you press Send |
 
 **The foss build declares no `INTERNET` permission.** Without it, Android does not grant the app a
@@ -136,25 +136,29 @@ It does ask for `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` an
 them can move data off the device. It also wakes on screen unlock, so what you see is current by
 the time you look.
 
-The Play build can report app and crash events, but only after you say yes. It does not ask on
-first launch: settings ask once, the first time you open them after picking a notes folder and
-placing a widget (or after skipping the setup guide), and until you answer nothing is sent. You can
-change your answer in settings any time. It is written not to send note contents, file names or
+The Play build can report app and crash events, but only after you say yes. The first-launch guide
+asks right after its welcome screen, with "Share anonymous stats" and "No thanks", and until you
+answer nothing is sent. If you updated instead, or left the guide before answering, the question
+comes later: on a visit to settings, or right after a saved quick note. It is asked once, and
+you can change your answer in settings any time. It is written not to send note contents, file names or
 folder paths: storage locations are stripped from crash messages and breadcrumbs before they are
 handed to Firebase. No advertising ID is collected, and the ad-related
 permissions Firebase would otherwise add are removed from the manifest.
 
-Five days after the Play build first runs on your phone (for an update, the first run of the
-version that added this), it may ask Google Play to show its rating dialog: right after you save a
-quick note from the widget. It asks no more than once every 90 days. That request goes to the Play
-Store app on your phone, and Google decides whether the dialog appears. The app is never told
-whether you rated it or what you gave, and it sends nothing about your notes. The ★ Rate chip on
-the widget and the "Rate on Google Play" row in settings only open the store page. The foss build
-has no rating dialog; its chip and settings row open the GitHub repository in your browser.
+Two days after the app first runs on your phone, a saved note, whether a quick note or a new one
+from the widget, may be followed by a request for a rating. In the Play build the first is Google's
+own in-app review card, asked for once; it goes through the Play Store app on your phone, Google
+decides whether the card appears, and the app is never told whether you rated it or what you gave.
+It only learns how long the card stayed open, in three rough buckets. Five days later the app's own
+dialog follows, with a button to rate and a "Later" button; in the foss build it is the first
+request, two days after the first start. The button only opens a page: the store page in the Play
+build, the GitHub repository in the foss build. "Later", or closing the dialog, brings it back once,
+ten days on; after the second "Later" it never comes again. Once you rate, from the dialog, the ★ Rate
+chip on the widget, the "What's new" dialog or settings, nothing asks again. The ★ Rate chip and the
+rate row in settings open the same page.
 
-Settings can ask, at most once a day and not before the app is a week old, what you think and what
-to build next; "Send feedback" in settings opens the same form any time. In the Play build, pressing
-Send stores your answer — the thumb and what you typed — together with the app
+"Send feedback" in settings opens a form asking what you think and what to build next; settings
+do not open it on their own. In the Play build, pressing Send stores your answer — the thumb and what you typed — together with the app
 version in Firebase Firestore. Nothing is sent until you press Send, and nothing else goes with
 it: no account, no device identifier, nothing from your notes. This does not depend on the
 analytics switch, because sending is something you do on purpose. In the foss build Send only opens

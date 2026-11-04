@@ -81,7 +81,6 @@
     <string name="language_setting">Language</string>
     <string name="action_done">Done</string>
     <string name="action_delete">Delete</string>
-    <string name="action_skip">Skip</string>
     <string name="delete_note_body">The file will be deleted. There is no trash in the app to recover it from, and if the folder is synced the deletion will follow to your other devices.</string>
     <string name="delete_note_failed">Could not delete the file</string>
     <string name="fast_note_target_none_yet">Select a notes folder with .md files to choose a Fast note target.</string>
@@ -93,8 +92,6 @@
     <string name="card_color">Color</string>
     <string name="card_custom_color">Custom color</string>
     <string name="card_delete_file">Delete note file</string>
-    <string name="guide_step_folder">Pick the folder your notes live in</string>
-    <string name="guide_step_widget">Add the widget to your home screen</string>
     <string name="about_title">Something broken, or just using it?</string>
     <string name="about_report">Report a bug</string>
     <string name="about_rate">Rate on Google Play</string>
@@ -117,7 +114,6 @@
     <string name="fast_note_target_folder_empty">No .md files in this folder yet. Create a note with the + button on the widget, then come back and pick it here.</string>
     <string name="about_desc">This app is made by one person in their spare time. Bug reports are read, and knowing someone out there uses it is what keeps it going.</string>
     <string name="vault_detected">Obsidian vault \"%1$s\" detected, so tapping a note on the widget opens the right file. Nothing to set up here.</string>
-    <string name="guide_step_counter">Setup — step %1$d of 2</string>
     <string name="delete_note_title">Delete %1$s?</string>
     <string name="sync_mode_git">Git</string>
     <string name="sync_mode_other">Something else</string>
@@ -173,8 +169,8 @@
     <string name="rate_chip_hint">Takes 10 s</string>
     <string name="rate_chip_star" translatable="false">★</string>
     <string name="rate_dialog_title">Notes Widget is made by one person.</string>
-    <string name="rate_dialog_body_play">A rating on Google Play helps other people find it.</string>
-    <string name="rate_dialog_body_foss">A star on GitHub helps other people find it.</string>
+    <string name="rate_dialog_body_play">Your rating keeps this free widget alive and improving.</string>
+    <string name="rate_dialog_body_foss">Your star keeps this free widget alive and improving.</string>
     <string name="rate_dialog_rate_play">★ Rate on Google Play</string>
     <string name="rate_dialog_rate_foss">★ Star on GitHub</string>
     <string name="rate_dialog_idea">Suggest an idea</string>
@@ -197,6 +193,11 @@
     <string name="widget_background_desc">Lower it to let the wallpaper show through. Note cards keep their colours.</string>
     <string name="widget_background_value">%1$d%%</string>
     <string name="widget_color_desc">System follows the phone\'s theme. Any other colour stays the same in light and dark mode.</string>
+    <string name="add_buttons_setting">Show add buttons</string>
+    <string name="add_buttons_setting_desc">The + and fast note buttons at the bottom of the widget. Switch them off to give your notes more room.</string>
+    <string name="card_default_title">All cards</string>
+    <string name="card_default_desc">Size, text size and colour for every card. A card you set up below keeps its own look.</string>
+    <string name="card_use_default">Use the look of all cards</string>
     <string name="widget_color_system">System</string>
     <string name="widget_color_rose" translatable="false">Rose</string>
     <string name="widget_color_red" translatable="false">Red</string>
@@ -237,7 +238,49 @@
     <string name="whats_new_130_fast_note">Fast notes can be checkboxes, and you choose the file right in the dialog</string>
     <string name="whats_new_130_feedback">Tell me what to improve, right from settings</string>
     <string name="whats_new_130_languages">Now also in Russian, Portuguese, Italian and Ukrainian</string>
+    <string name="whats_new_140_card_default">Set the size, text size and colour of all cards at once</string>
     <string name="whats_new_footer_play">Enjoying the update? A rating helps other people find the widget.</string>
     <string name="whats_new_footer_foss">Enjoying the update? A star on GitHub helps other people find the widget.</string>
     <string name="whats_new_later">Maybe later</string>
+    <string name="onboarding_step_counter">Step %1$d of %2$d</string>
+    <string name="onboarding_welcome_title">Your Markdown notes on your home screen</string>
+    <string name="onboarding_welcome_body">See the notes from one folder at a glance and jot new ones down without opening an app.</string>
+    <string name="onboarding_welcome_preview">Example of the widget with three notes</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_folder_title">Where are your notes?</string>
+    <string name="onboarding_folder_body">Pick the folder your notes live in, for example your Obsidian vault.</string>
+    <string name="onboarding_folder_pick">Choose folder</string>
+    <string name="onboarding_folder_change">Choose another folder</string>
+    <string name="onboarding_folder_counting">Looking for notes…</string>
+    <string name="onboarding_folder_empty">There are no .md files in this folder. Choose another one, or continue if your notes are going to be here.</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_widget_title">Add the widget to your home screen</string>
+    <string name="onboarding_widget_body">That is where your notes show up. Its size and look can be changed any time.</string>
+    <string name="onboarding_widget_add_cards">Add widget with note cards</string>
+    <string name="onboarding_widget_add_list">Compact list instead</string>
+    <string name="onboarding_widget_placed">The widget is on your home screen.</string>
+    <string name="onboarding_widget_manual">You can also add it yourself: touch and hold an empty spot on your home screen, tap Widgets and find Notes Widget for Markdown.</string>
+    <string name="onboarding_widget_later">I\'ll do it later</string>
+    <string name="onboarding_finish">Done</string>
+    <plurals name="onboarding_folder_notes_found">
+        <item quantity="one">%d note found</item>
+        <item quantity="other">%d notes found</item>
+    </plurals>
+    <string name="onboarding_consent_share">Share anonymous stats</string>
+    <string name="onboarding_buttons_title">Quick add buttons?</string>
+    <string name="onboarding_buttons_body">The + button creates a new note. The other one adds a quick line to the file you choose.</string>
+    <string name="onboarding_buttons_show">Show the buttons</string>
+    <string name="onboarding_buttons_show_desc">New note and quick note, one tap away</string>
+    <string name="onboarding_buttons_hide">Just my notes</string>
+    <string name="onboarding_buttons_hide_desc">More room for your notes</string>
+    <string name="onboarding_buttons_hint">You can change this later in settings.</string>
+    <string name="widget_buttons_title">Widget buttons (optional)</string>
+    <string name="whats_new_buttons_intro">The + and quick note buttons at the bottom of the widget are now optional. Pick what you prefer:</string>
+    <string name="whats_new_buttons_keep">Keep the buttons</string>
+    <string name="whats_new_buttons_hide">Hide the buttons</string>
+    <string name="after_note_rating_title_play">Rate Notes Widget on Google Play</string>
+    <string name="after_note_rating_title_foss">Star Notes Widget on GitHub</string>
+    <string name="after_note_rating_later">Later</string>
+    <string name="onboarding_consent_no">No thanks</string>
 </resources>

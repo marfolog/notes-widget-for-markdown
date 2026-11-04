@@ -36,6 +36,41 @@ class UsageEventTest {
     }
 
     @Test
+    fun `how long google's review card took goes into three buckets`() {
+        assertEquals("lt1s", UsageEvent.nativeDuration(0))
+        assertEquals("lt1s", UsageEvent.nativeDuration(999))
+        assertEquals("1to5s", UsageEvent.nativeDuration(1_000))
+        assertEquals("1to5s", UsageEvent.nativeDuration(5_000))
+        assertEquals("gt5s", UsageEvent.nativeDuration(5_001))
+        assertEquals("gt5s", UsageEvent.nativeDuration(120_000))
+    }
+
+    @Test
+    fun `the rating events come from three places`() {
+        assertEquals("after_fast_note", UsageEvent.FROM_AFTER_FAST_NOTE)
+        assertEquals("after_new_note", UsageEvent.FROM_AFTER_NEW_NOTE)
+        assertEquals("rate_chip", UsageEvent.FROM_RATE_CHIP)
+        assertEquals("rate_native_requested", UsageEvent.RATE_NATIVE_REQUESTED)
+        assertEquals("rate_native_finished", UsageEvent.RATE_NATIVE_FINISHED)
+    }
+
+    @Test
+    fun `the add buttons choice is one setting told apart by where it was made`() {
+        assertEquals(
+            listOf("setting" to "add_buttons", "value" to "on", "from" to "onboarding"),
+            UsageEvent.addButtonsChanged(shown = true, from = UsageEvent.FROM_ONBOARDING).toList()
+        )
+        assertEquals(
+            listOf("setting" to "add_buttons", "value" to "off", "from" to "whats_new"),
+            UsageEvent.addButtonsChanged(shown = false, from = UsageEvent.FROM_WHATS_NEW).toList()
+        )
+        assertEquals(
+            listOf("setting" to "add_buttons", "value" to "off", "from" to "settings"),
+            UsageEvent.addButtonsChanged(shown = false, from = UsageEvent.FROM_SETTINGS).toList()
+        )
+    }
+
+    @Test
     fun `switches and flags map to fixed words`() {
         assertEquals("on", UsageEvent.onOff(true))
         assertEquals("off", UsageEvent.onOff(false))

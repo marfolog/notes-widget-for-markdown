@@ -38,10 +38,6 @@ class NoteCardSettingsStore(context: Context) {
         }
     }
 
-    fun get(noteId: String): NoteCardAppearance {
-        return getAll()[noteId] ?: NoteCardAppearance()
-    }
-
     fun getOrder(): List<String> {
         val raw = prefs.getString(KEY_CARD_ORDER_JSON, null) ?: return emptyList()
         return runCatching {
@@ -88,12 +84,17 @@ class NoteCardSettingsStore(context: Context) {
 
     /** Drops a deleted note's appearance and its slot in the manual order. */
     fun forget(noteId: String) {
+        forgetAppearance(noteId)
+        saveOrder(getOrder().filterNot { it == noteId })
+    }
+
+    /** The card goes back to the widget's default look; its place in the order stays. */
+    fun forgetAppearance(noteId: String) {
         val root = JSONObject(prefs.getString(KEY_CARD_SETTINGS_JSON, "{}") ?: "{}")
         root.remove(noteId)
         prefs.edit()
             .putString(KEY_CARD_SETTINGS_JSON, root.toString())
-            .apply()
-        saveOrder(getOrder().filterNot { it == noteId })
+            .commit()
     }
 
     fun save(noteId: String, appearance: NoteCardAppearance) {

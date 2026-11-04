@@ -25,6 +25,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,10 +46,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RemoveCircleOutline
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -125,6 +124,7 @@ import java.text.DateFormat
 import java.util.Date
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
 import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteStyle
+import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.WidgetColor
@@ -136,6 +136,11 @@ import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetExtraNotesUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.GitSyncLabel
+import com.marfolog.noteswidgetformarkdown.presentation.consent.ReportingConsentDialog
+import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingScreen
+import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingSession
+import com.marfolog.noteswidgetformarkdown.presentation.widget.AddButtons
+import com.marfolog.noteswidgetformarkdown.presentation.widget.CardDefaults
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.presentation.widget.OpenWith
 import com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetBackground
@@ -144,7 +149,6 @@ import com.marfolog.noteswidgetformarkdown.util.AppLanguage
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.AutoPrompt
 import com.marfolog.noteswidgetformarkdown.util.ConsentPrompt
-import com.marfolog.noteswidgetformarkdown.util.FeedbackReminder
 import com.marfolog.noteswidgetformarkdown.util.PromptBudget
 import com.marfolog.noteswidgetformarkdown.util.ProjectLinks
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
@@ -152,9 +156,7 @@ import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.util.UsageEvent
 import com.marfolog.noteswidgetformarkdown.util.UsageProperties
-import com.marfolog.noteswidgetformarkdown.util.WhatsNew
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewReminder
-import com.marfolog.noteswidgetformarkdown.worker.NotesFolderObserverJob
 import com.marfolog.noteswidgetformarkdown.ui.theme.NoteCardPalette
 import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetPalette
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
@@ -168,11 +170,14 @@ import org.koin.java.KoinJavaComponent.get
 
 class SetupActivity : ComponentActivity() {
 
+    private lateinit var onboarding: OnboardingSession
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ThemePreference.load(this)
+        onboarding = OnboardingSession(applicationContext)
         if (savedInstanceState == null) {
             Telemetry.event(
                 UsageEvent.SETTINGS_OPENED,
@@ -187,26 +192,30 @@ class SetupActivity : ComponentActivity() {
                     ThemePreference.Mode.System -> isSystemInDarkTheme()
                 }
             ) {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(
-                            title = {
-                                Column {
-                                    Text(stringResource(R.string.settings_title))
-                                    // Verze primo v hlavicce: pri hlaseni chyby ji uzivatel
-                                    // nemusi hledat v systemovem nastaveni.
-                                    Text(
-                                        text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                if (onboarding.step != null) {
+                    OnboardingScreen(session = onboarding, onLeave = ::finish)
+                } else {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        topBar = {
+                            TopAppBar(
+                                title = {
+                                    Column {
+                                        Text(stringResource(R.string.settings_title))
+                                        // Verze primo v hlavicce: pri hlaseni chyby ji uzivatel
+                                        // nemusi hledat v systemovem nastaveni.
+                                        Text(
+                                            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
+                    ) { innerPadding ->
+                        SetupScreen(modifier = Modifier.padding(innerPadding))
                     }
-                ) { innerPadding ->
-                    SetupScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -235,6 +244,11 @@ class SetupActivity : ComponentActivity() {
         const val KEY_WIDGET_BACKGROUND = "widget_background_percent"
         const val KEY_WIDGET_COLOR = "widget_color"
         const val KEY_WIDGET_COLOR_HEX = "widget_color_hex"
+        const val KEY_SHOW_ADD_BUTTONS = "show_add_buttons"
+        const val KEY_DEFAULT_CARD_SIZE = "default_card_size"
+        const val KEY_DEFAULT_CARD_COLOR = "default_card_color"
+        const val KEY_DEFAULT_CARD_TEXT_SIZE = "default_card_text_size"
+        const val KEY_DEFAULT_CARD_COLOR_HEX = "default_card_color_hex"
 
         /** One of the `UsageEvent.FROM_*` values; none means the launcher. */
         const val EXTRA_OPENED_FROM = "opened_from"
@@ -255,6 +269,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     val prefs = context.getSharedPreferences(SetupActivity.PREFS_NAME, android.content.Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val cardSettingsStore = remember { NoteCardSettingsStore(context.applicationContext) }
+    val notesLoadFailed = stringResource(R.string.notes_load_failed)
+    val deleteNoteFailed = stringResource(R.string.delete_note_failed)
 
     var vaultUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_URI, null)) }
     var notesUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTES_URI, null)) }
@@ -263,6 +279,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var fastNoteTargetUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, null)) }
     var notesForSettings by remember { mutableStateOf<List<NoteSummary>>(emptyList()) }
     var cardSettings by remember { mutableStateOf(cardSettingsStore.getAll()) }
+    var cardDefault by remember { mutableStateOf(CardDefaults.get(context)) }
+    val cardAppearances = CardAppearances(cardSettings, cardDefault)
     var notesLoadError by rememberSaveable { mutableStateOf<String?>(null) }
     val extraNotesStore = remember { ExtraNotesStore(context.applicationContext) }
     var extraNoteUris by remember { mutableStateOf(extraNotesStore.getAll()) }
@@ -302,7 +320,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }.onFailure { error ->
             AppLog.w(SetupActivity.AREA, "Could not list notes in $currentNotesUri", error)
             notesForSettings = emptyList()
-            notesLoadError = error.message ?: context.getString(R.string.notes_load_failed)
+            notesLoadError = error.message ?: notesLoadFailed
         }
     }
 
@@ -354,6 +372,20 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     var widgetColor by rememberSaveable { mutableStateOf(savedWidgetColor.color) }
     var widgetColorHex by rememberSaveable { mutableStateOf(savedWidgetColor.customHex) }
 
+    var showAddButtons by rememberSaveable { mutableStateOf(AddButtons.isShown(context)) }
+
+    fun changeCard(note: NoteSummary, change: (NoteCardAppearance) -> NoteCardAppearance) {
+        cardSettingsStore.save(note.fileUri, change(cardAppearances.of(note.fileUri)))
+        cardSettings = cardSettingsStore.getAll()
+        scope.launch { NotesWidget.updateAll(context) }
+    }
+
+    fun changeCardDefault(updated: NoteCardAppearance) {
+        cardDefault = updated
+        CardDefaults.save(context, updated)
+        scope.launch { NotesWidget.updateAll(context) }
+    }
+
     fun changeWidgetColor(choice: WidgetColorChoice) {
         val before = WidgetColorChoice(widgetColor, widgetColorHex)
         widgetColor = choice.color
@@ -397,12 +429,6 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         DocumentsContract.buildDocumentUri(childTreeUri.authority, parentDocId)
     }.getOrNull()
 
-    fun computeRelativePath(vaultUriStr: String, notesUriStr: String): String {
-        val vaultDocId = DocumentsContract.getTreeDocumentId(Uri.parse(vaultUriStr))
-        val notesDocId = DocumentsContract.getTreeDocumentId(Uri.parse(notesUriStr))
-        return notesDocId.removePrefix(vaultDocId).removePrefix("/")
-    }
-
     val vaultPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -438,7 +464,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             // Recompute relative path if notes folder is already selected
             val currentNotesUri = notesUri
             if (currentNotesUri != null) {
-                val path = computeRelativePath(uriStr, currentNotesUri)
+                val path = NotesFolderSelection.relativePath(uriStr, currentNotesUri)
                 derivedPath = path
                 prefs.edit().putString(SetupActivity.KEY_NOTE_FOLDER_PATH, path).apply()
             }
@@ -449,46 +475,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         if (uri != null) {
-            val oldUriString = prefs.getString(SetupActivity.KEY_NOTES_URI, null)
-            if (oldUriString != null) {
-                runCatching {
-                    context.contentResolver.releasePersistableUriPermission(
-                        Uri.parse(oldUriString),
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                }
-            }
-
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-
-            val uriStr = uri.toString()
-
-            prefs.edit()
-                .putString(SetupActivity.KEY_NOTES_URI, uriStr)
-                .apply()
-
-            if (notesUri == null && !prefs.getBoolean(SetupActivity.KEY_GUIDE_DONE, false)) {
-                Telemetry.event(UsageEvent.SETUP_STEP_DONE, UsageEvent.PARAM_STEP to UsageEvent.STEP_FOLDER)
-            }
-            notesUri = uriStr
-            Telemetry.event(UsageEvent.FOLDER_SELECTED)
-            AppLog.i(SetupActivity.AREA, "Notes folder granted: $uriStr")
-            // Re-arm the folder watcher: it is bound to one specific tree URI.
-            NotesFolderObserverJob.schedule(context)
-            // And redraw now. The watcher only wakes when a file changes, so after a plain
-            // folder switch the widget kept showing the old folder until something else did.
-            scope.launch { NotesWidget.updateAll(context) }
-
-            // Compute relative path if vault is already selected
-            val currentVaultUri = vaultUri
-            if (currentVaultUri != null) {
-                val path = computeRelativePath(currentVaultUri, uriStr)
-                derivedPath = path
-                prefs.edit().putString(SetupActivity.KEY_NOTE_FOLDER_PATH, path).apply()
-            }
+            NotesFolderSelection.select(context, uri, scope)?.let { derivedPath = it }
+            notesUri = uri.toString()
         }
     }
 
@@ -535,38 +523,19 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }.getOrNull() ?: Uri.decode(uriString.substringAfterLast('/')).substringAfterLast('/')
     }
 
-    // Pruvodce: zadne cislo kroku se neuklada, krok se odvozuje z toho, co uz je nastaveno.
-    // Diky tomu prezije otoceni displeje i navrat z file pickeru bez dalsiho stavu.
+    // The first-launch guide sets this when it ends. Someone who set the app up before there was a
+    // guide only has a folder, and counts as set up the same.
     var guideDone by rememberSaveable {
         mutableStateOf(prefs.getBoolean(SetupActivity.KEY_GUIDE_DONE, false))
     }
-    // Kdo appku uz pouziva a jen ji aktualizoval, zadneho pruvodce nedostane.
     LaunchedEffect(Unit) {
         if (!guideDone && notesUri != null) {
             prefs.edit().putBoolean(SetupActivity.KEY_GUIDE_DONE, true).apply()
             guideDone = true
         }
     }
-    val dismissGuide: () -> Unit = {
-        prefs.edit().putBoolean(SetupActivity.KEY_GUIDE_DONE, true).apply()
-        guideDone = true
-    }
-    val skipGuide: () -> Unit = {
-        Telemetry.event(UsageEvent.SETUP_SKIPPED)
-        prefs.edit().putBoolean(SetupActivity.KEY_GUIDE_SKIPPED, true).apply()
-        dismissGuide()
-    }
-    val guideStep: GuideStep? = when {
-        guideDone -> null
-        notesUri == null -> GuideStep.PickFolder
-        else -> GuideStep.Save
-    }
 
     val onSave: () -> Unit = {
-        if (guideStep == GuideStep.Save) {
-            Telemetry.event(UsageEvent.SETUP_STEP_DONE, UsageEvent.PARAM_STEP to UsageEvent.STEP_WIDGET)
-        }
-        dismissGuide()
         Toast.makeText(context, R.string.widget_updated_toast, Toast.LENGTH_SHORT).show()
 
         scope.launch {
@@ -609,29 +578,31 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             )
             if (consentDue) add(AutoPrompt.Consent)
             if (WhatsNewReminder.shouldShow(context, setupComplete, openedFrom)) add(AutoPrompt.WhatsNew)
-            if (FeedbackReminder.shouldOffer(context, now, setupComplete, openedFrom)) add(AutoPrompt.Feedback)
         }
-        val chosen = PromptBudget.pick(context, due, now, promptedThisVisit = autoPrompt != null)
+        val mandatory = if (AutoPrompt.WhatsNew in due && WhatsNewReminder.needsButtonsChoice(context)) {
+            setOf(AutoPrompt.WhatsNew)
+        } else {
+            emptySet()
+        }
+        val chosen = PromptBudget.pick(context, due, now, promptedThisVisit = autoPrompt != null, exemptFromGap = mandatory)
             ?: return@LaunchedEffect
         autoPrompt = chosen
         PromptBudget.markShown(context, now)
         when (chosen) {
             AutoPrompt.Consent -> Unit
             AutoPrompt.WhatsNew -> {
-                WhatsNewReminder.markShown(context, now)
                 showWhatsNew = true
-                Telemetry.event(
-                    UsageEvent.WHATS_NEW_SHOWN,
-                    UsageEvent.PARAM_VERSION to WhatsNew.release(BuildConfig.VERSION_NAME)
-                )
-                // The rate chip keeps its distance from this dialog, so redraw it with the new date.
-                scope.launch { NotesWidget.updateAll(context) }
+                // A dialog that opens with a question is marked as seen once it is answered, by the dialog.
+                if (!WhatsNewReminder.needsButtonsChoice(context)) {
+                    WhatsNewReminder.markShown(context, now)
+                    // The rate chip keeps its distance from this dialog, so redraw it with the new date.
+                    scope.launch { NotesWidget.updateAll(context) }
+                }
             }
-            AutoPrompt.Feedback -> openFeedback()
         }
     }
     if (showWhatsNew) {
-        WhatsNewDialogHost(onClose = { showWhatsNew = false })
+        WhatsNewDialogHost(onButtonsChosen = { showAddButtons = it }, onClose = { showWhatsNew = false })
     }
     if (showFeedback) {
         FeedbackDialogHost(onClose = { showFeedback = false })
@@ -639,16 +610,12 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
 
     if (askAboutReporting && Telemetry.ENABLED && autoPrompt == AutoPrompt.Consent) {
         ReportingConsentDialog { agreed ->
-            Telemetry.setEnabled(context, agreed)
-            Telemetry.markAsked(context)
             telemetryEnabled = agreed
             askAboutReporting = false
         }
     }
 
     SetupScreenContent(
-        guideStep = guideStep,
-        onSkipGuide = skipGuide,
         vaultName = vaultDisplayName,
         onSelectVault = { vaultPicker.launch(null) },
         notesFolderName = notesDisplayName,
@@ -659,7 +626,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         onRemoveExtraNote = { entry -> extraNoteToRemove = entry },
         derivedPath = derivedPath,
         notes = notesForSettings,
-        cardSettings = cardSettings,
+        cardAppearances = cardAppearances,
         notesLoadError = notesLoadError,
         fastNoteTargetUri = fastNoteTargetUri,
         onFastNoteTargetSelected = { note ->
@@ -693,32 +660,50 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         },
         onWidgetCustomColorChanged = { hex -> changeWidgetColor(WidgetColorChoice(WidgetColor.Custom, hex)) },
         onCardSizeSelected = { note, size ->
-            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(size = size)
-            cardSettingsStore.save(note.fileUri, updated)
+            changeCard(note) { it.copy(size = size) }
             Telemetry.event(UsageEvent.CARD_HEIGHT_CHANGED)
-            cardSettings = cardSettingsStore.getAll()
-            scope.launch { NotesWidget.updateAll(context) }
         },
         onCardColorSelected = { note, color ->
-            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(color = color)
-            cardSettingsStore.save(note.fileUri, updated)
+            changeCard(note) { it.copy(color = color) }
             Telemetry.event(UsageEvent.CARD_COLOR_CHANGED)
-            cardSettings = cardSettingsStore.getAll()
-            scope.launch { NotesWidget.updateAll(context) }
         },
         onCardTextSizeSelected = { note, textSize ->
-            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(textSize = textSize)
-            cardSettingsStore.save(note.fileUri, updated)
+            changeCard(note) { it.copy(textSize = textSize) }
+        },
+        onCardCustomColorChanged = { note, colorHex ->
+            changeCard(note) { it.copy(color = NoteCardColor.Custom, customColorHex = colorHex) }
+        },
+        onCardResetToDefault = { note ->
+            cardSettingsStore.forgetAppearance(note.fileUri)
             cardSettings = cardSettingsStore.getAll()
             scope.launch { NotesWidget.updateAll(context) }
         },
-        onCardCustomColorChanged = { note, colorHex ->
-            val updated = (cardSettings[note.fileUri] ?: NoteCardAppearance()).copy(
-                color = NoteCardColor.Custom,
-                customColorHex = colorHex
-            )
-            cardSettingsStore.save(note.fileUri, updated)
-            cardSettings = cardSettingsStore.getAll()
+        onDefaultCardSizeSelected = { size ->
+            if (size != cardDefault.size) {
+                changeCardDefault(cardDefault.copy(size = size))
+                logSettingChanged(UsageEvent.SETTING_DEFAULT_CARD_SIZE, size.storageValue)
+            }
+        },
+        onDefaultCardTextSizeSelected = { textSize ->
+            if (textSize != cardDefault.textSize) {
+                changeCardDefault(cardDefault.copy(textSize = textSize))
+                logSettingChanged(UsageEvent.SETTING_DEFAULT_CARD_TEXT_SIZE, textSize.storageValue)
+            }
+        },
+        onDefaultCardColorSelected = { color ->
+            if (color != cardDefault.color) {
+                changeCardDefault(cardDefault.copy(color = color))
+                logSettingChanged(UsageEvent.SETTING_DEFAULT_CARD_COLOR, color.storageValue)
+            }
+        },
+        onDefaultCardCustomColorChanged = { hex ->
+            changeCardDefault(cardDefault.copy(color = NoteCardColor.Custom, customColorHex = hex))
+        },
+        showAddButtons = showAddButtons,
+        onShowAddButtonsChanged = { shown ->
+            showAddButtons = shown
+            AddButtons.setShown(context, shown)
+            Telemetry.event(UsageEvent.SETTING_CHANGED, *UsageEvent.addButtonsChanged(shown, UsageEvent.FROM_SETTINGS))
             scope.launch { NotesWidget.updateAll(context) }
         },
         onReorder = { from, to ->
@@ -852,7 +837,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
                                     AppLog.e(SetupActivity.AREA, "Delete failed", error)
                                     Toast.makeText(
                                         context,
-                                        error.message ?: context.getString(R.string.delete_note_failed),
+                                        error.message ?: deleteNoteFailed,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -913,21 +898,6 @@ private fun humanFolderPath(treeUri: String): String? = runCatching {
     if (path.isEmpty()) root else "$root/$path"
 }.getOrNull()
 
-@Composable
-private fun ReportingConsentDialog(onAnswer: (Boolean) -> Unit) {
-    AlertDialog(
-        onDismissRequest = { onAnswer(false) },
-        title = { Text(stringResource(R.string.consent_prompt_title)) },
-        text = { Text(stringResource(R.string.consent_prompt_body)) },
-        confirmButton = {
-            TextButton(onClick = { onAnswer(true) }) { Text(stringResource(R.string.consent_prompt_yes)) }
-        },
-        dismissButton = {
-            TextButton(onClick = { onAnswer(false) }) { Text(stringResource(R.string.consent_prompt_no)) }
-        }
-    )
-}
-
 private fun gitStatusText(context: Context, status: GitSyncStatus): String = when (status) {
     is GitSyncStatus.NotTracked -> context.getString(R.string.git_status_not_tracked)
     is GitSyncStatus.Unavailable ->
@@ -987,7 +957,7 @@ internal fun SetupScreenContent(
     onRemoveExtraNote: (ExtraNoteEntry) -> Unit = {},
     derivedPath: String,
     notes: List<NoteSummary> = emptyList(),
-    cardSettings: Map<String, NoteCardAppearance> = emptyMap(),
+    cardAppearances: CardAppearances = CardAppearances(),
     notesLoadError: String? = null,
     fastNoteTargetUri: String? = null,
     onFastNoteTargetSelected: (NoteSummary) -> Unit = {},
@@ -1002,6 +972,13 @@ internal fun SetupScreenContent(
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit = { _, _ -> },
     onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit = { _, _ -> },
     onCardCustomColorChanged: (NoteSummary, String) -> Unit = { _, _ -> },
+    onCardResetToDefault: (NoteSummary) -> Unit = {},
+    onDefaultCardSizeSelected: (NoteCardSize) -> Unit = {},
+    onDefaultCardTextSizeSelected: (NoteCardTextSize) -> Unit = {},
+    onDefaultCardColorSelected: (NoteCardColor) -> Unit = {},
+    onDefaultCardCustomColorChanged: (String) -> Unit = {},
+    showAddButtons: Boolean = true,
+    onShowAddButtonsChanged: (Boolean) -> Unit = {},
     onReorder: (Int, Int) -> Unit = { _, _ -> },
     expandedNoteUri: String? = null,
     onToggleExpanded: (NoteSummary) -> Unit = {},
@@ -1032,8 +1009,6 @@ internal fun SetupScreenContent(
     onSendFeedback: () -> Unit = {},
     canSave: Boolean,
     onSave: () -> Unit,
-    guideStep: GuideStep? = null,
-    onSkipGuide: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -1045,10 +1020,6 @@ internal fun SetupScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-        if (guideStep != null) {
-            GuideBanner(step = guideStep, onSkip = onSkipGuide)
-            Spacer(modifier = Modifier.height(20.dp))
-        }
 
         // Section 1: the only folder anyone has to pick
         Text(
@@ -1096,6 +1067,12 @@ internal fun SetupScreenContent(
         // Vsechno dalsi ma smysl az nad vybranou slozkou. Dokud neni, byla by to jen rada
         // zasedlych tlacitek a odstavcu o necem, co jeste neexistuje.
         if (notesFolderName != null) {
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        WidgetButtonsSection(shown = showAddButtons, onChanged = onShowAddButtonsChanged)
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
@@ -1236,7 +1213,9 @@ internal fun SetupScreenContent(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(value = telemetryEnabled, role = Role.Switch, onValueChange = onTelemetryChanged),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -1245,7 +1224,7 @@ internal fun SetupScreenContent(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
-                Switch(checked = telemetryEnabled, onCheckedChange = onTelemetryChanged)
+                Switch(checked = telemetryEnabled, onCheckedChange = null)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -1391,14 +1370,25 @@ internal fun SetupScreenContent(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
+        DefaultCardSetting(
+            appearance = cardAppearances.default,
+            onSizeSelected = onDefaultCardSizeSelected,
+            onTextSizeSelected = onDefaultCardTextSizeSelected,
+            onColorSelected = onDefaultCardColorSelected,
+            onCustomColorChanged = onDefaultCardCustomColorChanged
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         CardSettingsSection(
             notes = notes,
-            cardSettings = cardSettings,
+            cardAppearances = cardAppearances,
             notesLoadError = notesLoadError,
             onCardSizeSelected = onCardSizeSelected,
             onCardColorSelected = onCardColorSelected,
             onCardTextSizeSelected = onCardTextSizeSelected,
             onCardCustomColorChanged = onCardCustomColorChanged,
+            onCardResetToDefault = onCardResetToDefault,
             onReorder = onReorder,
             expandedNoteUri = expandedNoteUri,
             onToggleExpanded = onToggleExpanded,
@@ -1647,7 +1637,9 @@ private fun LanguageSetting(languageName: String, onClick: () -> Unit) {
 @Composable
 private fun RateChipSetting(enabled: Boolean, onChanged: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = enabled, role = Role.Switch, onValueChange = onChanged),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -1656,7 +1648,7 @@ private fun RateChipSetting(enabled: Boolean, onChanged: (Boolean) -> Unit) {
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
-        Switch(checked = enabled, onCheckedChange = onChanged)
+        Switch(checked = enabled, onCheckedChange = null)
     }
     Spacer(modifier = Modifier.height(4.dp))
     Text(
@@ -1669,12 +1661,13 @@ private fun RateChipSetting(enabled: Boolean, onChanged: (Boolean) -> Unit) {
 @Composable
 private fun CardSettingsSection(
     notes: List<NoteSummary>,
-    cardSettings: Map<String, NoteCardAppearance>,
+    cardAppearances: CardAppearances,
     notesLoadError: String?,
     onCardSizeSelected: (NoteSummary, NoteCardSize) -> Unit,
     onCardColorSelected: (NoteSummary, NoteCardColor) -> Unit,
     onCardTextSizeSelected: (NoteSummary, NoteCardTextSize) -> Unit,
     onCardCustomColorChanged: (NoteSummary, String) -> Unit,
+    onCardResetToDefault: (NoteSummary) -> Unit,
     onReorder: (Int, Int) -> Unit,
     expandedNoteUri: String?,
     onToggleExpanded: (NoteSummary) -> Unit,
@@ -1718,7 +1711,7 @@ private fun CardSettingsSection(
                 onSettle = onReorder,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) { index, note, isDragging ->
-                val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+                val appearance = cardAppearances.of(note.fileUri)
                 // ReorderableColumn has no notion of item identity — it is a plain Column
                 // walking `list` by index, so remembered state (the swipe-to-dismiss state
                 // below included) stays tied to a *position*. When the list shrinks or
@@ -1737,6 +1730,7 @@ private fun CardSettingsSection(
                 NoteCardSettingsRow(
                     note = note,
                     appearance = appearance,
+                    hasOwnAppearance = cardAppearances.hasOwn(note.fileUri),
                     expanded = expandedNoteUri == note.fileUri,
                     isDragging = isDragging,
                     dragHandleModifier = Modifier.draggableHandle(),
@@ -1744,7 +1738,8 @@ private fun CardSettingsSection(
                     onSizeSelected = { size -> onCardSizeSelected(note, size) },
                     onColorSelected = { color -> onCardColorSelected(note, color) },
                     onTextSizeSelected = { textSize -> onCardTextSizeSelected(note, textSize) },
-                    onCustomColorChanged = { colorHex -> onCardCustomColorChanged(note, colorHex) }
+                    onCustomColorChanged = { colorHex -> onCardCustomColorChanged(note, colorHex) },
+                    onResetToDefault = { onCardResetToDefault(note) }
                 )
                 }
                 }
@@ -1758,6 +1753,7 @@ private fun CardSettingsSection(
 private fun NoteCardSettingsRow(
     note: NoteSummary,
     appearance: NoteCardAppearance,
+    hasOwnAppearance: Boolean,
     expanded: Boolean,
     isDragging: Boolean,
     dragHandleModifier: Modifier,
@@ -1765,7 +1761,8 @@ private fun NoteCardSettingsRow(
     onSizeSelected: (NoteCardSize) -> Unit,
     onColorSelected: (NoteCardColor) -> Unit,
     onTextSizeSelected: (NoteCardTextSize) -> Unit,
-    onCustomColorChanged: (String) -> Unit
+    onCustomColorChanged: (String) -> Unit,
+    onResetToDefault: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -1810,65 +1807,118 @@ private fun NoteCardSettingsRow(
             }
 
             if (expanded) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-            ) {
-                NoteCardSize.entries.forEach { size ->
-                    FilterChip(
-                        selected = appearance.size == size,
-                        onClick = { onSizeSelected(size) },
-                        label = { Text(size.label) }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.card_text_size),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-            ) {
-                NoteCardTextSize.entries.forEach { textSize ->
-                    FilterChip(
-                        selected = appearance.textSize == textSize,
-                        onClick = { onTextSizeSelected(textSize) },
-                        label = { Text(textSize.label) }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.card_color),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-            ) {
-                NoteCardColor.entries.forEach { color ->
-                    ColorChip(
-                        selected = appearance.color == color,
-                        label = color.label,
-                        swatch = cardColorPreview(color),
-                        onClick = { onColorSelected(color) }
-                    )
-                }
-            }
-            if (appearance.color == NoteCardColor.Custom) {
                 Spacer(modifier = Modifier.height(8.dp))
-                CustomColorField(value = appearance.customColorHex.orEmpty(), onValueChange = onCustomColorChanged)
-            }
+                CardAppearanceChooser(
+                    appearance = appearance,
+                    onSizeSelected = onSizeSelected,
+                    onTextSizeSelected = onTextSizeSelected,
+                    onColorSelected = onColorSelected,
+                    onCustomColorChanged = onCustomColorChanged
+                )
+                if (hasOwnAppearance) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TextButton(onClick = onResetToDefault) {
+                        Text(stringResource(R.string.card_use_default))
+                    }
+                }
             }
         }
     }
+}
+
+/** Size, text size and colour of one card, or of every card that has no look of its own. */
+@Composable
+private fun CardAppearanceChooser(
+    appearance: NoteCardAppearance,
+    onSizeSelected: (NoteCardSize) -> Unit,
+    onTextSizeSelected: (NoteCardTextSize) -> Unit,
+    onColorSelected: (NoteCardColor) -> Unit,
+    onCustomColorChanged: (String) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.horizontalScroll(rememberScrollState())
+    ) {
+        NoteCardSize.entries.forEach { size ->
+            FilterChip(
+                selected = appearance.size == size,
+                onClick = { onSizeSelected(size) },
+                label = { Text(size.label) }
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.card_text_size),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.horizontalScroll(rememberScrollState())
+    ) {
+        NoteCardTextSize.entries.forEach { textSize ->
+            FilterChip(
+                selected = appearance.textSize == textSize,
+                onClick = { onTextSizeSelected(textSize) },
+                label = { Text(textSize.label) }
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.card_color),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.horizontalScroll(rememberScrollState())
+    ) {
+        NoteCardColor.entries.forEach { color ->
+            ColorChip(
+                selected = appearance.color == color,
+                label = color.label,
+                swatch = cardColorPreview(color),
+                onClick = { onColorSelected(color) }
+            )
+        }
+    }
+    if (appearance.color == NoteCardColor.Custom) {
+        Spacer(modifier = Modifier.height(8.dp))
+        CustomColorField(value = appearance.customColorHex.orEmpty(), onValueChange = onCustomColorChanged)
+    }
+}
+
+@Composable
+private fun DefaultCardSetting(
+    appearance: NoteCardAppearance,
+    onSizeSelected: (NoteCardSize) -> Unit,
+    onTextSizeSelected: (NoteCardTextSize) -> Unit,
+    onColorSelected: (NoteCardColor) -> Unit,
+    onCustomColorChanged: (String) -> Unit
+) {
+    Text(
+        text = stringResource(R.string.card_default_title),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = stringResource(R.string.card_default_desc),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    CardAppearanceChooser(
+        appearance = appearance,
+        onSizeSelected = onSizeSelected,
+        onTextSizeSelected = onTextSizeSelected,
+        onColorSelected = onColorSelected,
+        onCustomColorChanged = onCustomColorChanged
+    )
 }
 
 @Composable
@@ -1998,61 +2048,6 @@ private fun DeleteSwipeBackground(direction: SwipeToDismissBoxValue, removesFrom
     }
 }
 
-/** Dva kroky, ktere musi kazdy projit. Vic jich neni — zbytek obrazovky je ladeni. */
-internal enum class GuideStep { PickFolder, Save }
-
-/**
- * Pomalu pulzujici ramecek kolem tlacitka, ktere je na rade. Bez prekryvu pres obrazovku:
- * uzivatel muze delat cokoli jineho, jen vidi, kudy vede cesta.
- */
-@Composable
-private fun GuideBanner(step: GuideStep, onSkip: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(
-                    R.string.guide_step_counter,
-                    if (step == GuideStep.PickFolder) 1 else 2
-                ),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            GuideLine(stringResource(R.string.guide_step_folder), done = step != GuideStep.PickFolder)
-            GuideLine(stringResource(R.string.guide_step_widget), done = false)
-            Spacer(modifier = Modifier.height(4.dp))
-            TextButton(onClick = onSkip, modifier = Modifier.align(Alignment.End)) {
-                Text(stringResource(R.string.action_skip))
-            }
-        }
-    }
-}
-
-@Composable
-private fun GuideLine(text: String, done: Boolean) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 2.dp)
-    ) {
-        Icon(
-            imageVector = if (done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    }
-}
-
 @Composable
 private fun BoxScope.WatermarkLogo() {
     // Logo je svetle, takze na svetlem pozadi by bylo bila na bile — tam se prebarvi na tmavou
@@ -2109,6 +2104,7 @@ private fun AboutSection(onSendFeedback: () -> Unit) {
             }
             AboutRow(Icons.Outlined.StarOutline, RatingPrompt.ABOUT_RATE_RES) {
                 clicked(UsageEvent.BUTTON_RATE)
+                RateReminder.markRateTapped(context)
                 RatingPrompt.openRatePage(context)
             }
             AboutRow(Icons.Outlined.ChatBubbleOutline, R.string.about_say_hi) {

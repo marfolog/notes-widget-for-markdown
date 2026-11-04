@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 /**
  * When the "★ Rate" chip sits on the widget. Both flavours show it; only where it leads differs.
  *
- * A week after the first start, or two days after updating to a build that has the chip,
+ * Three days after the first start, or two days after updating to a build that has the chip,
  * whichever is later — so someone who has used the app for a while sees it soon after the update,
  * and a new install not before it has earned an opinion. Then up to three short windows, each two
  * days long and sixteen days apart. Nothing in between: a chip that never goes away is noise.
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
  */
 internal object RateChipSchedule {
 
-    val FIRST_SEEN_DELAY_MILLIS = TimeUnit.DAYS.toMillis(7)
+    val FIRST_SEEN_DELAY_MILLIS = TimeUnit.DAYS.toMillis(3)
     val FEATURE_SEEN_DELAY_MILLIS = TimeUnit.DAYS.toMillis(2)
     val WHATS_NEW_DELAY_MILLIS = TimeUnit.DAYS.toMillis(7)
     val WINDOW_LENGTH_MILLIS = TimeUnit.DAYS.toMillis(2)

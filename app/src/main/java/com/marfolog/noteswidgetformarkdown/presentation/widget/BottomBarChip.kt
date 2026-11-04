@@ -34,3 +34,7 @@ internal fun bottomBarChip(rateWindowOpen: Boolean, syncLabel: GitSyncLabel.Labe
         else -> BottomBarChip.Rate(RateAlternate.Hint)
     }
 }
+
+/** With the add buttons switched off and no chip to show, the bar gives all its room to the notes. */
+internal fun showsBottomBar(addButtons: Boolean, chip: BottomBarChip): Boolean =
+    addButtons || chip != BottomBarChip.None

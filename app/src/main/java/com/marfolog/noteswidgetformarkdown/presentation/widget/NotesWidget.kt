@@ -51,6 +51,7 @@ import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
 import com.marfolog.noteswidgetformarkdown.data.repository.GitSyncStatusReader
 import com.marfolog.noteswidgetformarkdown.data.repository.ObsidianVaultLocator
+import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardColor
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
@@ -95,11 +96,12 @@ class NotesWidget : GlanceAppWidget() {
                         current.state,
                         current.vaultName,
                         current.noteFolderPath,
-                        current.cardSettings,
+                        current.cardAppearances,
                         current.bottomBarChip,
                         isLoading,
                         current.extraNoteFolders,
-                        backgroundPercent
+                        backgroundPercent,
+                        current.showAddButtons
                     )
                 }
             }
@@ -140,11 +142,12 @@ private fun WidgetRoot(
     state: WidgetState,
     vaultName: String?,
     noteFolderPath: String?,
-    cardSettings: Map<String, NoteCardAppearance>,
+    cardAppearances: CardAppearances,
     bottomBarChip: BottomBarChip,
     isLoading: Boolean = false,
     extraNoteFolders: Map<String, String> = emptyMap(),
-    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT
+    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT,
+    showAddButtons: Boolean = true
 ) {
     Box(
         modifier = GlanceModifier
@@ -155,9 +158,9 @@ private fun WidgetRoot(
         when (state) {
             is WidgetState.Uninitialized -> UninitializedContent()
             is WidgetState.PermissionLost -> PermissionLostContent()
-            is WidgetState.Success -> ConfiguredContent(state.notes, vaultName, noteFolderPath, cardSettings, bottomBarChip, isLoading, extraNoteFolders, backgroundPercent)
-            is WidgetState.Empty -> ConfiguredContentEmpty(vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent)
-            is WidgetState.Error -> ConfiguredContentError(state.message, vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent)
+            is WidgetState.Success -> ConfiguredContent(state.notes, vaultName, noteFolderPath, cardAppearances, bottomBarChip, isLoading, extraNoteFolders, backgroundPercent, showAddButtons)
+            is WidgetState.Empty -> ConfiguredContentEmpty(vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent, showAddButtons)
+            is WidgetState.Error -> ConfiguredContentError(state.message, vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent, showAddButtons)
         }
     }
 }
@@ -281,14 +284,15 @@ private fun ConfiguredContent(
     notes: List<NoteSummary>,
     vaultName: String?,
     noteFolderPath: String?,
-    cardSettings: Map<String, NoteCardAppearance>,
+    cardAppearances: CardAppearances,
     bottomBarChip: BottomBarChip,
     isLoading: Boolean = false,
     extraNoteFolders: Map<String, String> = emptyMap(),
-    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT
+    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT,
+    showAddButtons: Boolean = true
 ) {
-    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading) {
-        NotesList(notes, vaultName, noteFolderPath, cardSettings, extraNoteFolders)
+    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading, showAddButtons) {
+        NotesList(notes, vaultName, noteFolderPath, cardAppearances, extraNoteFolders)
     }
 }
 
@@ -298,9 +302,10 @@ private fun ConfiguredContentEmpty(
     noteFolderPath: String?,
     bottomBarChip: BottomBarChip,
     isLoading: Boolean = false,
-    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT
+    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT,
+    showAddButtons: Boolean = true
 ) {
-    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading) {
+    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading, showAddButtons) {
         EmptyContent(backgroundPercent)
     }
 }
@@ -312,9 +317,10 @@ private fun ConfiguredContentError(
     noteFolderPath: String?,
     bottomBarChip: BottomBarChip,
     isLoading: Boolean = false,
-    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT
+    backgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT,
+    showAddButtons: Boolean = true
 ) {
-    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading) {
+    ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading, showAddButtons) {
         ErrorContent(message, backgroundPercent)
     }
 }
@@ -328,7 +334,7 @@ private fun NotesList(
     notes: List<NoteSummary>,
     vaultName: String?,
     noteFolderPath: String?,
-    cardSettings: Map<String, NoteCardAppearance>,
+    cardAppearances: CardAppearances,
     extraNoteFolders: Map<String, String>
 ) {
     LazyColumn(
@@ -336,7 +342,7 @@ private fun NotesList(
             .fillMaxSize()
     ) {
         items(notes, itemId = { note ->
-            val appearance = cardSettings[note.fileUri] ?: NoteCardAppearance()
+            val appearance = cardAppearances.of(note.fileUri)
             "${note.id}:${appearance.size.storageValue}:${appearance.color.storageValue}:${appearance.textSize.storageValue}:${appearance.customColorHex.orEmpty()}"
                 .hashCode()
                 .toLong()
@@ -346,7 +352,7 @@ private fun NotesList(
                     note,
                     vaultName,
                     noteFolderPathFor(note, noteFolderPath, extraNoteFolders),
-                    cardSettings[note.fileUri] ?: NoteCardAppearance()
+                    cardAppearances.of(note.fileUri)
                 )
                 Spacer(modifier = GlanceModifier.height(8.dp))
             }

@@ -23,14 +23,15 @@ class PromptBudgetTest {
 
     private val day = TimeUnit.DAYS.toMillis(1)
     private val openedAt = 1_760_000_000_000L
-    private val everything = setOf(AutoPrompt.Consent, AutoPrompt.WhatsNew, AutoPrompt.Feedback)
+    private val everything = setOf(AutoPrompt.Consent, AutoPrompt.WhatsNew)
 
     private fun pick(
         due: Set<AutoPrompt>,
         nowMillis: Long = openedAt,
         lastAutoPromptAtMillis: Long? = null,
-        promptedThisVisit: Boolean = false
-    ) = PromptBudget.pick(due, nowMillis, lastAutoPromptAtMillis, promptedThisVisit)
+        promptedThisVisit: Boolean = false,
+        exemptFromGap: Set<AutoPrompt> = emptySet()
+    ) = PromptBudget.pick(due, nowMillis, lastAutoPromptAtMillis, promptedThisVisit, exemptFromGap)
 
     @Test
     fun `nothing due means no dialog`() {
@@ -39,7 +40,7 @@ class PromptBudgetTest {
 
     @Test
     fun `the only dialog due is shown when none came before`() {
-        assertEquals(AutoPrompt.Feedback, pick(setOf(AutoPrompt.Feedback)))
+        assertEquals(AutoPrompt.Consent, pick(setOf(AutoPrompt.Consent)))
         assertEquals(AutoPrompt.WhatsNew, pick(setOf(AutoPrompt.WhatsNew)))
     }
 
@@ -49,24 +50,19 @@ class PromptBudgetTest {
     }
 
     @Test
-    fun `what's new goes before the feedback question`() {
-        assertEquals(AutoPrompt.WhatsNew, pick(setOf(AutoPrompt.Feedback, AutoPrompt.WhatsNew)))
-    }
-
-    @Test
     fun `a second dialog in the same visit is refused, rotation included`() {
-        assertNull(pick(setOf(AutoPrompt.Feedback), promptedThisVisit = true))
+        assertNull(pick(setOf(AutoPrompt.WhatsNew), promptedThisVisit = true))
         assertNull(pick(everything, promptedThisVisit = true))
     }
 
     @Test
     fun `three days of quiet after any automatic dialog, from exactly three days on it is allowed`() {
         val lastAt = openedAt - 3 * day
-        assertNull(pick(setOf(AutoPrompt.Feedback), nowMillis = lastAt + day, lastAutoPromptAtMillis = lastAt))
-        assertNull(pick(setOf(AutoPrompt.Feedback), nowMillis = lastAt + 3 * day - 1, lastAutoPromptAtMillis = lastAt))
+        assertNull(pick(setOf(AutoPrompt.WhatsNew), nowMillis = lastAt + day, lastAutoPromptAtMillis = lastAt))
+        assertNull(pick(setOf(AutoPrompt.WhatsNew), nowMillis = lastAt + 3 * day - 1, lastAutoPromptAtMillis = lastAt))
         assertEquals(
-            AutoPrompt.Feedback,
-            pick(setOf(AutoPrompt.Feedback), nowMillis = lastAt + 3 * day, lastAutoPromptAtMillis = lastAt)
+            AutoPrompt.WhatsNew,
+            pick(setOf(AutoPrompt.WhatsNew), nowMillis = lastAt + 3 * day, lastAutoPromptAtMillis = lastAt)
         )
     }
 
@@ -77,7 +73,7 @@ class PromptBudgetTest {
 
     @Test
     fun `a clock set before the last dialog reads as not yet`() {
-        assertNull(pick(setOf(AutoPrompt.Feedback), nowMillis = openedAt - 10 * day, lastAutoPromptAtMillis = openedAt))
+        assertNull(pick(setOf(AutoPrompt.WhatsNew), nowMillis = openedAt - 10 * day, lastAutoPromptAtMillis = openedAt))
     }
 
     @Test
@@ -89,18 +85,17 @@ class PromptBudgetTest {
     }
 
     @Test
-    fun `what's new today makes the feedback question wait three days`() {
+    fun `what's new today makes the reporting question wait three days`() {
         val store = InMemoryStore()
-        val both = setOf(AutoPrompt.WhatsNew, AutoPrompt.Feedback)
 
-        assertEquals(AutoPrompt.WhatsNew, PromptBudget.pick(store, both, openedAt, promptedThisVisit = false))
+        assertEquals(AutoPrompt.WhatsNew, PromptBudget.pick(store, setOf(AutoPrompt.WhatsNew), openedAt, promptedThisVisit = false))
         PromptBudget.markShown(store, openedAt)
 
         val nextVisit = openedAt + day
-        assertNull(PromptBudget.pick(store, setOf(AutoPrompt.Feedback), nextVisit, promptedThisVisit = false))
+        assertNull(PromptBudget.pick(store, setOf(AutoPrompt.Consent), nextVisit, promptedThisVisit = false))
         assertEquals(
-            AutoPrompt.Feedback,
-            PromptBudget.pick(store, setOf(AutoPrompt.Feedback), openedAt + 3 * day, promptedThisVisit = false)
+            AutoPrompt.Consent,
+            PromptBudget.pick(store, setOf(AutoPrompt.Consent), openedAt + 3 * day, promptedThisVisit = false)
         )
     }
 
@@ -114,6 +109,68 @@ class PromptBudgetTest {
 
     @Test
     fun `a fresh store holds nothing back`() {
-        assertEquals(AutoPrompt.Feedback, PromptBudget.pick(InMemoryStore(), setOf(AutoPrompt.Feedback), openedAt, false))
+        assertEquals(AutoPrompt.WhatsNew, PromptBudget.pick(InMemoryStore(), setOf(AutoPrompt.WhatsNew), openedAt, false))
+    }
+
+    @Test
+    fun `a required dialog is not held back by the quiet days`() {
+        assertEquals(
+            AutoPrompt.WhatsNew,
+            pick(
+                due = setOf(AutoPrompt.WhatsNew),
+                lastAutoPromptAtMillis = openedAt - day,
+                exemptFromGap = setOf(AutoPrompt.WhatsNew)
+            )
+        )
+    }
+
+    @Test
+    fun `a required dialog still waits for the next visit when another one was shown in this one`() {
+        assertNull(
+            pick(
+                due = setOf(AutoPrompt.WhatsNew),
+                promptedThisVisit = true,
+                exemptFromGap = setOf(AutoPrompt.WhatsNew)
+            )
+        )
+    }
+
+    @Test
+    fun `during the quiet days only the required dialog may come, the others keep waiting`() {
+        assertEquals(
+            AutoPrompt.WhatsNew,
+            pick(
+                due = everything,
+                lastAutoPromptAtMillis = openedAt - day,
+                exemptFromGap = setOf(AutoPrompt.WhatsNew)
+            )
+        )
+        assertNull(pick(due = setOf(AutoPrompt.Consent), lastAutoPromptAtMillis = openedAt - day, exemptFromGap = setOf(AutoPrompt.WhatsNew)))
+    }
+
+    @Test
+    fun `the reporting question still goes first when no quiet days hold it back`() {
+        assertEquals(
+            AutoPrompt.Consent,
+            pick(due = everything, exemptFromGap = setOf(AutoPrompt.WhatsNew))
+        )
+    }
+
+    @Test
+    fun `right after the reporting question the news come on the next visit, not three days later`() {
+        val store = InMemoryStore()
+        val first = PromptBudget.pick(store, everything, openedAt, promptedThisVisit = false, exemptFromGap = setOf(AutoPrompt.WhatsNew))
+        PromptBudget.markShown(store, openedAt)
+
+        val second = PromptBudget.pick(
+            store,
+            setOf(AutoPrompt.WhatsNew),
+            openedAt + 60_000,
+            promptedThisVisit = false,
+            exemptFromGap = setOf(AutoPrompt.WhatsNew)
+        )
+
+        assertEquals(AutoPrompt.Consent, first)
+        assertEquals(AutoPrompt.WhatsNew, second)
     }
 }

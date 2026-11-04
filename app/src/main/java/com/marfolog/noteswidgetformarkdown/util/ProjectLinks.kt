@@ -18,6 +18,9 @@ object ProjectLinks {
     const val NEW_IDEA_URL = "$REPO_URL/discussions/new?category=ideas"
     const val PRIVACY_URL = "https://folmbuild.cz/notes-widget-privacy/"
 
+    /** For an activity stack; no new task, so it sits on top of what was started before it. */
+    fun viewIntent(url: String): Intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
     fun open(context: Context, url: String) {
         runCatching {
             context.startActivity(
