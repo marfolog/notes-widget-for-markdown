@@ -2,6 +2,16 @@
 
 All notable public changes will be documented in this file.
 
+## v1.5.0 - 2026-11-05
+
+- An empty widget now says why. Looking into the folder (counting only, no note is read; at most four levels deep and about 2,000 items, hidden folders such as `.obsidian` skipped) tells apart notes that sit in subfolders, a folder without Markdown files, an empty folder and a folder the app can no longer read. The first-launch guide, the empty widget and settings show the matching sentence; for notes in subfolders the guide and settings offer **Pick a subfolder**, a list of the folders that hold notes of their own with their path and count, which opens the folder picker inside the one you tap.
+- The widget still shows only the notes directly in the folder you picked.
+- Fast Note Target can be cleared with "None, ask every time"; the fast note dialog then asks where to write. The app can create its own *Quick notes.md* (a numbered name when the file exists), offered first in settings and in the dialog, also in a folder without notes. Picking an existing file that already has content says first that new notes are added at its end and offers the Quick notes file instead. The picker states that nothing is overwritten.
+- Play build: `folder_selected` carries what the folder held (`result`), `fast_target_set` says whether the target was an existing file, a created one or cleared (`kind`), and a question in settings asks whether separate widgets for separate folders would be used (`feature_interest`). The analytics events are sent only with your consent.
+- Play build: that question is a banner at the top of settings, shown from the tenth visit to settings on, at most three times if nobody reacts, and as a line under the list of subfolders. Tapping "Yes, I'd use it" or "No thanks" stores one anonymous document (the feature, the answer, the app version and the server's time) in Firebase Firestore, once per installation and independent of the analytics switch, like the feedback form; closing it sends nothing. The foss build never asks.
+- One coordinator now decides which dialog, review card or banner may appear, so at most one comes per visit and never next to another within days; the reporting question after a saved note now also keeps the three quiet days from the last dialog, and the rating dialog after a note stays away on the days the ★ Rate chip is on the widget.
+- Git sync tells you when your git client can no longer reach the remote.
+
 ## v1.4.0 - 2026-11-02
 
 - Widget settings can hide the add and fast note buttons at the bottom of the widget. Without them the bottom bar shrinks to the sync or rating chip, or goes away entirely, so the notes get the room. Works for both widget types; refresh and settings stay.

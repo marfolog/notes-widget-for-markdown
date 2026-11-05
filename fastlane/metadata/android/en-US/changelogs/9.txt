@@ -1,0 +1,3 @@
+- An empty widget says why, and finds notes that sit in subfolders
+- Fast Note Target can be cleared; the app can create its own Quick notes file
+- Git sync tells you when your git client can no longer reach the remote
