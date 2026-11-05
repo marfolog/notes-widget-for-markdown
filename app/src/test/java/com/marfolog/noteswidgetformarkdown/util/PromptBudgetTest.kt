@@ -173,4 +173,15 @@ class PromptBudgetTest {
         assertEquals(AutoPrompt.Consent, first)
         assertEquals(AutoPrompt.WhatsNew, second)
     }
+
+    @Test
+    fun `opening settings from the sync chip shows no automatic dialog over the sync warning`() {
+        assertEquals(true, PromptBudget.isQuietVisit(UsageEvent.FROM_SYNC_CHIP))
+    }
+
+    @Test
+    fun `opening settings from the widget or the launcher still allows an automatic dialog`() {
+        assertEquals(false, PromptBudget.isQuietVisit(UsageEvent.FROM_WIDGET))
+        assertEquals(false, PromptBudget.isQuietVisit(null))
+    }
 }

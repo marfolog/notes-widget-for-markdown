@@ -21,11 +21,13 @@
     <string name="sync_unknown">sync sconosciuta</string>
     <string name="sync_stuck">sync bloccata</string>
     <string name="sync_not_pushed">non inviato</string>
+    <string name="sync_cant_connect">non connesso</string>
     <string name="sync_synced">sync %1$s</string>
     <string name="sync_updated">modificato %1$s</string>
     <string name="sync_days_one">1 g</string>
     <string name="sync_days">%1$d g</string>
     <string name="sync_days_many">99+ g</string>
+    <string name="sync_hours">%1$d h</string>
     <string name="fast_note_title">Nota veloce</string>
     <string name="fast_note_saving">Salvataggio…</string>
     <string name="fast_note_saved">Nota veloce salvata sul dispositivo</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"Client di sincronizzazione attivo l\'ultima volta: "</string>
     <string name="git_problem_conflict">Unione non completata (MERGE_HEAD presente) — probabilmente c\'è un conflitto in attesa nel tuo client git.</string>
     <string name="git_problem_rebase">Un rebase è stato avviato e mai completato — risolvilo nel tuo client git.</string>
-    <string name="git_problem_diverged">Il branch locale è diverso da origin — ci sono modifiche in attesa di essere inviate o recuperate.</string>
+    <string name="git_problem_not_pushed">Il server ha modifiche più recenti; la tua app git deve prima scaricarle e unirle.</string>
+    <string name="git_problem_diverged">Questo telefono e il server sono cambiati separatamente. La tua app git deve prima scaricare le modifiche del server e unirle. Non sovrascrivere il server (force push).</string>
+    <string name="git_problem_cant_connect">Le modifiche fatte su questo telefono non sono arrivate sul server e la tua app git non si connette dal %1$s. Aprila e accedi di nuovo. Non usare nessuna opzione che sovrascrive il server (force push).</string>
+    <string name="git_problem_silent_long">La tua app git non si connette al server da %1$s. Di solito è scaduto l\'accesso oppure Android le impedisce di girare in background.</string>
+    <string name="git_problem_stale">La tua app git non si connette al server da %1$s. Se sincronizzi così di rado di proposito, alza la soglia di avviso più in basso, nella sezione sullo stato della sincronizzazione.</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Chiaro</string>
     <string name="theme_dark">Scuro</string>

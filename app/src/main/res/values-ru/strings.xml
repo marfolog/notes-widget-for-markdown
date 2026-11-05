@@ -21,11 +21,13 @@
     <string name="sync_unknown">синхронизация неизвестна</string>
     <string name="sync_stuck">синхронизация зависла</string>
     <string name="sync_not_pushed">не отправлено</string>
+    <string name="sync_cant_connect">нет связи</string>
     <string name="sync_synced">синх. %1$s</string>
     <string name="sync_updated">изменено %1$s</string>
     <string name="sync_days_one">1 д</string>
     <string name="sync_days">%1$d д</string>
     <string name="sync_days_many">99+ д</string>
+    <string name="sync_hours">%1$d ч</string>
     <string name="fast_note_title">Быстрая заметка</string>
     <string name="fast_note_saving">Сохранение…</string>
     <string name="fast_note_saved">Быстрая заметка сохранена на устройстве</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"Клиент синхронизации был активен: "</string>
     <string name="git_problem_conflict">Незавершённое слияние (есть MERGE_HEAD) — скорее всего, в git-клиенте ждёт конфликт.</string>
     <string name="git_problem_rebase">Перебазирование начато и не завершено — разреши его в git-клиенте.</string>
-    <string name="git_problem_diverged">Локальная ветка отличается от origin — изменения ждут отправки или получения.</string>
+    <string name="git_problem_not_pushed">На сервере есть более новые изменения; git-приложению нужно сначала скачать и слить их.</string>
+    <string name="git_problem_diverged">Этот телефон и сервер менялись независимо друг от друга. Git-приложению нужно сначала скачать изменения с сервера и слить их. Не перезаписывай сервер (force push).</string>
+    <string name="git_problem_cant_connect">Изменения, сделанные на этом телефоне, не дошли до сервера, а git-приложение не подключалось с %1$s. Открой его и войди заново. Не используй никакие варианты, которые перезаписывают сервер (force push).</string>
+    <string name="git_problem_silent_long">Git-приложение не подключалось к серверу уже %1$s. Чаще всего истёк вход в аккаунт или Android запретил приложению работать в фоне.</string>
+    <string name="git_problem_stale">Git-приложение не подключалось к серверу уже %1$s. Если ты синхронизируешь так редко намеренно, увеличь порог предупреждения ниже, в разделе о статусе синхронизации.</string>
     <string name="theme_system">Системная</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Тёмная</string>

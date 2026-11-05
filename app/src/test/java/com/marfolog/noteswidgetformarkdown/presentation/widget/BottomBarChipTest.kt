@@ -9,8 +9,8 @@ import org.junit.Test
 
 class BottomBarChipTest {
 
-    private val synced = GitSyncLabel.Label(R.string.sync_synced, Severity.Ok, "09:41")
-    private val stale = GitSyncLabel.Label(R.string.sync_synced, Severity.Stale, "3 d")
+    private val synced = GitSyncLabel.Label(R.string.sync_synced, Severity.Ok, GitSyncLabel.Age.Clock("09:41"))
+    private val stale = GitSyncLabel.Label(R.string.sync_synced, Severity.Stale, GitSyncLabel.Age.Days(3))
     private val stuck = GitSyncLabel.Label(R.string.sync_stuck, Severity.Problem)
     private val noInfo = GitSyncLabel.Label(R.string.sync_no_info, Severity.Off)
 

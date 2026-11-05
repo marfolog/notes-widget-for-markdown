@@ -29,11 +29,13 @@
     <string name="sync_unknown">sync unknown</string>
     <string name="sync_stuck">sync stuck</string>
     <string name="sync_not_pushed">not pushed</string>
+    <string name="sync_cant_connect">can\'t connect</string>
     <string name="sync_synced">synced %1$s</string>
     <string name="sync_updated">updated %1$s</string>
     <string name="sync_days_one">1 d</string>
     <string name="sync_days">%1$d d</string>
     <string name="sync_days_many">99+ d</string>
+    <string name="sync_hours">%1$d h</string>
 
     <!-- Fast note -->
     <string name="fast_note_title">Fast note</string>
@@ -130,7 +132,11 @@
     <string name="git_status_client_active">"Sync client last active: "</string>
     <string name="git_problem_conflict">Unfinished merge (MERGE_HEAD present) — most likely a conflict waiting in your git client.</string>
     <string name="git_problem_rebase">A rebase was started and never finished — resolve it in your git client.</string>
-    <string name="git_problem_diverged">Local branch differs from origin — changes are waiting to be pushed or pulled.</string>
+    <string name="git_problem_not_pushed">The server has newer changes; your git app has to download and merge them first.</string>
+    <string name="git_problem_diverged">This phone and the server have each changed separately. Your git app has to download and merge the server\'s changes first. Don\'t overwrite the server (force push).</string>
+    <string name="git_problem_cant_connect">Changes made on this phone have not reached the server, and your git app has not connected since %1$s. Open it and sign in again. Don\'t use any option that overwrites the server (force push).</string>
+    <string name="git_problem_silent_long">Your git app has not connected to the server for %1$s. Most often the login expired or Android stopped it from running in the background.</string>
+    <string name="git_problem_stale">Your git app has not connected to the server for %1$s. If it only syncs this rarely on purpose, raise the warning threshold in the sync status section below.</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

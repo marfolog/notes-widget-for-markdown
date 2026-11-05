@@ -24,6 +24,12 @@ object PromptBudget {
 
     private const val KEY_LAST_AUTO_PROMPT_AT = "last_auto_prompt_at"
 
+    /**
+     * Whoever taps the sync chip came to find out why it is amber or red. No dialog may cover
+     * that answer, so such a visit gets no automatic dialog at all.
+     */
+    fun isQuietVisit(openedFrom: String?): Boolean = openedFrom == UsageEvent.FROM_SYNC_CHIP
+
     internal fun pick(
         due: Set<AutoPrompt>,
         nowMillis: Long,

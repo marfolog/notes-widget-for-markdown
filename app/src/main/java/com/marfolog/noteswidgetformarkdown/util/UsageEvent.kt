@@ -45,6 +45,8 @@ object UsageEvent {
     const val FEEDBACK_DIALOG_CHOICE = "feedback_dialog_choice"
     const val FEEDBACK_THUMBS = "feedback_thumbs"
 
+    const val SYNC_PROBLEM_SHOWN = "sync_problem_shown"
+
     const val WHATS_NEW_SHOWN = "whats_new_shown"
     const val WHATS_NEW_CHOICE = "whats_new_choice"
 
@@ -66,6 +68,11 @@ object UsageEvent {
     const val STEP_BUTTONS = "buttons"
     const val STEP_WIDGET = "widget"
     const val STEP_FINISHED = "finished"
+
+    const val SYNC_PROBLEM_CANT_CONNECT = "cant_connect"
+    const val SYNC_PROBLEM_NOT_PUSHED = "not_pushed"
+    const val SYNC_PROBLEM_STUCK = "stuck"
+    const val SYNC_PROBLEM_STALE = "stale"
 
     const val WHATS_NEW_STEP_BUTTONS = "buttons"
     const val WHATS_NEW_STEP_NEWS = "news"

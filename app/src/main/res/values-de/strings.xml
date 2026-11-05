@@ -21,11 +21,13 @@
     <string name="sync_unknown">Status unklar</string>
     <string name="sync_stuck">Sync hängt</string>
     <string name="sync_not_pushed">nicht gepusht</string>
+    <string name="sync_cant_connect">keine Verbindung</string>
     <string name="sync_synced">Sync %1$s</string>
     <string name="sync_updated">geändert %1$s</string>
     <string name="sync_days_one">1 T</string>
     <string name="sync_days">%1$d T</string>
     <string name="sync_days_many">99+ T</string>
+    <string name="sync_hours">%1$d Std.</string>
     <string name="fast_note_title">Schnellnotiz</string>
     <string name="fast_note_saving">Speichern…</string>
     <string name="fast_note_saved">Schnellnotiz lokal gespeichert</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"Sync-Client zuletzt aktiv: "</string>
     <string name="git_problem_conflict">Unfertiger Merge (MERGE_HEAD vorhanden) — höchstwahrscheinlich wartet in deinem git-Client ein Konflikt.</string>
     <string name="git_problem_rebase">Ein Rebase wurde begonnen und nie beendet — löse ihn in deinem git-Client auf.</string>
-    <string name="git_problem_diverged">Lokaler Branch weicht von origin ab — Änderungen warten auf push oder pull.</string>
+    <string name="git_problem_not_pushed">Der Server hat neuere Änderungen; deine Git-App muss sie zuerst herunterladen und zusammenführen.</string>
+    <string name="git_problem_diverged">Dieses Telefon und der Server wurden getrennt voneinander geändert. Deine Git-App muss zuerst die Änderungen vom Server herunterladen und zusammenführen. Überschreibe den Server nicht (Force-Push).</string>
+    <string name="git_problem_cant_connect">Änderungen von diesem Telefon haben den Server nicht erreicht, und deine Git-App hat sich seit %1$s nicht mehr verbunden. Öffne sie und melde dich neu an. Nutze keine Option, die den Server überschreibt (Force-Push).</string>
+    <string name="git_problem_silent_long">Deine Git-App hat sich seit %1$s nicht mehr mit dem Server verbunden. Meist ist die Anmeldung abgelaufen oder Android hat die App im Hintergrund gestoppt.</string>
+    <string name="git_problem_stale">Deine Git-App hat sich seit %1$s nicht mehr mit dem Server verbunden. Wenn du bewusst so selten synchronisierst, erhöhe unten im Abschnitt zum Sync-Status die Warnschwelle.</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>

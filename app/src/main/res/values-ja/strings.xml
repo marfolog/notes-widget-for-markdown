@@ -21,11 +21,13 @@
     <string name="sync_unknown">状態不明</string>
     <string name="sync_stuck">同期が停止</string>
     <string name="sync_not_pushed">未プッシュ</string>
+    <string name="sync_cant_connect">接続不可</string>
     <string name="sync_synced">同期 %1$s</string>
     <string name="sync_updated">更新 %1$s</string>
     <string name="sync_days_one">1 日</string>
     <string name="sync_days">%1$d 日</string>
     <string name="sync_days_many">99+ 日</string>
+    <string name="sync_hours">%1$d 時間</string>
     <string name="fast_note_title">クイックノート</string>
     <string name="fast_note_saving">保存中…</string>
     <string name="fast_note_saved">クイックノートを端末に保存しました</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"同期クライアントの最終稼働："</string>
     <string name="git_problem_conflict">マージが未完了です（MERGE_HEAD があります）— git クライアントでコンフリクトが待っている可能性が高いです。</string>
     <string name="git_problem_rebase">リベースが始まったまま終わっていません — git クライアントで解決してください。</string>
-    <string name="git_problem_diverged">ローカルブランチが origin と異なります — プッシュまたはプルを待っている変更があります。</string>
+    <string name="git_problem_not_pushed">サーバーに新しい変更があります。git アプリが先にそれをダウンロードしてマージする必要があります。</string>
+    <string name="git_problem_diverged">このスマートフォンとサーバーで、それぞれ別々に変更されています。git アプリが先にサーバーの変更をダウンロードしてマージする必要があります。サーバーを上書きしないでください（強制プッシュ）。</string>
+    <string name="git_problem_cant_connect">このスマートフォンで行った変更はサーバーに届いておらず、git アプリは %1$s から接続できていません。アプリを開いて、もう一度ログインしてください。サーバーを上書きする操作（強制プッシュ）は使わないでください。</string>
+    <string name="git_problem_silent_long">git アプリは %1$s のあいだサーバーに接続していません。多くの場合、ログインの期限切れか、Android によるバックグラウンド実行の停止が原因です。</string>
+    <string name="git_problem_stale">git アプリは %1$s のあいだサーバーに接続していません。意図してこの頻度で同期しているなら、下の同期ステータスの項目で警告のしきい値を上げてください。</string>
     <string name="theme_system">システムに従う</string>
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>

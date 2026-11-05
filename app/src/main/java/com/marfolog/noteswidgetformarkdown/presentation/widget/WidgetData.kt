@@ -12,6 +12,7 @@ import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
+import com.marfolog.noteswidgetformarkdown.util.SyncProblemReport
 import kotlinx.coroutines.flow.firstOrNull
 import org.koin.java.KoinJavaComponent.get
 
@@ -121,6 +122,7 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
             prefs.getInt(SetupActivity.KEY_STALE_HOURS, GitSyncLabel.DEFAULT_STALE_HOURS)
         )
     }
+    if (syncLabel != null) SyncProblemReport.reportOnce(context, syncLabel.trouble)
     val rateChipWindow = RateReminder.openWindow(context, now).takeIf { state.isUsable() }
     val bottomBarChip = bottomBarChip(rateChipWindow != null, syncLabel)
     if (bottomBarChip is BottomBarChip.Rate) RateReminder.reportShownOnce(context, rateChipWindow)

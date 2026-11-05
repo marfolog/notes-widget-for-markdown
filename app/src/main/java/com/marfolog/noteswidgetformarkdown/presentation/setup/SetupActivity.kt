@@ -44,6 +44,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Delete
@@ -136,6 +137,7 @@ import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetExtraNotesUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.widget.GitSyncLabel
+import com.marfolog.noteswidgetformarkdown.presentation.widget.text
 import com.marfolog.noteswidgetformarkdown.presentation.consent.ReportingConsentDialog
 import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingScreen
 import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingSession
@@ -568,6 +570,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         val now = System.currentTimeMillis()
         val setupComplete = notesUri != null && guideDone
         val openedFrom = (context as? Activity)?.intent?.getStringExtra(SetupActivity.EXTRA_OPENED_FROM)
+        if (PromptBudget.isQuietVisit(openedFrom)) return@LaunchedEffect
         val due = buildSet {
             val consentDue = ConsentPrompt.isDue(
                 canReport = Telemetry.ENABLED,
@@ -750,7 +753,8 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             logSettingChanged(UsageEvent.SETTING_STALE_HOURS, hours.toString())
             scope.launch { NotesWidget.updateAll(context) }
         },
-        gitStatusText = gitStatusText(context, gitStatus),
+        gitStatusText = gitStatusText(context, gitStatus, staleHours),
+        syncWarning = if (syncMode == "git") syncWarningUi(context, gitStatus, staleHours) else null,
         gitIsTracked = gitStatus is GitSyncStatus.Tracked,
         gitIsBroken = gitStatus is GitSyncStatus.Unavailable,
         onSelectGitFolder = { gitPicker.launch(parentFolderHint()) },
@@ -898,7 +902,7 @@ private fun humanFolderPath(treeUri: String): String? = runCatching {
     if (path.isEmpty()) root else "$root/$path"
 }.getOrNull()
 
-private fun gitStatusText(context: Context, status: GitSyncStatus): String = when (status) {
+private fun gitStatusText(context: Context, status: GitSyncStatus, staleHours: Int): String = when (status) {
     is GitSyncStatus.NotTracked -> context.getString(R.string.git_status_not_tracked)
     is GitSyncStatus.Unavailable ->
         context.getString(R.string.git_status_unreadable, status.reason)
@@ -918,7 +922,7 @@ private fun gitStatusText(context: Context, status: GitSyncStatus): String = whe
                 .format(Date(status.lastChangeAtMillis))
         )
         status.branch?.let { append(context.getString(R.string.git_status_branch, it)) }
-        status.lastFetchAtMillis?.let { fetchedAt ->
+        status.lastRemoteContactAtMillis?.let { fetchedAt ->
             append("\n")
             append(context.getString(R.string.git_status_last_remote_contact))
             append(
@@ -935,13 +939,37 @@ private fun gitStatusText(context: Context, status: GitSyncStatus): String = whe
                     .format(Date(activeAt))
             )
         }
-        val problem = when (status.problem) {
-            GitSyncStatus.Problem.None -> null
-            GitSyncStatus.Problem.Conflict -> R.string.git_problem_conflict
-            GitSyncStatus.Problem.RebaseInProgress -> R.string.git_problem_rebase
-            GitSyncStatus.Problem.Diverged -> R.string.git_problem_diverged
-        }
-        problem?.let { append("\n\n⚠ " + context.getString(it)) }
+    }
+}
+
+/** Plain-language sync warning already resolved to text, so the composable only draws it. */
+internal data class SyncWarningUi(val text: String, val isProblem: Boolean)
+
+private fun syncWarningUi(context: Context, status: GitSyncStatus, staleHours: Int): SyncWarningUi? {
+    if (status !is GitSyncStatus.Tracked) return null
+    val label = GitSyncLabel.format(status, System.currentTimeMillis(), staleHours)
+    return GitSyncLabel.warningOf(label)?.let { SyncWarningUi(it.detail.text(context), it.isProblem) }
+}
+
+@Composable
+private fun SyncWarningCard(warning: SyncWarningUi, modifier: Modifier = Modifier) {
+    val container = if (warning.isProblem) MaterialTheme.colorScheme.errorContainer else Color(0xFFFFE8B0)
+    val content = if (warning.isProblem) MaterialTheme.colorScheme.onErrorContainer else Color(0xFF4A3300)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(container)
+            .padding(16.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Warning,
+            contentDescription = null,
+            tint = if (warning.isProblem) MaterialTheme.colorScheme.error else Color(0xFFB37800)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text = warning.text, style = MaterialTheme.typography.bodyMedium, color = content)
     }
 }
 
@@ -984,6 +1012,7 @@ internal fun SetupScreenContent(
     onToggleExpanded: (NoteSummary) -> Unit = {},
     onDeleteRequested: (NoteSummary) -> Unit = {},
     gitStatusText: String = "",
+    syncWarning: SyncWarningUi? = null,
     gitIsTracked: Boolean = false,
     // Cervene se hlasi jen nalezeny, ale necitelny .git. Zadny git neni chyba — spousta lidi
     // synchronizuje jinak.
@@ -1020,6 +1049,12 @@ internal fun SetupScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
+
+        // Kdo klepne na zluty nebo cerveny cip, musi duvod videt hned, ne az dole u stavu gitu.
+        syncWarning?.let {
+            SyncWarningCard(it)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Section 1: the only folder anyone has to pick
         Text(
@@ -1329,6 +1364,10 @@ internal fun SetupScreenContent(
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
         )
+        syncWarning?.let {
+            Spacer(modifier = Modifier.height(12.dp))
+            SyncWarningCard(it)
+        }
         Spacer(modifier = Modifier.height(8.dp))
         if (syncMode == "git") {
         OutlinedButton(

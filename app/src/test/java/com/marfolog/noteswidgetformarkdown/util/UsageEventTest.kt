@@ -192,4 +192,19 @@ class UsageEventTest {
             UsageEvent.feedbackSent(FeedbackForm(text = "Thanks"))
         )
     }
+
+    @Test
+    fun `sync trouble is one event told apart by four fixed types`() {
+        assertEquals("sync_problem_shown", UsageEvent.SYNC_PROBLEM_SHOWN)
+        assertEquals("type", UsageEvent.PARAM_TYPE)
+        assertEquals(
+            listOf("cant_connect", "not_pushed", "stuck", "stale"),
+            listOf(
+                UsageEvent.SYNC_PROBLEM_CANT_CONNECT,
+                UsageEvent.SYNC_PROBLEM_NOT_PUSHED,
+                UsageEvent.SYNC_PROBLEM_STUCK,
+                UsageEvent.SYNC_PROBLEM_STALE
+            )
+        )
+    }
 }

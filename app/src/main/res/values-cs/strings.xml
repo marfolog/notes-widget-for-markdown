@@ -21,11 +21,13 @@
     <string name="sync_unknown">stav neznámý</string>
     <string name="sync_stuck">sync vázne</string>
     <string name="sync_not_pushed">nepushnuto</string>
+    <string name="sync_cant_connect">nelze připojit</string>
     <string name="sync_synced">sync %1$s</string>
     <string name="sync_updated">změna %1$s</string>
     <string name="sync_days_one">1 d</string>
     <string name="sync_days">%1$d d</string>
     <string name="sync_days_many">99+ d</string>
+    <string name="sync_hours">%1$d h</string>
     <string name="fast_note_title">Rychlá poznámka</string>
     <string name="fast_note_saving">Ukládám…</string>
     <string name="fast_note_saved">Rychlá poznámka uložena do zařízení</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"Klient byl naposledy aktivní: "</string>
     <string name="git_problem_conflict">Nedokončené sloučení (je tu MERGE_HEAD) — nejspíš na vás v git klientovi čeká konflikt.</string>
     <string name="git_problem_rebase">Rebase se začal a nikdy nedokončil — vyřešte ho v git klientovi.</string>
-    <string name="git_problem_diverged">Místní větev se liší od origin — změny čekají na push nebo pull.</string>
+    <string name="git_problem_not_pushed">Server má novější změny, git aplikace je musí nejdřív stáhnout a sloučit.</string>
+    <string name="git_problem_diverged">Telefon i server se změnily každý zvlášť. Git aplikace musí nejdřív stáhnout změny ze serveru a sloučit je. Server nepřepisujte (force push).</string>
+    <string name="git_problem_cant_connect">Změny z tohoto telefonu se na server nedostaly a git aplikace se od %1$s nepřipojila. Otevřete ji a přihlaste se znovu. Nepoužívejte žádnou volbu, která přepíše server (force push).</string>
+    <string name="git_problem_silent_long">Git aplikace se k serveru nepřipojila už %1$s. Nejčastěji vypršelo přihlášení nebo jí Android zakázal běh na pozadí.</string>
+    <string name="git_problem_stale">Git aplikace se k serveru nepřipojila už %1$s. Pokud synchronizujete záměrně takhle zřídka, zvyšte práh upozornění níže v sekci stavu synchronizace.</string>
     <string name="theme_system">Systém</string>
     <string name="theme_light">Světlé</string>
     <string name="theme_dark">Tmavé</string>

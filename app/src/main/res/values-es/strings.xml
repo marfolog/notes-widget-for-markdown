@@ -21,11 +21,13 @@
     <string name="sync_unknown">estado desconocido</string>
     <string name="sync_stuck">sinc. atascada</string>
     <string name="sync_not_pushed">sin enviar</string>
+    <string name="sync_cant_connect">sin conexión</string>
     <string name="sync_synced">sinc. %1$s</string>
     <string name="sync_updated">cambio %1$s</string>
     <string name="sync_days_one">1 d</string>
     <string name="sync_days">%1$d d</string>
     <string name="sync_days_many">99+ d</string>
+    <string name="sync_hours">%1$d h</string>
     <string name="fast_note_title">Nota rápida</string>
     <string name="fast_note_saving">Guardando…</string>
     <string name="fast_note_saved">Nota rápida guardada en el dispositivo</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"Cliente de sincronización activo por última vez: "</string>
     <string name="git_problem_conflict">Fusión sin terminar (hay un MERGE_HEAD): lo más probable es que te espere un conflicto en tu cliente de git.</string>
     <string name="git_problem_rebase">Se empezó un rebase y nunca se terminó: resuélvelo en tu cliente de git.</string>
-    <string name="git_problem_diverged">La rama local difiere de origin: hay cambios esperando un push o un pull.</string>
+    <string name="git_problem_not_pushed">El servidor tiene cambios más recientes; tu app de git tiene que descargarlos y fusionarlos primero.</string>
+    <string name="git_problem_diverged">Este teléfono y el servidor han cambiado por separado. Tu app de git tiene que descargar primero los cambios del servidor y fusionarlos. No sobrescribas el servidor (force push).</string>
+    <string name="git_problem_cant_connect">Los cambios hechos en este teléfono no han llegado al servidor, y tu app de git no se conecta desde el %1$s. Ábrela e inicia sesión de nuevo. No uses ninguna opción que sobrescriba el servidor (force push).</string>
+    <string name="git_problem_silent_long">Tu app de git lleva %1$s sin conectarse al servidor. Lo más habitual es que la sesión haya caducado o que Android le impida ejecutarse en segundo plano.</string>
+    <string name="git_problem_stale">Tu app de git lleva %1$s sin conectarse al servidor. Si sincronizas tan poco a propósito, sube el umbral de aviso más abajo, en la sección del estado de sincronización.</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>

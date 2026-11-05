@@ -21,11 +21,13 @@
     <string name="sync_unknown">状态未知</string>
     <string name="sync_stuck">同步卡住</string>
     <string name="sync_not_pushed">未推送</string>
+    <string name="sync_cant_connect">无法连接</string>
     <string name="sync_synced">同步 %1$s</string>
     <string name="sync_updated">更新 %1$s</string>
     <string name="sync_days_one">1 天</string>
     <string name="sync_days">%1$d 天</string>
     <string name="sync_days_many">99+ 天</string>
+    <string name="sync_hours">%1$d 小时</string>
     <string name="fast_note_title">快速笔记</string>
     <string name="fast_note_saving">正在保存…</string>
     <string name="fast_note_saved">快速笔记已保存到本机</string>
@@ -117,7 +119,11 @@
     <string name="git_status_client_active">"同步客户端最后活跃："</string>
     <string name="git_problem_conflict">合并未完成（存在 MERGE_HEAD）— 很可能有冲突正等着你在 git 客户端里处理。</string>
     <string name="git_problem_rebase">变基已开始但从未完成 — 请在 git 客户端中解决。</string>
-    <string name="git_problem_diverged">本地分支与 origin 不一致 — 有改动等待推送或拉取。</string>
+    <string name="git_problem_not_pushed">服务器上有更新的更改；git 应用需要先下载并合并它们。</string>
+    <string name="git_problem_diverged">这部手机和服务器各自发生了更改。git 应用需要先下载服务器的更改并合并。不要覆盖服务器（强制推送）。</string>
+    <string name="git_problem_cant_connect">这部手机上的更改没有到达服务器，git 应用自 %1$s 起一直没有连接。请打开它并重新登录。不要使用任何会覆盖服务器的选项（强制推送）。</string>
+    <string name="git_problem_silent_long">git 应用已有 %1$s 没有连接服务器。最常见的原因是登录过期，或 Android 阻止它在后台运行。</string>
+    <string name="git_problem_stale">git 应用已有 %1$s 没有连接服务器。如果你是有意这样低频同步，请在下方的同步状态部分调高警告阈值。</string>
     <string name="theme_system">跟随系统</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>

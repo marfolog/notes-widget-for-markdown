@@ -247,7 +247,7 @@ private fun RemoteViews.setDayNightTextColor(context: Context, viewId: Int, colo
 }
 
 private fun GitSyncLabel.Label.text(context: Context): String =
-    arg?.let { context.getString(textRes, it) } ?: context.getString(textRes)
+    arg?.let { context.getString(textRes, it.text(context)) } ?: context.getString(textRes)
 
 @Composable
 private fun BarChip(onClick: Action, dotColor: ColorProvider, text: String, backgroundPercent: Int) {
