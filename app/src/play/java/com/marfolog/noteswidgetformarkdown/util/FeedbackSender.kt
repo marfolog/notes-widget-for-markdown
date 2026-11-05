@@ -6,9 +6,6 @@ import android.net.NetworkCapabilities
 import androidx.annotation.StringRes
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.firestore.MemoryCacheSettings
 import com.marfolog.noteswidgetformarkdown.BuildConfig
 import com.marfolog.noteswidgetformarkdown.R
 import kotlin.coroutines.resume
@@ -32,22 +29,17 @@ object FeedbackSender {
     private const val COLLECTION = "feedback"
     private const val TIMEOUT_MILLIS = 15_000L
 
-    /**
-     * Memory cache only: a send that failed must not sit on disk and go out on a later start,
-     * after the user was told it failed and maybe sent it again.
-     */
-    private val firestore: FirebaseFirestore by lazy {
-        FirebaseFirestore.getInstance().apply {
-            firestoreSettings = FirebaseFirestoreSettings.Builder()
-                .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
-                .build()
-        }
-    }
+    private val firestore get() = PlayFirestore.instance
 
     suspend fun send(context: Context, form: FeedbackForm): FeedbackSendResult {
         val now = System.currentTimeMillis()
         if (!FeedbackReminder.canSend(context, now)) return FeedbackSendResult.TooSoon
         if (FeedbackReminder.isPending(context, now)) return FeedbackSendResult.Pending
+        // A debug build only looks like it sent: the answers of real people are not the place to test.
+        if (!FirestoreGuard.mayWrite(BuildConfig.DEBUG)) {
+            AppLog.i(AREA, "Debug build, would send feedback to Firestore (thumbs=${form.thumbs?.value}, ${form.trimmedText.length} characters)")
+            return FeedbackSendResult.Sent
+        }
         // Firestore would queue the write and wait for a network; offline is a plain failure here.
         if (!isOnline(context)) return FeedbackSendResult.Failed
 

@@ -1,5 +1,6 @@
 package com.marfolog.noteswidgetformarkdown.util
 
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptIds
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -8,29 +9,22 @@ import org.junit.Test
 class AfterNotePromptTest {
 
     @Test
-    fun `nothing due shows nothing`() {
-        assertEquals(AfterNotePrompt.None, AfterNotePrompt.choose(consentDue = false, ask = RatingAsk.None))
+    fun `nothing chosen shows nothing`() {
+        assertEquals(AfterNotePrompt.None, AfterNotePrompt.of(null))
     }
 
     @Test
-    fun `google's review card is launched when only it is due`() {
-        assertEquals(AfterNotePrompt.NativeReview, AfterNotePrompt.choose(consentDue = false, ask = RatingAsk.Native))
+    fun `each prompt the coordinator can choose after a note maps to what the activity shows`() {
+        assertEquals(AfterNotePrompt.Consent, AfterNotePrompt.of(PromptIds.CONSENT))
+        assertEquals(AfterNotePrompt.NativeReview, AfterNotePrompt.of(PromptIds.RATING_NATIVE))
+        assertEquals(AfterNotePrompt.Rating, AfterNotePrompt.of(PromptIds.RATING_DIALOG))
     }
 
     @Test
-    fun `the app's own rating dialog is shown when only it is due`() {
-        assertEquals(AfterNotePrompt.Rating, AfterNotePrompt.choose(consentDue = false, ask = RatingAsk.Dialog))
-    }
-
-    @Test
-    fun `the reporting question is shown when only it is due`() {
-        assertEquals(AfterNotePrompt.Consent, AfterNotePrompt.choose(consentDue = true, ask = RatingAsk.None))
-    }
-
-    @Test
-    fun `the reporting question goes first when a rating is due too, and the rating waits`() {
-        assertEquals(AfterNotePrompt.Consent, AfterNotePrompt.choose(consentDue = true, ask = RatingAsk.Native))
-        assertEquals(AfterNotePrompt.Consent, AfterNotePrompt.choose(consentDue = true, ask = RatingAsk.Dialog))
+    fun `a prompt that does not belong after a note shows nothing there`() {
+        assertEquals(AfterNotePrompt.None, AfterNotePrompt.of(PromptIds.WHATS_NEW))
+        assertEquals(AfterNotePrompt.None, AfterNotePrompt.of(PromptIds.INTEREST_BANNER))
+        assertEquals(AfterNotePrompt.None, AfterNotePrompt.of("something_else"))
     }
 
     @Test
@@ -39,14 +33,6 @@ class AfterNotePromptTest {
         assertTrue(AfterNotePrompt.Rating.showsDialog)
         assertFalse(AfterNotePrompt.NativeReview.showsDialog)
         assertFalse(AfterNotePrompt.None.showsDialog)
-    }
-
-    @Test
-    fun `everything shown after a note counts against the budget of automatic dialogs, nothing shown does not`() {
-        assertTrue(AfterNotePrompt.Consent.countsAsAutomaticDialog)
-        assertTrue(AfterNotePrompt.Rating.countsAsAutomaticDialog)
-        assertTrue(AfterNotePrompt.NativeReview.countsAsAutomaticDialog)
-        assertFalse(AfterNotePrompt.None.countsAsAutomaticDialog)
     }
 
     @Test

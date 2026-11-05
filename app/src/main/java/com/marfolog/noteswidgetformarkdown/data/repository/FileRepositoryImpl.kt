@@ -3,9 +3,12 @@ package com.marfolog.noteswidgetformarkdown.data.repository
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownFastNoteInserter
+import com.marfolog.noteswidgetformarkdown.domain.model.CreatedFile
+import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteTarget
 import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteStyle
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.data.parser.MarkdownPreviewFormatter
@@ -110,8 +113,35 @@ class FileRepositoryImpl(
         contentResolver.openOutputStream(newFile.uri)?.use { stream ->
             stream.write(content.toByteArray(Charsets.UTF_8))
         } ?: throw IllegalStateException("Could not open the new file for writing")
+        // A folder that was empty has a note now, which the next look into it must find.
+        FolderDiagnoser.forget(folderUri)
 
         newFile.uri.toString()
+    }
+
+    override suspend fun createFastNoteFile(folderUri: String, baseName: String): Result<CreatedFile> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val folder = DocumentFile.fromTreeUri(context, Uri.parse(folderUri))
+                    ?.takeIf { it.exists() }
+                    ?: throw IllegalStateException("Folder not found")
+                // Looked up fresh instead of trusting a list the screen may have loaded a while ago.
+                val taken = folder.listFiles().mapNotNull { it.name }
+                val fileName = FastNoteTarget.freeFileName(baseName, taken)
+                val created = folder.createFile("text/markdown", fileName)
+                    ?: throw IllegalStateException("Provider did not create the file")
+                // The provider may have picked another name after all; the file's own name is the truth.
+                FolderDiagnoser.forget(folderUri)
+                CreatedFile(uri = created.uri.toString(), name = created.name ?: fileName)
+            }
+        }
+
+    override suspend fun fileSize(fileUri: String): Long? = withContext(Dispatchers.IO) {
+        runCatching {
+            contentResolver.query(Uri.parse(fileUri), arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
+            }
+        }.getOrNull()
     }
 
     override suspend fun appendFastNote(fileUri: String, noteText: String, style: FastNoteStyle): Result<Boolean> = withContext(Dispatchers.IO) {

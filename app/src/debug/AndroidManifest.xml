@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+          Debug builds only: moves the clock the prompts go by and resets them, from adb. The release
+          manifest has no such receiver and no code behind it.
+        -->
+        <receiver
+            android:name="com.marfolog.noteswidgetformarkdown.debug.DebugPromptsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.marfolog.noteswidgetformarkdown.debug.TIME" />
+                <action android:name="com.marfolog.noteswidgetformarkdown.debug.PROMPTS_RESET" />
+                <action android:name="com.marfolog.noteswidgetformarkdown.debug.PROMPTS_DUMP" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

@@ -159,7 +159,7 @@ private fun WidgetRoot(
             is WidgetState.Uninitialized -> UninitializedContent()
             is WidgetState.PermissionLost -> PermissionLostContent()
             is WidgetState.Success -> ConfiguredContent(state.notes, vaultName, noteFolderPath, cardAppearances, bottomBarChip, isLoading, extraNoteFolders, backgroundPercent, showAddButtons)
-            is WidgetState.Empty -> ConfiguredContentEmpty(vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent, showAddButtons)
+            is WidgetState.Empty -> ConfiguredContentEmpty(state.hint, vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent, showAddButtons)
             is WidgetState.Error -> ConfiguredContentError(state.message, vaultName, noteFolderPath, bottomBarChip, isLoading, backgroundPercent, showAddButtons)
         }
     }
@@ -298,6 +298,7 @@ private fun ConfiguredContent(
 
 @Composable
 private fun ConfiguredContentEmpty(
+    hint: EmptyHint,
     vaultName: String?,
     noteFolderPath: String?,
     bottomBarChip: BottomBarChip,
@@ -306,7 +307,7 @@ private fun ConfiguredContentEmpty(
     showAddButtons: Boolean = true
 ) {
     ConfiguredScaffold(vaultName, noteFolderPath, bottomBarChip, backgroundPercent, isLoading, showAddButtons) {
-        EmptyContent(backgroundPercent)
+        EmptyContent(hint, backgroundPercent)
     }
 }
 
@@ -404,14 +405,22 @@ private fun NoteCard(
 // region Empty & Error Content
 
 @Composable
-private fun EmptyContent(backgroundPercent: Int, modifier: GlanceModifier = GlanceModifier) {
+private fun EmptyContent(hint: EmptyHint, backgroundPercent: Int, modifier: GlanceModifier = GlanceModifier) {
+    val context = LocalContext.current
+    // Says where the notes are, and a tap goes to the Notes Folder in settings to fix it.
+    val tap = if (hint.opensSettings) {
+        GlanceModifier.clickable(actionStartActivity(SetupActivity.intent(context, UsageEvent.FROM_WIDGET)))
+    } else {
+        GlanceModifier
+    }
     Box(
-        modifier = modifier.fillMaxWidth(),
+        // The refresh and settings buttons sit over the right edge; a longer message must stop short of them.
+        modifier = modifier.fillMaxWidth().padding(end = 48.dp).then(tap),
         contentAlignment = Alignment.Center
     ) {
         WidgetSurface(backgroundPercent, cornerRadius = 12.dp, horizontalPadding = 12.dp, verticalPadding = 8.dp) {
             Text(
-                text = LocalContext.current.getString(R.string.widget_no_notes),
+                text = context.getString(emptyMessageRes(hint)),
                 style = TextStyle(
                     fontSize = 14.sp,
                     color = ChromeColors.content

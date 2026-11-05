@@ -1,16 +1,11 @@
 package com.marfolog.noteswidgetformarkdown.util
 
-import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConsentPromptTest {
-
-    private val day = TimeUnit.DAYS.toMillis(1)
-    private val openedAt = 1_760_000_000_000L
 
     private fun due(
         canReport: Boolean = true,
@@ -78,33 +73,5 @@ class ConsentPromptTest {
         }
 
         assertEquals(listOf(false, false, true, false), shown)
-    }
-
-    @Test
-    fun `when everything is due the reporting question goes first`() {
-        val dueNow = buildSet {
-            if (due()) add(AutoPrompt.Consent)
-            add(AutoPrompt.WhatsNew)
-        }
-
-        assertEquals(AutoPrompt.Consent, PromptBudget.pick(dueNow, openedAt, null, promptedThisVisit = false))
-    }
-
-    @Test
-    fun `the reporting question waits out the quiet days after what's new like any other dialog`() {
-        val dueNow = setOf(AutoPrompt.Consent)
-
-        assertNull(PromptBudget.pick(dueNow, openedAt + day, openedAt, promptedThisVisit = false))
-        assertEquals(AutoPrompt.Consent, PromptBudget.pick(dueNow, openedAt + 3 * day, openedAt, promptedThisVisit = false))
-    }
-
-    @Test
-    fun `once answered, what's new is no longer held back by it`() {
-        val dueNow = buildSet {
-            if (due(alreadyAsked = true)) add(AutoPrompt.Consent)
-            add(AutoPrompt.WhatsNew)
-        }
-
-        assertEquals(AutoPrompt.WhatsNew, PromptBudget.pick(dueNow, openedAt, null, promptedThisVisit = false))
     }
 }

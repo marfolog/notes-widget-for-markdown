@@ -2,6 +2,8 @@ package com.marfolog.noteswidgetformarkdown.util
 
 import android.content.Context
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptIds
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptSurfaces
 
 /**
  * What the rate chip remembers between process starts. The schedule itself is [RateChipSchedule];
@@ -62,6 +64,7 @@ object RateReminder {
     /** Both widgets load their data on every refresh; the window is reported by whichever is first. */
     fun reportShownOnce(context: Context, window: Int?) {
         if (claimShownWindow(store(context), window)) {
+            PromptSurfaces.recordShown(context, PromptIds.RATE_CHIP)
             Telemetry.event(UsageEvent.RATE_CHIP_SHOWN, UsageEvent.PARAM_WINDOW to window.toString())
         }
     }

@@ -1,12 +1,17 @@
 rules_version = '2';
 
-// Feedback sent from the settings of the Play build. The app may add one document per answer and
-// nothing else: nobody reads, changes or deletes anything through the client API.
+// Feedback and answers to in-app questions, sent from the Play build only when the user presses
+// a button. The app may add one document per answer and nothing else: nobody reads, changes or
+// deletes anything through the client API.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     match /feedback/{id} {
       allow create: if isFeedback(request.resource.data);
+    }
+
+    match /interest/{id} {
+      allow create: if isInterest(request.resource.data);
     }
 
     match /{document=**} {
@@ -21,6 +26,16 @@ service cloud.firestore {
         && data.createdAt == request.time
         && (data.thumbs == null || data.thumbs in ['up', 'down'])
         && data.text is string && data.text.size() <= 1000;
+    }
+
+    function isInterest(data) {
+      return data.keys().hasOnly(['feature', 'answer', 'appVersion', 'versionCode', 'createdAt'])
+        && data.keys().hasAll(['feature', 'answer', 'appVersion', 'versionCode', 'createdAt'])
+        && data.feature in ['multi_folder_widgets']
+        && data.answer in ['yes', 'no']
+        && data.appVersion is string && data.appVersion.size() <= 40
+        && data.versionCode is int
+        && data.createdAt == request.time;
     }
   }
 }

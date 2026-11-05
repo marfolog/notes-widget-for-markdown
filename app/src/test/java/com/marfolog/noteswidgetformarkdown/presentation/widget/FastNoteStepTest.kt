@@ -64,14 +64,14 @@ class FastNoteStepTest {
     }
 
     @Test
-    fun `a folder without notes says so`() {
-        assertEquals(FastNoteStep.NoNotesInFolder, fastNoteStep(null, null, folder, Result.success(emptyList())))
+    fun `a folder without notes still offers the quick notes file`() {
+        assertEquals(FastNoteStep.PickTarget(emptyList()), fastNoteStep(null, null, folder, Result.success(emptyList())))
     }
 
     @Test
-    fun `a folder holding only extra notes has nothing to pick`() {
+    fun `a folder holding only extra notes has nothing to pick but the quick notes file`() {
         assertEquals(
-            FastNoteStep.NoNotesInFolder,
+            FastNoteStep.PickTarget(emptyList()),
             fastNoteStep(null, null, folder, Result.success(listOf(note("Gifts", isExtra = true))))
         )
     }
@@ -106,5 +106,43 @@ class FastNoteStepTest {
     fun `while the saved target is being checked the dialog waits`() {
         assertEquals(FastNoteStep.Loading, fastNoteStep(groceries.fileUri, null, folder, null))
         assertEquals(FastNoteStep.Loading, fastNoteStep(groceries.fileUri, null, null, null))
+    }
+
+    @Test
+    fun `a target the user removed asks again, as if none was ever set`() {
+        // Settings remove the stored uri, so the dialog sees exactly what a first-time user sees.
+        assertEquals(
+            FastNoteStep.PickTarget(listOf(groceries, projects)),
+            fastNoteStep(null, null, folder, Result.success(listOf(groceries, projects)))
+        )
+    }
+
+    @Test
+    fun `a target deleted after the widget was tapped asks instead of writing`() {
+        assertEquals(
+            FastNoteStep.PickTarget(listOf(projects)),
+            fastNoteStep(groceries.fileUri, false, folder, Result.success(listOf(projects)))
+        )
+    }
+
+    @Test
+    fun `a picked file waits for the user's yes before it becomes the target`() {
+        assertEquals(
+            FastNoteStep.ConfirmTarget(projects),
+            fastNoteStep(null, null, folder, Result.success(listOf(groceries, projects)), confirming = projects)
+        )
+    }
+
+    @Test
+    fun `a pending file does not hide a folder that cannot be read`() {
+        assertEquals(
+            FastNoteStep.NotesUnreadable,
+            fastNoteStep(null, null, folder, Result.failure(SecurityException("lost")), confirming = projects)
+        )
+    }
+
+    @Test
+    fun `a target that exists wins over a pending file`() {
+        assertEquals(FastNoteStep.Write, fastNoteStep(groceries.fileUri, true, folder, null, confirming = projects))
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -48,16 +49,19 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.marfolog.noteswidgetformarkdown.R
-import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
 import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteStyle
+import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteTarget
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.AppendFastNoteUseCase
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CheckFastNoteTargetUseCase
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CreateFastNoteFileUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.consent.ReportingConsentDialog
 import com.marfolog.noteswidgetformarkdown.presentation.setup.FastNoteStyleChooser
@@ -87,6 +91,9 @@ class FastNoteActivity : ComponentActivity() {
     private var targetName by mutableStateOf<String?>(null)
     private var targetExists by mutableStateOf<Boolean?>(null)
     private var folderNotes by mutableStateOf<Result<List<NoteSummary>>?>(null)
+    private var confirming by mutableStateOf<NoteSummary?>(null)
+    private var creating by mutableStateOf(false)
+    private var pickError by mutableStateOf<String?>(null)
     private var saving by mutableStateOf(false)
     private var style by mutableStateOf(FastNoteStyle.Bullet)
 
@@ -137,7 +144,7 @@ class FastNoteActivity : ComponentActivity() {
                 }
                 if (dialogVisible) {
                     FastNoteWindow(onDismissRequest = { if (!saving) finish() }) {
-                        when (val step = fastNoteStep(targetUri, targetExists, notesFolderUri, folderNotes)) {
+                        when (val step = fastNoteStep(targetUri, targetExists, notesFolderUri, folderNotes, confirming)) {
                             FastNoteStep.Write -> WriteContent(
                                 targetName = targetName,
                                 isSaving = saving,
@@ -149,16 +156,25 @@ class FastNoteActivity : ComponentActivity() {
                             FastNoteStep.Loading -> LoadingContent(onCancel = { finish() })
                             is FastNoteStep.PickTarget -> PickTargetContent(
                                 notes = step.notes,
+                                busy = creating,
+                                error = pickError,
                                 onPick = ::pickTarget,
+                                onCreateQuickNotes = { createQuickNotes(notesFolderUri) },
                                 onCancel = { finish() }
+                            )
+                            is FastNoteStep.ConfirmTarget -> ConfirmTargetContent(
+                                fileName = step.note.fileName,
+                                quickNotesName = FastNoteTarget.freeFileName(
+                                    getString(R.string.quick_notes_name),
+                                    folderNotes?.getOrNull().orEmpty().map { it.fileName }
+                                ),
+                                busy = creating,
+                                onUse = { acceptTarget(step.note, UsageEvent.TARGET_KIND_EXISTING) },
+                                onCreateQuickNotes = { createQuickNotes(notesFolderUri) },
+                                onCancel = { confirming = null }
                             )
                             FastNoteStep.NoNotesFolder -> NoTargetContent(
                                 messageRes = R.string.fast_note_no_folder,
-                                onOpenSettings = ::openSettings,
-                                onCancel = { finish() }
-                            )
-                            FastNoteStep.NoNotesInFolder -> NoTargetContent(
-                                messageRes = R.string.fast_note_folder_empty,
                                 onOpenSettings = ::openSettings,
                                 onCancel = { finish() }
                             )
@@ -182,22 +198,67 @@ class FastNoteActivity : ComponentActivity() {
             ?.takeIf { it.exists() && it.canRead() && it.canWrite() }
     }.getOrNull()
 
-    /** Same notes, in the same order, as the target chips in settings. */
+    /** Same notes, newest change first, as the target chips in settings. */
     private suspend fun loadFolderNotes(notesFolderUri: String): Result<List<NoteSummary>> = runCatching {
         val getNotesUseCase = get<GetNotesUseCase>(GetNotesUseCase::class.java)
-        NoteCardSettingsStore(applicationContext)
-            .applyOrder(getNotesUseCase(notesFolderUri).firstOrNull().orEmpty())
+        FastNoteTarget.chipOrder(getNotesUseCase(notesFolderUri).firstOrNull().orEmpty())
     }.onFailure { AppLog.w(AREA, "Could not list notes to pick a fast note target", it) }
 
+    /**
+     * A file with something in it is not taken at once: new notes go at its end, which is said first.
+     * Whatever cannot be measured counts as having content, since a question costs a tap.
+     */
     private fun pickTarget(note: NoteSummary) {
+        pickError = null
+        lifecycleScope.launch {
+            val needsWarning = runCatching {
+                get<CheckFastNoteTargetUseCase>(CheckFastNoteTargetUseCase::class.java)(note.fileUri)
+            }.getOrDefault(true)
+            if (needsWarning) confirming = note else acceptTarget(note, UsageEvent.TARGET_KIND_EXISTING)
+        }
+    }
+
+    private fun acceptTarget(note: NoteSummary, kind: String) {
         getSharedPreferences(SetupActivity.PREFS_NAME, MODE_PRIVATE)
             .edit()
             .putString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, note.fileUri)
             .apply()
-        Telemetry.event(UsageEvent.FAST_TARGET_SET)
+        Telemetry.event(UsageEvent.FAST_TARGET_SET, *UsageEvent.fastTargetSet(kind))
+        confirming = null
         targetName = note.fileName
         targetUri = note.fileUri
         targetExists = true
+    }
+
+    /** The app's own file in the notes folder, so nobody has to write into one of theirs. */
+    private fun createQuickNotes(notesFolderUri: String?) {
+        if (notesFolderUri.isNullOrBlank() || creating) return
+        creating = true
+        pickError = null
+        lifecycleScope.launch {
+            val result = runCatching {
+                get<CreateFastNoteFileUseCase>(CreateFastNoteFileUseCase::class.java)(
+                    notesFolderUri,
+                    getString(R.string.quick_notes_name)
+                ).getOrThrow()
+            }
+            creating = false
+            result.onSuccess { created ->
+                confirming = null
+                acceptTarget(
+                    NoteSummary(
+                        id = created.uri, title = created.name.removeSuffix(".md"), preview = "",
+                        lastModified = System.currentTimeMillis(), fileUri = created.uri, fileName = created.name
+                    ),
+                    UsageEvent.TARGET_KIND_CREATED
+                )
+                NotesWidget.updateAll(applicationContext)
+            }.onFailure { error ->
+                AppLog.w(AREA, "Could not create the quick notes file", error)
+                confirming = null
+                pickError = getString(R.string.fast_note_create_quick_failed)
+            }
+        }
     }
 
     private fun openSettings() {
@@ -352,9 +413,13 @@ private fun LoadingContent(onCancel: () -> Unit) {
 @Composable
 private fun PickTargetContent(
     notes: List<NoteSummary>,
+    busy: Boolean,
+    error: String?,
     onPick: (NoteSummary) -> Unit,
+    onCreateQuickNotes: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val quickNotesName = FastNoteTarget.freeFileName(stringResource(R.string.quick_notes_name), notes.map { it.fileName })
     Column(modifier = Modifier.padding(vertical = 24.dp)) {
         Text(
             text = stringResource(R.string.fast_note_pick_title),
@@ -364,18 +429,48 @@ private fun PickTargetContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.fast_note_pick_hint),
+            text = stringResource(R.string.fast_note_append_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.fast_note_pick_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+        )
+        error?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        // First, so that the safe choice is the one in reach; the files of the user come after it.
+        TargetRow(
+            fileName = stringResource(R.string.fast_note_create_quick, quickNotesName),
+            icon = Icons.Outlined.NoteAdd,
+            highlighted = true,
+            enabled = !busy,
+            onClick = onCreateQuickNotes
+        )
         Column(
             modifier = Modifier
-                .heightIn(max = 360.dp)
+                .heightIn(max = 320.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            notes.forEach { note -> TargetRow(note.fileName, onClick = { onPick(note) }) }
+            if (notes.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.fast_note_folder_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                )
+            }
+            notes.forEach { note -> TargetRow(note.fileName, enabled = !busy, onClick = { onPick(note) }) }
         }
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(
@@ -389,26 +484,65 @@ private fun PickTargetContent(
     }
 }
 
+/** Said once, before a file with content becomes the target; the buttons stack so none of them wraps. */
 @Composable
-private fun TargetRow(fileName: String, onClick: () -> Unit) {
+private fun ConfirmTargetContent(
+    fileName: String,
+    quickNotesName: String,
+    busy: Boolean,
+    onUse: () -> Unit,
+    onCreateQuickNotes: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Column(modifier = Modifier.padding(24.dp)) {
+        Text(
+            text = stringResource(R.string.fast_note_warn_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = AlertDialogDefaults.titleContentColor
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.fast_note_warn_body, fileName),
+            style = MaterialTheme.typography.bodyMedium,
+            color = AlertDialogDefaults.textContentColor
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()) {
+            TextButton(enabled = !busy, onClick = onCreateQuickNotes) {
+                Text(stringResource(R.string.fast_note_warn_create, quickNotesName), maxLines = 1)
+            }
+            TextButton(enabled = !busy, onClick = onUse) { Text(stringResource(R.string.fast_note_warn_use), maxLines = 1) }
+            TextButton(enabled = !busy, onClick = onCancel) { Text(stringResource(R.string.action_cancel), maxLines = 1) }
+        }
+    }
+}
+
+@Composable
+private fun TargetRow(
+    fileName: String,
+    icon: ImageVector = Icons.Outlined.Description,
+    highlighted: Boolean = false,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
         Icon(
-            imageVector = Icons.Outlined.Description,
+            imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = fileName,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

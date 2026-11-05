@@ -10,6 +10,7 @@ import com.marfolog.noteswidgetformarkdown.di.appModule
 import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetInventory
 import com.marfolog.noteswidgetformarkdown.util.AppLog
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.util.UsageProperties
@@ -51,12 +52,13 @@ class NotesWidgetApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppClock.init(this)
         Telemetry.init(this)
         WhatsNewSwitch.init(this)
         WhatsNewReminder.recordStart(this)
         // Here rather than in an activity: widget updates start the process too, and most people
         // only ever use the widget.
-        if (RateReminder.recordStart(this, System.currentTimeMillis())) {
+        if (RateReminder.recordStart(this, AppClock.now())) {
             WidgetInventory.adoptExisting(this)
         }
         UsageProperties.publish(this)

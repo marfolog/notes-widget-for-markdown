@@ -3,6 +3,8 @@ package com.marfolog.noteswidgetformarkdown.di
 import com.marfolog.noteswidgetformarkdown.data.repository.FileRepositoryImpl
 import com.marfolog.noteswidgetformarkdown.domain.repository.FileRepository
 import com.marfolog.noteswidgetformarkdown.domain.usecase.AppendFastNoteUseCase
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CheckFastNoteTargetUseCase
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CreateFastNoteFileUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.CreateNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.DeleteNoteUseCase
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetExtraNotesUseCase
@@ -16,6 +18,8 @@ val appModule = module {
     factory { GetNotesUseCase(fileRepository = get()) }
     factory { CreateNoteUseCase(fileRepository = get()) }
     factory { AppendFastNoteUseCase(fileRepository = get()) }
+    factory { CreateFastNoteFileUseCase(fileRepository = get()) }
+    factory { CheckFastNoteTargetUseCase(fileRepository = get()) }
     factory { DeleteNoteUseCase(fileRepository = get()) }
     factory { GetExtraNotesUseCase(fileRepository = get()) }
     viewModel { NotesViewModel(getNotesUseCase = get()) }

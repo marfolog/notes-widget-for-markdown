@@ -56,6 +56,8 @@ import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -147,11 +149,21 @@ import com.marfolog.noteswidgetformarkdown.presentation.widget.NotesWidget
 import com.marfolog.noteswidgetformarkdown.presentation.widget.OpenWith
 import com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetBackground
 import com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetInventory
+import com.marfolog.noteswidgetformarkdown.debug.DebugTools
+import com.marfolog.noteswidgetformarkdown.domain.model.FastNoteTarget
+import com.marfolog.noteswidgetformarkdown.domain.model.FolderDiagnosis
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CheckFastNoteTargetUseCase
+import com.marfolog.noteswidgetformarkdown.domain.usecase.CreateFastNoteFileUseCase
+import com.marfolog.noteswidgetformarkdown.util.FeatureInterest
+import com.marfolog.noteswidgetformarkdown.util.SettingsVisits
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptCoordinator
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptFacts
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptIds
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptSurfaces
+import com.marfolog.noteswidgetformarkdown.util.prompt.Surface
 import com.marfolog.noteswidgetformarkdown.util.AppLanguage
 import com.marfolog.noteswidgetformarkdown.util.AppLog
-import com.marfolog.noteswidgetformarkdown.util.AutoPrompt
-import com.marfolog.noteswidgetformarkdown.util.ConsentPrompt
-import com.marfolog.noteswidgetformarkdown.util.PromptBudget
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.ProjectLinks
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
@@ -180,6 +192,8 @@ class SetupActivity : ComponentActivity() {
         enableEdgeToEdge()
         ThemePreference.load(this)
         onboarding = OnboardingSession(applicationContext)
+        // The guide is not a visit to settings, and a turn of the screen is not a new one.
+        if (savedInstanceState == null && onboarding.step == null) SettingsVisits.record(applicationContext)
         if (savedInstanceState == null) {
             Telemetry.event(
                 UsageEvent.SETTINGS_OPENED,
@@ -273,6 +287,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     val cardSettingsStore = remember { NoteCardSettingsStore(context.applicationContext) }
     val notesLoadFailed = stringResource(R.string.notes_load_failed)
     val deleteNoteFailed = stringResource(R.string.delete_note_failed)
+    val quickNotesBaseName = stringResource(R.string.quick_notes_name)
 
     var vaultUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_VAULT_URI, null)) }
     var notesUri by rememberSaveable { mutableStateOf(prefs.getString(SetupActivity.KEY_NOTES_URI, null)) }
@@ -302,7 +317,9 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    LaunchedEffect(notesUri, extraNoteUris) {
+    // Bumped when the app itself changed what is in the folder, such as a created Quick notes file.
+    var notesReload by remember { mutableIntStateOf(0) }
+    LaunchedEffect(notesUri, extraNoteUris, notesReload) {
         val currentNotesUri = notesUri
         if (currentNotesUri.isNullOrEmpty()) {
             notesForSettings = emptyList()
@@ -325,6 +342,11 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             notesLoadError = error.message ?: notesLoadFailed
         }
     }
+
+    var screenResumes by remember { mutableIntStateOf(0) }
+    val folderDiagnosis = rememberFolderDiagnosis(notesUri, notesReload to screenResumes, refresh = screenResumes > 0)
+    var showSubfolders by rememberSaveable { mutableStateOf(false) }
+    var pendingTarget by remember { mutableStateOf<NoteSummary?>(null) }
 
     var expandedNoteUri by rememberSaveable { mutableStateOf<String?>(null) }
     var noteToDelete by remember { mutableStateOf<NoteSummary?>(null) }
@@ -361,7 +383,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
     var gitReloadTrigger by remember { mutableIntStateOf(0) }
     val rateChipSettingAvailable = remember {
-        RateReminder.isSettingAvailable(context, System.currentTimeMillis())
+        RateReminder.isSettingAvailable(context, AppClock.now())
     }
     var rateChipEnabled by rememberSaveable { mutableStateOf(RateReminder.isEnabled(context)) }
     val languageName = remember { currentLanguageName(context) }
@@ -398,8 +420,10 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    var gitLoaded by remember { mutableStateOf(false) }
     LaunchedEffect(vaultUri, notesUri, gitReloadTrigger) {
         gitStatus = GitSyncStatusReader(context.applicationContext).read(vaultUri)
+        gitLoaded = true
     }
 
     /**
@@ -482,6 +506,40 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    fun setFastTarget(note: NoteSummary, kind: String) {
+        fastNoteTargetUri = note.fileUri
+        prefs.edit().putString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, note.fileUri).commit()
+        Telemetry.event(UsageEvent.FAST_TARGET_SET, *UsageEvent.fastTargetSet(kind))
+        pendingTarget = null
+    }
+
+    fun createQuickNotes() {
+        val folder = notesUri ?: return
+        pendingTarget = null
+        scope.launch {
+            val created = runCatching {
+                get<CreateFastNoteFileUseCase>(CreateFastNoteFileUseCase::class.java)(
+                    folder,
+                    quickNotesBaseName
+                ).getOrThrow()
+            }
+            created.onSuccess { file ->
+                setFastTarget(
+                    NoteSummary(
+                        id = file.uri, title = file.name.removeSuffix(".md"), preview = "",
+                        lastModified = System.currentTimeMillis(), fileUri = file.uri, fileName = file.name
+                    ),
+                    UsageEvent.TARGET_KIND_CREATED
+                )
+                notesReload++
+                NotesWidget.updateAll(context)
+            }.onFailure { error ->
+                AppLog.w(SetupActivity.AREA, "Could not create the quick notes file", error)
+                Toast.makeText(context, R.string.fast_note_create_quick_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     // One file per pick. The type list is wide on purpose — providers disagree on what a .md file
     // is — and the extension check below is what actually decides.
     val extraNotePicker = rememberLauncherForActivityResult(
@@ -553,55 +611,82 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
     }
     var showWhatsNew by rememberSaveable { mutableStateOf(false) }
     // Saved, so a rotation neither asks again nor brings a second dialog.
-    var autoPrompt by rememberSaveable { mutableStateOf<AutoPrompt?>(null) }
+    var shownPromptId by rememberSaveable { mutableStateOf<String?>(null) }
     // Checked on every return to this screen until something shows: adding the widget happens on
     // the home screen while settings stay open underneath.
     var resumes by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) resumes++
+            if (event == Lifecycle.Event.ON_RESUME) {
+                resumes++
+                // Coming back from a file manager: what the folder holds may have changed meanwhile.
+                screenResumes++
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(resumes) {
-        if (resumes == 0 || autoPrompt != null) return@LaunchedEffect
-        val now = System.currentTimeMillis()
-        val setupComplete = notesUri != null && guideDone
+    // Whether a problem with the folder is on screen, as with the sync card: information, not a prompt.
+    val folderCardShown = folderDiagnosis != null && folderDiagnosis !is FolderDiagnosis.HasNotes
+    val syncCardShown = syncMode == "git" && syncWarningUi(context, gitStatus, staleHours) != null
+    val settingsVisits = remember { SettingsVisits.count(context) }
+    var interestBanner by rememberSaveable { mutableStateOf(InterestBannerState.Hidden) }
+    // The banner is weighed once per visit, the first time the cards are known; a card that goes away
+    // later in the visit (a folder fixed in the picker) does not bring it in on top of the screen.
+    var bannerWindowClosed by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(resumes, gitLoaded, folderDiagnosis) {
+        if (resumes == 0 || shownPromptId != null) return@LaunchedEffect
         val openedFrom = (context as? Activity)?.intent?.getStringExtra(SetupActivity.EXTRA_OPENED_FROM)
-        if (PromptBudget.isQuietVisit(openedFrom)) return@LaunchedEffect
-        val due = buildSet {
-            val consentDue = ConsentPrompt.isDue(
-                canReport = Telemetry.ENABLED,
-                alreadyAsked = !askAboutReporting,
-                notesFolderChosen = notesUri != null,
-                widgetsPlaced = WidgetInventory.Kind.entries.sumOf { WidgetInventory.count(context, it) },
-                guideSkipped = prefs.getBoolean(SetupActivity.KEY_GUIDE_SKIPPED, false)
+        val cardsLoaded = gitLoaded && (notesUri == null || folderDiagnosis != null)
+        val facts = PromptFacts(
+            canReport = Telemetry.ENABLED,
+            reportingAsked = !askAboutReporting,
+            notesFolderChosen = notesUri != null,
+            widgetsPlaced = WidgetInventory.Kind.entries.sumOf { WidgetInventory.count(context, it) },
+            guideSkipped = prefs.getBoolean(SetupActivity.KEY_GUIDE_SKIPPED, false),
+            guideDone = guideDone && notesUri != null,
+            setupComplete = notesUri != null && guideDone,
+            openedFrom = openedFrom,
+            whatsNewDue = WhatsNewReminder.shouldShow(context, notesUri != null && guideDone, openedFrom),
+            whatsNewMandatory = WhatsNewReminder.needsButtonsChoice(context),
+            settingsVisits = settingsVisits,
+            interestAnswered = FeatureInterest.isAnswered(context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS),
+            interestBannerShows = FeatureInterest.bannerShows(context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS),
+            syncCardVisible = syncCardShown,
+            folderCardVisible = folderCardShown,
+            // Dialogs do not wait for the cards; only the banner does, and it is asked again when they arrive.
+            cardsKnown = cardsLoaded && !bannerWindowClosed
+        )
+        // A banner that was shown as often as it will be and left alone counts as an answer.
+        if (cardsLoaded) {
+            FeatureInterest.reportIgnoredOnce(
+                context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS, UsageEvent.FROM_SETTINGS_BANNER
             )
-            if (consentDue) add(AutoPrompt.Consent)
-            if (WhatsNewReminder.shouldShow(context, setupComplete, openedFrom)) add(AutoPrompt.WhatsNew)
         }
-        val mandatory = if (AutoPrompt.WhatsNew in due && WhatsNewReminder.needsButtonsChoice(context)) {
-            setOf(AutoPrompt.WhatsNew)
-        } else {
-            emptySet()
-        }
-        val chosen = PromptBudget.pick(context, due, now, promptedThisVisit = autoPrompt != null, exemptFromGap = mandatory)
-            ?: return@LaunchedEffect
-        autoPrompt = chosen
-        PromptBudget.markShown(context, now)
-        when (chosen) {
-            AutoPrompt.Consent -> Unit
-            AutoPrompt.WhatsNew -> {
+        if (cardsLoaded && syncCardShown) PromptSurfaces.recordShown(context, PromptIds.SYNC_CARD)
+        if (cardsLoaded && folderCardShown) PromptSurfaces.recordShown(context, PromptIds.FOLDER_CARD)
+        val visit = PromptCoordinator.Visit(quiet = PromptSurfaces.isQuietVisit(openedFrom))
+        val chosen = PromptSurfaces.decide(context, Surface.Settings, facts, visit)
+        if (cardsLoaded) bannerWindowClosed = true
+        if (chosen == null) return@LaunchedEffect
+        shownPromptId = chosen.id
+        when (chosen.id) {
+            PromptIds.WHATS_NEW -> {
                 showWhatsNew = true
                 // A dialog that opens with a question is marked as seen once it is answered, by the dialog.
                 if (!WhatsNewReminder.needsButtonsChoice(context)) {
-                    WhatsNewReminder.markShown(context, now)
+                    WhatsNewReminder.markShown(context, AppClock.now())
                     // The rate chip keeps its distance from this dialog, so redraw it with the new date.
                     scope.launch { NotesWidget.updateAll(context) }
                 }
             }
+            PromptIds.INTEREST_BANNER -> {
+                interestBanner = InterestBannerState.Ask
+                FeatureInterest.recordBannerShown(context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS)
+                FeatureInterest.reportShown(UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS, UsageEvent.FROM_SETTINGS_BANNER)
+            }
+            else -> Unit
         }
     }
     if (showWhatsNew) {
@@ -611,7 +696,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         FeedbackDialogHost(onClose = { showFeedback = false })
     }
 
-    if (askAboutReporting && Telemetry.ENABLED && autoPrompt == AutoPrompt.Consent) {
+    if (askAboutReporting && Telemetry.ENABLED && shownPromptId == PromptIds.CONSENT) {
         ReportingConsentDialog { agreed ->
             telemetryEnabled = agreed
             askAboutReporting = false
@@ -620,10 +705,35 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
 
     SetupScreenContent(
         vaultName = vaultDisplayName,
+        interestBanner = interestBanner,
+        onInterestYes = {
+            FeatureInterest.answer(
+                context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS, UsageEvent.ANSWER_YES, UsageEvent.FROM_SETTINGS_BANNER
+            )
+            interestBanner = InterestBannerState.Thanks
+        },
+        onInterestNo = {
+            FeatureInterest.answer(
+                context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS, UsageEvent.ANSWER_NO, UsageEvent.FROM_SETTINGS_BANNER
+            )
+            interestBanner = InterestBannerState.Hidden
+        },
+        onInterestDismiss = {
+            // The corner button ends the question like any answer, and is counted as its own; after
+            // a "yes" it only closes the thanks.
+            interestBanner.dismissAnswer()?.let { answer ->
+                FeatureInterest.answer(
+                    context, UsageEvent.FEATURE_MULTI_FOLDER_WIDGETS, answer, UsageEvent.FROM_SETTINGS_BANNER
+                )
+            }
+            interestBanner = InterestBannerState.Hidden
+        },
         onSelectVault = { vaultPicker.launch(null) },
         notesFolderName = notesDisplayName,
         notesFolderPath = notesUri?.let { humanFolderPath(it) },
-        onSelectNotesFolder = { notesPicker.launch(null) },
+        onSelectNotesFolder = { notesPicker.launchSafely(null) },
+        folderDiagnosis = folderDiagnosis,
+        onPickSubfolder = { showSubfolders = true },
         extraNotes = extraNoteEntries,
         onAddExtraNote = { extraNotePicker.launch(EXTRA_NOTE_MIME_TYPES) },
         onRemoveExtraNote = { entry -> extraNoteToRemove = entry },
@@ -633,12 +743,24 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         notesLoadError = notesLoadError,
         fastNoteTargetUri = fastNoteTargetUri,
         onFastNoteTargetSelected = { note ->
-            fastNoteTargetUri = note.fileUri
-            prefs.edit()
-                .putString(SetupActivity.KEY_FAST_NOTE_TARGET_URI, note.fileUri)
-                .commit()
-            Telemetry.event(UsageEvent.FAST_TARGET_SET)
+            if (note.fileUri != fastNoteTargetUri) {
+                scope.launch {
+                    // A file with content is not taken at once: new notes go at its end, which is said first.
+                    val needsWarning = runCatching {
+                        get<CheckFastNoteTargetUseCase>(CheckFastNoteTargetUseCase::class.java)(note.fileUri)
+                    }.getOrDefault(true)
+                    if (needsWarning) pendingTarget = note else setFastTarget(note, UsageEvent.TARGET_KIND_EXISTING)
+                }
+            }
         },
+        onFastNoteTargetCleared = {
+            if (fastNoteTargetUri != null) {
+                fastNoteTargetUri = null
+                prefs.edit().remove(SetupActivity.KEY_FAST_NOTE_TARGET_URI).commit()
+                Telemetry.event(UsageEvent.FAST_TARGET_SET, *UsageEvent.fastTargetSet(UsageEvent.TARGET_KIND_CLEARED))
+            }
+        },
+        onCreateQuickNotes = ::createQuickNotes,
         fastNoteStyle = fastNoteStyle,
         onFastNoteStyleChanged = { style ->
             fastNoteStyle = style
@@ -796,6 +918,45 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         onSave = onSave,
         modifier = modifier
     )
+
+    val subfolderDiagnosis = folderDiagnosis as? FolderDiagnosis.NotesInSubfolders
+    if (showSubfolders && subfolderDiagnosis != null) {
+        SubfolderPickerDialog(
+            diagnosis = subfolderDiagnosis,
+            onPick = { subfolder ->
+                showSubfolders = false
+                // The same picker, opened inside the subfolder: confirming it makes it the notes folder.
+                notesPicker.launchSafely(subfolderPickerStart(notesUri, subfolder))
+            },
+            onDismiss = { showSubfolders = false }
+        )
+    }
+
+    pendingTarget?.let { note ->
+        val quickNotesName = FastNoteTarget.freeFileName(
+            stringResource(R.string.quick_notes_name),
+            notesForSettings.filterNot { it.isExtra }.map { it.fileName }
+        )
+        AlertDialog(
+            onDismissRequest = { pendingTarget = null },
+            title = { Text(stringResource(R.string.fast_note_warn_title)) },
+            text = { Text(stringResource(R.string.fast_note_warn_body, note.fileName)) },
+            confirmButton = {
+                // Stacked, so no label has to wrap in a narrow dialog.
+                Column(horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = ::createQuickNotes) {
+                        Text(stringResource(R.string.fast_note_warn_create, quickNotesName), maxLines = 1)
+                    }
+                    TextButton(onClick = { setFastTarget(note, UsageEvent.TARGET_KIND_EXISTING) }) {
+                        Text(stringResource(R.string.fast_note_warn_use), maxLines = 1)
+                    }
+                    TextButton(onClick = { pendingTarget = null }) {
+                        Text(stringResource(R.string.action_cancel), maxLines = 1)
+                    }
+                }
+            }
+        )
+    }
 
     // Deleting is permanent — SAF has no trash, and recreating the file would give it a new
     // URI, orphaning its appearance settings. So: confirm, then delete for real.
@@ -980,6 +1141,12 @@ internal fun SetupScreenContent(
     notesFolderName: String?,
     notesFolderPath: String? = null,
     onSelectNotesFolder: () -> Unit,
+    folderDiagnosis: FolderDiagnosis? = null,
+    onPickSubfolder: () -> Unit = {},
+    interestBanner: InterestBannerState = InterestBannerState.Hidden,
+    onInterestYes: () -> Unit = {},
+    onInterestNo: () -> Unit = {},
+    onInterestDismiss: () -> Unit = {},
     extraNotes: List<ExtraNoteEntry> = emptyList(),
     onAddExtraNote: () -> Unit = {},
     onRemoveExtraNote: (ExtraNoteEntry) -> Unit = {},
@@ -989,6 +1156,8 @@ internal fun SetupScreenContent(
     notesLoadError: String? = null,
     fastNoteTargetUri: String? = null,
     onFastNoteTargetSelected: (NoteSummary) -> Unit = {},
+    onFastNoteTargetCleared: () -> Unit = {},
+    onCreateQuickNotes: () -> Unit = {},
     fastNoteStyle: FastNoteStyle = FastNoteStyle.Bullet,
     onFastNoteStyleChanged: (FastNoteStyle) -> Unit = {},
     widgetBackgroundPercent: Int = WidgetBackground.DEFAULT_PERCENT,
@@ -1056,6 +1225,16 @@ internal fun SetupScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
+        if (interestBanner != InterestBannerState.Hidden) {
+            FeatureInterestBanner(
+                state = interestBanner,
+                onYes = onInterestYes,
+                onNo = onInterestNo,
+                onDismiss = onInterestDismiss
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         // Section 1: the only folder anyone has to pick
         Text(
             text = if (notesFolderName == null) stringResource(R.string.notes_folder_title_first) else stringResource(R.string.notes_folder_title),
@@ -1084,6 +1263,11 @@ internal fun SetupScreenContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
+            FolderStatus(
+                folderName = notesFolderName,
+                diagnosis = folderDiagnosis,
+                onPickSubfolder = onPickSubfolder
+            )
         }
 
         if (notesFolderName == null) {
@@ -1124,15 +1308,25 @@ internal fun SetupScreenContent(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.fast_note_append_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Spacer(modifier = Modifier.height(12.dp))
 
         FastNoteTargetSection(
             // Fast notes go into the folder; an extra note is not a target.
-            notes = notes.filterNot { it.isExtra },
+            notes = FastNoteTarget.chipOrder(notes.filterNot { it.isExtra }),
             notesLoadError = notesLoadError,
             selectedNoteUri = fastNoteTargetUri,
             onTargetSelected = onFastNoteTargetSelected,
-            folderSelected = notesFolderName != null
+            onTargetCleared = onFastNoteTargetCleared,
+            onCreateQuickNotes = onCreateQuickNotes,
+            folderSelected = notesFolderName != null,
+            folderName = notesFolderName,
+            folderDiagnosis = folderDiagnosis
         )
         Spacer(modifier = Modifier.height(12.dp))
         FastNoteStyleChooser(selected = fastNoteStyle, onSelected = onFastNoteStyleChanged)
@@ -1498,8 +1692,45 @@ internal fun SetupScreenContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Debug builds only: the release build has an empty twin of this that draws nothing.
+        DebugTools.Section()
         }
     }
+}
+
+/**
+ * What the picked folder holds, in a line: how many notes, or what to do about there being none.
+ * Looked into in the background, so for a moment there is nothing to show.
+ */
+@Composable
+private fun FolderStatus(
+    folderName: String,
+    diagnosis: FolderDiagnosis?,
+    onPickSubfolder: () -> Unit
+) {
+    val problem = diagnosis?.let { folderProblemText(folderName, it, R.string.folder_empty_hint) }
+    when {
+        diagnosis is FolderDiagnosis.HasNotes -> Text(
+            text = pluralStringResource(R.plurals.onboarding_folder_notes_found, diagnosis.count, diagnosis.count),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        problem != null -> {
+            Text(
+                text = problem,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            if (diagnosis is FolderDiagnosis.NotesInSubfolders) {
+                Spacer(modifier = Modifier.height(8.dp))
+                FilledTonalButton(onClick = onPickSubfolder, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.pick_subfolder))
+                }
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
 }
 
 @Composable
@@ -1508,7 +1739,11 @@ private fun FastNoteTargetSection(
     notesLoadError: String?,
     selectedNoteUri: String?,
     onTargetSelected: (NoteSummary) -> Unit,
-    folderSelected: Boolean = false
+    onTargetCleared: () -> Unit,
+    onCreateQuickNotes: () -> Unit,
+    folderSelected: Boolean = false,
+    folderName: String? = null,
+    folderDiagnosis: FolderDiagnosis? = null
 ) {
     when {
         notesLoadError != null -> {
@@ -1516,19 +1751,6 @@ private fun FastNoteTargetSection(
                 text = notesLoadError,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
-            )
-        }
-        notes.isEmpty() -> {
-            // Prazdna slozka a nevybrana slozka jsou dve ruzne situace a uzivatel v kazde dela
-            // neco jineho.
-            Text(
-                text = if (folderSelected) {
-                    stringResource(R.string.fast_note_target_folder_empty)
-                } else {
-                    stringResource(R.string.fast_note_target_none_yet)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         else -> {
@@ -1541,16 +1763,48 @@ private fun FastNoteTargetSection(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-            ) {
-                notes.forEach { note ->
+            // First, so the safe choice is the one in reach: the app's own file, never one of the user's.
+            if (folderSelected) {
+                val quickNotesName = FastNoteTarget.freeFileName(
+                    stringResource(R.string.quick_notes_name),
+                    notes.map { it.fileName }
+                )
+                OutlinedButton(onClick = onCreateQuickNotes, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.fast_note_create_quick, quickNotesName), maxLines = 1)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            if (notes.isEmpty()) {
+                // Prazdna slozka a nevybrana slozka jsou dve ruzne situace a uzivatel v kazde dela
+                // neco jineho.
+                Text(
+                    text = if (folderSelected) {
+                        // The same explanation as under Notes Folder, instead of a hint that is wrong for it.
+                        folderDiagnosis?.let { folderProblemText(folderName.orEmpty(), it, R.string.fast_note_target_folder_empty) }
+                            ?: stringResource(R.string.fast_note_target_folder_empty)
+                    } else {
+                        stringResource(R.string.fast_note_target_none_yet)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState())
+                ) {
                     FilterChip(
-                        selected = note.fileUri == selectedNoteUri,
-                        onClick = { onTargetSelected(note) },
-                        label = { Text(note.title) }
+                        selected = selectedNoteUri == null,
+                        onClick = onTargetCleared,
+                        label = { Text(stringResource(R.string.fast_note_target_none)) }
                     )
+                    notes.forEach { note ->
+                        FilterChip(
+                            selected = note.fileUri == selectedNoteUri,
+                            onClick = { onTargetSelected(note) },
+                            label = { Text(note.title) }
+                        )
+                    }
                 }
             }
         }

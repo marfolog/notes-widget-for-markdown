@@ -1,16 +1,21 @@
 package com.marfolog.noteswidgetformarkdown.presentation.widget
 
 import android.content.Context
+import androidx.annotation.StringRes
+import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.data.preferences.ExtraNotesStore
 import com.marfolog.noteswidgetformarkdown.data.preferences.NoteCardSettingsStore
+import com.marfolog.noteswidgetformarkdown.data.repository.FolderDiagnoser
 import com.marfolog.noteswidgetformarkdown.data.repository.GitSyncStatusReader
 import com.marfolog.noteswidgetformarkdown.data.repository.ObsidianVaultLocator
+import com.marfolog.noteswidgetformarkdown.domain.model.FolderDiagnosis
 import com.marfolog.noteswidgetformarkdown.domain.model.GitSyncStatus
 import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 import com.marfolog.noteswidgetformarkdown.domain.usecase.GetNotesUseCase
 import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import com.marfolog.noteswidgetformarkdown.util.AppLog
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.SyncProblemReport
 import kotlinx.coroutines.flow.firstOrNull
@@ -20,8 +25,34 @@ internal sealed interface WidgetState {
     data object Uninitialized : WidgetState
     data object PermissionLost : WidgetState
     data class Success(val notes: List<NoteSummary>) : WidgetState
-    data object Empty : WidgetState
+    data class Empty(val hint: EmptyHint = EmptyHint.None) : WidgetState
     data class Error(val message: String) : WidgetState
+}
+
+/** What an empty widget can tell about why it is empty; each one besides [None] leads to settings. */
+internal enum class EmptyHint {
+    None, NotesInSubfolders, NoMarkdown, EmptyFolder;
+
+    /** Whether tapping the message opens settings, where the folder can be changed. */
+    val opensSettings: Boolean get() = this == NotesInSubfolders || this == NoMarkdown
+}
+
+/** What the widget says in place of "No notes found" once the folder has been looked into. */
+internal fun emptyHintFor(diagnosis: FolderDiagnosis): EmptyHint = when (diagnosis) {
+    is FolderDiagnosis.NotesInSubfolders -> EmptyHint.NotesInSubfolders
+    is FolderDiagnosis.NoMarkdown -> EmptyHint.NoMarkdown
+    FolderDiagnosis.EmptyFolder -> EmptyHint.EmptyFolder
+    // Notes found contradict an empty list (the folder changed in between) and no access has its own
+    // state, so neither has anything better to say than the plain message.
+    is FolderDiagnosis.HasNotes, FolderDiagnosis.NoAccess -> EmptyHint.None
+}
+
+@StringRes
+internal fun emptyMessageRes(hint: EmptyHint): Int = when (hint) {
+    EmptyHint.NotesInSubfolders -> R.string.widget_notes_in_subfolders
+    EmptyHint.NoMarkdown -> R.string.widget_no_markdown
+    EmptyHint.EmptyFolder -> R.string.widget_folder_empty
+    EmptyHint.None -> R.string.widget_no_notes
 }
 
 /** Everything a widget needs to render, so both widget flavours read the vault identically. */
@@ -78,7 +109,12 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
             val notes = cardSettingsStore.applyOrder(
                 getNotesUseCase(folderUri, ExtraNotesStore(context).getAll()).firstOrNull() ?: emptyList()
             )
-            if (notes.isEmpty()) WidgetState.Empty else WidgetState.Success(notes)
+            if (notes.isEmpty()) {
+                // Looked into only now, when there is nothing to show: a widget with notes never pays for it.
+                WidgetState.Empty(emptyHintFor(FolderDiagnoser(context).diagnose(folderUri)))
+            } else {
+                WidgetState.Success(notes)
+            }
         }.getOrElse { e ->
             val message = e.message ?: "Unknown error"
             if (message.contains("permission", ignoreCase = true) || e is SecurityException) {
@@ -114,6 +150,7 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
             ?.toMap()
     }.orEmpty()
 
+    // The sync label compares with the times of files, which are real; the rate chip counts days of use.
     val now = System.currentTimeMillis()
     val syncLabel = gitSyncStatus?.let {
         GitSyncLabel.format(
@@ -123,7 +160,7 @@ internal suspend fun loadWidgetData(context: Context): WidgetData {
         )
     }
     if (syncLabel != null) SyncProblemReport.reportOnce(context, syncLabel.trouble)
-    val rateChipWindow = RateReminder.openWindow(context, now).takeIf { state.isUsable() }
+    val rateChipWindow = RateReminder.openWindow(context, AppClock.now()).takeIf { state.isUsable() }
     val bottomBarChip = bottomBarChip(rateChipWindow != null, syncLabel)
     if (bottomBarChip is BottomBarChip.Rate) RateReminder.reportShownOnce(context, rateChipWindow)
 

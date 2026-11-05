@@ -1,5 +1,6 @@
 package com.marfolog.noteswidgetformarkdown.presentation.onboarding
 
+import com.marfolog.noteswidgetformarkdown.domain.model.FolderDiagnosis
 import com.marfolog.noteswidgetformarkdown.util.UsageEvent
 
 /**
@@ -30,6 +31,9 @@ internal data class OnboardingProgress(
     val notesFolderChosen: Boolean,
     val buttons: Boolean?
 )
+
+/** The main button of the folder step: go on, pick one of the subfolders, or pick another folder. */
+internal enum class FolderPrimary { Continue, PickSubfolder, ChooseFolder }
 
 /** What the widget step offers: the pin buttons, a widget already in place, or how to add one by hand. */
 internal enum class WidgetStepState { Offer, Placed, ManualHint }
@@ -95,6 +99,13 @@ internal object Onboarding {
         else -> WidgetStepState.Offer
     }
 
-    /** Zero notes is worth a warning, not a stop: the folder may be meant for notes still to come. */
-    fun warnsAboutEmptyFolder(notesFound: Int?): Boolean = notesFound == 0
+    /**
+     * What the folder step makes the main button. Nothing here stops anyone: an empty folder may be
+     * meant for notes still to come, so continuing stays one tap away in every case.
+     */
+    fun folderPrimary(diagnosis: FolderDiagnosis?): FolderPrimary = when (diagnosis) {
+        null, is FolderDiagnosis.HasNotes, FolderDiagnosis.EmptyFolder -> FolderPrimary.Continue
+        is FolderDiagnosis.NotesInSubfolders -> FolderPrimary.PickSubfolder
+        is FolderDiagnosis.NoMarkdown, FolderDiagnosis.NoAccess -> FolderPrimary.ChooseFolder
+    }
 }

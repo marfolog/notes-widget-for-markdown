@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.marfolog.noteswidgetformarkdown.presentation.setup.NotesFolderSelection
+import com.marfolog.noteswidgetformarkdown.presentation.setup.launchSafely
+import com.marfolog.noteswidgetformarkdown.presentation.setup.subfolderPickerStart
 import com.marfolog.noteswidgetformarkdown.presentation.widget.AddButtons
 import com.marfolog.noteswidgetformarkdown.util.AppLog
 import com.marfolog.noteswidgetformarkdown.util.ReportingConsent
@@ -98,7 +100,9 @@ internal fun OnboardingScreen(session: OnboardingSession, onLeave: () -> Unit) {
                 OnboardingStep.Consent -> ConsentStep(onAnswer = ::answerConsent, onBack = ::goBack)
                 OnboardingStep.Folder -> FolderStep(
                     folder = rememberFolderSummary(notesUri),
-                    onPick = { folderPicker.launch(null) },
+                    onPick = { folderPicker.launchSafely(null) },
+                    // The same picker, opened inside the subfolder: confirming it makes it the folder.
+                    onPickSubfolder = { subfolder -> folderPicker.launchSafely(subfolderPickerStart(notesUri, subfolder)) },
                     onBack = ::goBack,
                     onContinue = ::advance
                 )

@@ -5,6 +5,7 @@ import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingSte
 import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingStep.Folder
 import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingStep.Welcome
 import com.marfolog.noteswidgetformarkdown.presentation.onboarding.OnboardingStep.Widget
+import com.marfolog.noteswidgetformarkdown.domain.model.FolderDiagnosis
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -214,9 +215,23 @@ class OnboardingTest {
     }
 
     @Test
-    fun `only an empty folder gets the warning, not one still being counted`() {
-        assertTrue(Onboarding.warnsAboutEmptyFolder(0))
-        assertFalse(Onboarding.warnsAboutEmptyFolder(null))
-        assertFalse(Onboarding.warnsAboutEmptyFolder(3))
+    fun `a folder with notes, an empty one and one still being looked at go on`() {
+        assertEquals(FolderPrimary.Continue, Onboarding.folderPrimary(null))
+        assertEquals(FolderPrimary.Continue, Onboarding.folderPrimary(FolderDiagnosis.HasNotes(3)))
+        assertEquals(FolderPrimary.Continue, Onboarding.folderPrimary(FolderDiagnosis.EmptyFolder))
+    }
+
+    @Test
+    fun `notes in subfolders make picking one the main button`() {
+        assertEquals(
+            FolderPrimary.PickSubfolder,
+            Onboarding.folderPrimary(FolderDiagnosis.NotesInSubfolders(5, emptyList(), false))
+        )
+    }
+
+    @Test
+    fun `a folder without markdown or without access makes choosing another the main button`() {
+        assertEquals(FolderPrimary.ChooseFolder, Onboarding.folderPrimary(FolderDiagnosis.NoMarkdown(2)))
+        assertEquals(FolderPrimary.ChooseFolder, Onboarding.folderPrimary(FolderDiagnosis.NoAccess))
     }
 }

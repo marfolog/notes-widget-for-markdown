@@ -40,7 +40,9 @@ import androidx.glance.text.TextStyle
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.domain.model.CardAppearances
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteCardAppearance
+import com.marfolog.noteswidgetformarkdown.presentation.setup.SetupActivity
 import com.marfolog.noteswidgetformarkdown.ui.theme.WidgetPalette
+import com.marfolog.noteswidgetformarkdown.util.UsageEvent
 import com.marfolog.noteswidgetformarkdown.domain.model.NoteSummary
 
 /**
@@ -180,13 +182,21 @@ private fun StatusMessage(state: WidgetState, backgroundPercent: Int) {
     val message = when (state) {
         is WidgetState.Uninitialized -> LocalContext.current.getString(R.string.widget_pick_folder_hint)
         is WidgetState.PermissionLost -> LocalContext.current.getString(R.string.widget_permission_lost_short)
-        is WidgetState.Empty -> LocalContext.current.getString(R.string.widget_no_notes)
+        is WidgetState.Empty -> LocalContext.current.getString(emptyMessageRes(state.hint))
         is WidgetState.Error -> state.message
         is WidgetState.Success -> ""
     }
 
+    val context = LocalContext.current
+    val opensSettings = (state as? WidgetState.Empty)?.hint?.opensSettings == true
+    val tap = if (opensSettings) {
+        GlanceModifier.clickable(actionStartActivity(SetupActivity.intent(context, UsageEvent.FROM_WIDGET)))
+    } else {
+        GlanceModifier
+    }
     Box(
-        modifier = GlanceModifier.fillMaxSize(),
+        // The refresh and settings buttons sit over the right edge; a longer message must stop short of them.
+        modifier = GlanceModifier.fillMaxSize().padding(end = 40.dp).then(tap),
         contentAlignment = Alignment.Center
     ) {
         WidgetSurface(backgroundPercent, cornerRadius = 12.dp, horizontalPadding = 12.dp, verticalPadding = 8.dp) {

@@ -3,13 +3,17 @@ package com.marfolog.noteswidgetformarkdown.presentation.widget
 import android.app.Activity
 import com.marfolog.noteswidgetformarkdown.util.AfterNotePrompt
 import com.marfolog.noteswidgetformarkdown.util.AfterNoteRating
-import com.marfolog.noteswidgetformarkdown.util.ConsentPrompt
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.NativeReview
-import com.marfolog.noteswidgetformarkdown.util.PromptBudget
-import com.marfolog.noteswidgetformarkdown.util.RatingAsk
+import com.marfolog.noteswidgetformarkdown.util.RateReminder
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.util.UsageEvent
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptCoordinator
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptFacts
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptIds
+import com.marfolog.noteswidgetformarkdown.util.prompt.PromptSurfaces
+import com.marfolog.noteswidgetformarkdown.util.prompt.Surface
 import kotlinx.coroutines.CoroutineScope
 
 /** How long a save waits for Google's review card, if Play has not handed it over by then. */
@@ -26,20 +30,30 @@ internal class AfterNoteAsk(
     private val from: String
 ) {
     private val context = activity.applicationContext
+    private var visit = PromptCoordinator.Visit()
     private val review: NativeReview? =
         if (wantsNativeReview()) RatingPrompt.prepareNativeReview(activity, scope) else null
 
-    private fun wantsNativeReview(): Boolean =
-        !consentDue() && AfterNoteRating.askFor(context, saved = true, System.currentTimeMillis()) == RatingAsk.Native
+    /** What the prompts need to know after a saved note; the rules for what is due live with them. */
+    private fun facts(): PromptFacts {
+        val now = AppClock.now()
+        return PromptFacts(
+            canReport = Telemetry.ENABLED,
+            reportingAsked = Telemetry.hasBeenAsked(context),
+            ratingAsk = AfterNoteRating.askFor(context, saved = true, now),
+            rateChipOpen = RateReminder.openWindow(context, now) != null
+        )
+    }
 
-    private fun consentDue(): Boolean =
-        ConsentPrompt.isDueAfterNote(Telemetry.ENABLED, Telemetry.hasBeenAsked(context))
+    private fun wantsNativeReview(): Boolean =
+        PromptSurfaces.peek(context, Surface.AfterNote, facts())?.id == PromptIds.RATING_NATIVE
 
     /** [saved] is false after a failed save, which asks for nothing. */
     fun decide(saved: Boolean): AfterNotePrompt {
-        val ask = AfterNoteRating.askFor(context, saved, System.currentTimeMillis())
-        val prompt = AfterNotePrompt.choose(consentDue = saved && consentDue(), ask = ask)
-        if (prompt.countsAsAutomaticDialog) PromptBudget.markShown(context, System.currentTimeMillis())
+        if (!saved) return AfterNotePrompt.None
+        val chosen = PromptSurfaces.decide(context, Surface.AfterNote, facts(), visit)
+        if (chosen != null) visit = PromptCoordinator.Visit(visit.shown + chosen)
+        val prompt = AfterNotePrompt.of(chosen?.id)
         if (prompt == AfterNotePrompt.Rating) {
             Telemetry.event(UsageEvent.RATE_DIALOG_SHOWN, UsageEvent.PARAM_FROM to from)
         }
@@ -51,7 +65,7 @@ internal class AfterNoteAsk(
      * answer within the wait is an attempt made, and the app's own dialog follows in due time.
      */
     suspend fun launchNativeReview() {
-        AfterNoteRating.recordNativeRequested(context, System.currentTimeMillis())
+        AfterNoteRating.recordNativeRequested(context, AppClock.now())
         Telemetry.event(UsageEvent.RATE_NATIVE_REQUESTED, UsageEvent.PARAM_FROM to from)
         review?.launch(activity, NATIVE_REVIEW_WAIT_MILLIS) { durationMillis ->
             Telemetry.event(

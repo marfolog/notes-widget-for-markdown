@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.marfolog.noteswidgetformarkdown.R
 import com.marfolog.noteswidgetformarkdown.ui.theme.NotesWidgetForMarkdownTheme
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.AfterNoteChoice
 import com.marfolog.noteswidgetformarkdown.util.AfterNoteRating
 import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
@@ -37,7 +38,7 @@ internal fun AfterNoteRatingHost(from: String, onClose: (AfterNoteChoice) -> Uni
     val context = LocalContext.current
 
     fun choose(choice: AfterNoteChoice) {
-        AfterNoteRating.recordChoice(context, choice, System.currentTimeMillis())
+        AfterNoteRating.recordChoice(context, choice, AppClock.now())
         Telemetry.event(
             UsageEvent.RATE_DIALOG_CHOICE,
             UsageEvent.PARAM_CHOICE to choice.eventValue,

@@ -64,9 +64,31 @@ class WhatsNewTest {
     }
 
     @Test
-    fun `releases before and after 1_4 never ask about the buttons`() {
+    fun `releases before 1_4 and after 1_5 never ask about the buttons`() {
         assertFalse(WhatsNew.needsButtonsChoice("1.3.1", buttonsChoice = null))
-        assertFalse(WhatsNew.needsButtonsChoice("1.5.0", buttonsChoice = null))
+        assertFalse(WhatsNew.needsButtonsChoice("1.6.0", buttonsChoice = null))
+    }
+
+    @Test
+    fun `1_5 asks whoever never chose the buttons, as 1_4 did, and the news follow`() {
+        assertTrue(WhatsNew.needsButtonsChoice("1.5.0", buttonsChoice = null))
+        assertTrue(WhatsNew.needsButtonsChoice("1.5.0-foss", buttonsChoice = null))
+        assertEquals(WhatsNewPage.ButtonsChoice, WhatsNew.firstPage("1.5.0", buttonsChoice = null))
+        assertTrue(WhatsNew.itemsFor("1.5.0").isNotEmpty())
+    }
+
+    @Test
+    fun `1_5 does not ask again whoever chose in 1_4, either way`() {
+        assertFalse(WhatsNew.needsButtonsChoice("1.5.0", buttonsChoice = true))
+        assertFalse(WhatsNew.needsButtonsChoice("1.5.0", buttonsChoice = false))
+        assertEquals(WhatsNewPage.News, WhatsNew.firstPage("1.5.0", buttonsChoice = false))
+    }
+
+    @Test
+    fun `updating from 1_3_1 straight to 1_5_0 shows the dialog, starting with the buttons question`() {
+        assertTrue(WhatsNew.arrivedByUpdate("1.3.1", "1.5.0", installedBefore = true))
+        assertTrue(show(versionName = "1.5.0", updatedToVersion = "1.5.0", seenVersion = "1.3.1"))
+        assertEquals(WhatsNewPage.ButtonsChoice, WhatsNew.firstPage("1.5.0", buttonsChoice = null))
     }
 
     @Test

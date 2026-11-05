@@ -4,7 +4,7 @@ package com.marfolog.noteswidgetformarkdown.util
  * When settings ask whether anonymous stats may be sent. Not on first launch: only once the widget
  * is set up — a notes folder picked and a widget on the home screen — or on the visit after the
  * guide was skipped. Asked once, and an answer either way is final. Which dialog goes first and how
- * often is up to [PromptBudget]. Anyone who answers in the first-launch guide is not asked again.
+ * often is up to the prompt coordinator. Anyone who answers in the first-launch guide is not asked again.
  */
 object ConsentPrompt {
 

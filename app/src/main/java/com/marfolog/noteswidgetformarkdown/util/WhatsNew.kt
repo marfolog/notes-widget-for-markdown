@@ -3,7 +3,7 @@ package com.marfolog.noteswidgetformarkdown.util
 import androidx.annotation.StringRes
 import com.marfolog.noteswidgetformarkdown.R
 
-enum class WhatsNewIcon { Palette, Checklist, Chat, Translate }
+enum class WhatsNewIcon { Palette, Checklist, Chat, Translate, Folder, Sync }
 
 /** The pages of the dialog, in order: the question some releases open with, then the news. */
 enum class WhatsNewPage(val eventValue: String) {
@@ -21,6 +21,11 @@ data class WhatsNewItem(val icon: WhatsNewIcon, @StringRes val textRes: Int)
 object WhatsNew {
 
     internal val RELEASES: Map<String, List<WhatsNewItem>> = mapOf(
+        "1.5.0" to listOf(
+            WhatsNewItem(WhatsNewIcon.Folder, R.string.whats_new_150_folder),
+            WhatsNewItem(WhatsNewIcon.Checklist, R.string.whats_new_150_fast_target),
+            WhatsNewItem(WhatsNewIcon.Sync, R.string.whats_new_150_git)
+        ),
         "1.4.0" to listOf(
             WhatsNewItem(WhatsNewIcon.Palette, R.string.whats_new_140_card_default)
         ),
@@ -32,15 +37,18 @@ object WhatsNew {
         )
     )
 
-    /** The release line whose dialog opens by asking about the add buttons. */
-    private const val BUTTONS_CHOICE_LINE = "1.4"
+    /**
+     * The release lines whose dialog opens by asking about the add buttons. 1.5 asks too, for
+     * whoever skipped 1.4 and never chose; whoever chose already is not asked again.
+     */
+    private val BUTTONS_CHOICE_LINES = setOf("1.4", "1.5")
 
     /**
      * Whoever never set the add buttons, in settings or anywhere else, has to answer before the news
-     * of 1.4: the buttons used to be fixed, and hiding them is something to decide, not to discover.
+     * of 1.4 or 1.5: the buttons used to be fixed, and hiding them is something to decide, not to discover.
      */
     internal fun needsButtonsChoice(versionName: String, buttonsChoice: Boolean?): Boolean =
-        line(versionName) == BUTTONS_CHOICE_LINE && buttonsChoice == null
+        line(versionName) in BUTTONS_CHOICE_LINES && buttonsChoice == null
 
     internal fun firstPage(versionName: String, buttonsChoice: Boolean?): WhatsNewPage =
         if (needsButtonsChoice(versionName, buttonsChoice)) WhatsNewPage.ButtonsChoice else WhatsNewPage.News

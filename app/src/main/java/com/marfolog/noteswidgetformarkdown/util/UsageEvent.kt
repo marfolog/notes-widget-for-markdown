@@ -1,5 +1,6 @@
 package com.marfolog.noteswidgetformarkdown.util
 
+import com.marfolog.noteswidgetformarkdown.domain.model.FolderDiagnosis
 import com.marfolog.noteswidgetformarkdown.presentation.widget.WidgetBackground
 
 /**
@@ -45,6 +46,9 @@ object UsageEvent {
     const val FEEDBACK_DIALOG_CHOICE = "feedback_dialog_choice"
     const val FEEDBACK_THUMBS = "feedback_thumbs"
 
+    const val FEATURE_INTEREST_SHOWN = "feature_interest_shown"
+    const val FEATURE_INTEREST = "feature_interest"
+
     const val SYNC_PROBLEM_SHOWN = "sync_problem_shown"
 
     const val WHATS_NEW_SHOWN = "whats_new_shown"
@@ -62,6 +66,22 @@ object UsageEvent {
     const val PARAM_CHOICE = "choice"
     const val PARAM_VERSION = "version"
     const val PARAM_DURATION = "duration"
+    const val PARAM_RESULT = "result"
+    const val PARAM_KIND = "kind"
+    const val PARAM_FEATURE = "feature"
+    const val PARAM_ANSWER = "answer"
+
+    const val TARGET_KIND_EXISTING = "existing"
+    const val TARGET_KIND_CREATED = "created"
+    const val TARGET_KIND_CLEARED = "cleared"
+
+    const val FEATURE_MULTI_FOLDER_WIDGETS = "multi_folder_widgets"
+    const val ANSWER_YES = "yes"
+    const val ANSWER_NO = "no"
+    const val ANSWER_DISMISSED = "dismissed"
+    const val ANSWER_IGNORED = "ignored"
+    const val FROM_SETTINGS_BANNER = "settings_banner"
+    const val FROM_SUBFOLDER_LIST = "subfolder_list"
 
     const val STEP_CONSENT = "consent"
     const val STEP_FOLDER = "folder"
@@ -152,6 +172,19 @@ object UsageEvent {
         PARAM_VALUE to onOff(shown),
         PARAM_FROM to from
     )
+
+    /** `folder_selected`: what the new folder turned out to hold, as one of a few fixed words. */
+    fun folderSelected(diagnosis: FolderDiagnosis): Array<Pair<String, String>> =
+        arrayOf(PARAM_RESULT to diagnosis.eventValue)
+
+    /** `fast_target_set`: [kind] is one of the `TARGET_KIND_*` values. */
+    fun fastTargetSet(kind: String): Array<Pair<String, String>> = arrayOf(PARAM_KIND to kind)
+
+    fun featureInterestShown(feature: String, from: String): Array<Pair<String, String>> =
+        arrayOf(PARAM_FEATURE to feature, PARAM_FROM to from)
+
+    fun featureInterest(feature: String, answer: String, from: String): Array<Pair<String, String>> =
+        arrayOf(PARAM_FEATURE to feature, PARAM_ANSWER to answer, PARAM_FROM to from)
 
     fun yesNo(value: Boolean): String = if (value) "yes" else "no"
 

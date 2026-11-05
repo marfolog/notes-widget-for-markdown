@@ -76,6 +76,17 @@ The `play` build updates through the Play Store like anything else installed fro
 The app works the vault out on its own by looking for `.obsidian`, so the root folder only has to be
 picked when that fails.
 
+The widget shows the notes that sit directly in the folder you picked, not those in its subfolders.
+When that folder has none, the app looks one more time (counting only, it reads no note) and tells you
+why: your notes are in subfolders (it lists them with how many each holds, and **Pick a subfolder**
+opens the folder picker right there), the folder has no Markdown files, or it is empty. The same
+explanation shows in the first-launch guide, on the empty widget and in settings.
+
+**Fast Note Target** is optional. Fast notes are added at the end of the file, nothing is overwritten.
+You can choose **None, ask every time**, let the app create its own *Quick notes.md* in the notes
+folder, or pick one of your own files; the app warns once before it takes a file that already has
+content.
+
 A note that lives somewhere else, like a single list in another folder, can be added on its own under
 **Extra Notes → Add File**, one file at a time. It shows on the widget next to the folder notes.
 Swiping it away only takes it off the widget; the file stays where it is.
@@ -120,6 +131,7 @@ phone.
 | Can be switched off | nothing to switch off | yes, in settings |
 | Rating prompt | the app's own dialog after a saved note; it and the ★ Rate chip link to GitHub | Google's in-app review once, then the app's own dialog after a saved note; the dialog and the ★ Rate chip link to the store |
 | Feedback you type | opens a GitHub discussion in your browser, the app sends nothing | Firebase Firestore, only when you press Send |
+| "Would you use this?" in settings | not asked | one question, Firebase Firestore, only when you tap "Yes" or "No" |
 
 **The foss build declares no `INTERNET` permission.** Without it, Android does not grant the app a
 network connection of its own. That is a property of the file you download rather than an assurance
@@ -164,8 +176,17 @@ it: no account, no device identifier, nothing from your notes. This does not dep
 analytics switch, because sending is something you do on purpose. In the foss build Send only opens
 a pre-filled GitHub discussion in your browser, where you decide whether to post it.
 
-Neither build has an account. Apart from the feedback you choose to send from the Play build, no
-server or database holds anything of yours. Files are read only in folders you picked.
+Once, after you have used settings a while, the Play build asks in a banner (and in the list of
+subfolders, if your notes are in several) whether you would use widgets that each show a different
+folder. A tap on "Yes, I'd use it" or "No thanks" stores one document in Firebase Firestore: the
+feature's name, yes or no, the app version and the server's time, nothing else, no identifier of you,
+your phone or your installation, no folder name. It goes out once per installation and does not
+depend on the analytics switch, because tapping is something you do on purpose; the closing
+button and ignoring the banner send nothing there (with your consent to statistics the
+analytics only count them as "dismissed" or "ignored"). The foss build never asks.
+
+Neither build has an account. Apart from the feedback and that one answer you choose to send from the
+Play build, no server or database holds anything of yours. Files are read only in folders you picked.
 
 Full text: [Privacy Policy](https://folmbuild.cz/notes-widget-privacy/).
 
@@ -227,7 +248,7 @@ no account, no cloud, and platform APIs over file-access hacks.
 <summary><b>Roadmap</b></summary>
 
 Nothing is promised. Things that would make sense if the project carries on: F-Droid metadata ·
-configurable non-Obsidian editors · a grid layout for the card widget · nested folders · dark
+configurable non-Obsidian editors · a grid layout for the card widget · notes from subfolders on the widget · dark
 variants of the card colours, which stay light at night · an accessibility pass over widget
 contrast and touch targets.
 

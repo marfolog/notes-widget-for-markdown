@@ -12,7 +12,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -44,6 +46,7 @@ import com.marfolog.noteswidgetformarkdown.util.RatingPrompt
 import com.marfolog.noteswidgetformarkdown.util.Telemetry
 import com.marfolog.noteswidgetformarkdown.util.UsageEvent
 import com.marfolog.noteswidgetformarkdown.util.WhatsNew
+import com.marfolog.noteswidgetformarkdown.util.AppClock
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewIcon
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewItem
 import com.marfolog.noteswidgetformarkdown.util.WhatsNewPage
@@ -77,7 +80,7 @@ internal fun WhatsNewDialogHost(onButtonsChosen: (shown: Boolean) -> Unit, onClo
         AddButtons.setShown(context, shown)
         Telemetry.event(UsageEvent.SETTING_CHANGED, *UsageEvent.addButtonsChanged(shown, UsageEvent.FROM_WHATS_NEW))
         // Seen only now: leaving the question open must bring the dialog back, not lose it.
-        WhatsNewReminder.markShown(context, System.currentTimeMillis())
+        WhatsNewReminder.markShown(context, AppClock.now())
         // The widget changes with the choice, and the rate chip keeps its distance from this dialog.
         scope.launch { NotesWidget.updateAll(context) }
         onButtonsChosen(shown)
@@ -199,4 +202,6 @@ private fun WhatsNewIcon.vector(): ImageVector = when (this) {
     WhatsNewIcon.Checklist -> Icons.Outlined.Checklist
     WhatsNewIcon.Chat -> Icons.Outlined.ChatBubbleOutline
     WhatsNewIcon.Translate -> Icons.Outlined.Translate
+    WhatsNewIcon.Folder -> Icons.Outlined.FolderOpen
+    WhatsNewIcon.Sync -> Icons.Outlined.Sync
 }
