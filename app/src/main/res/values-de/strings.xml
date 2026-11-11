@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Schnellnotiz konnte nicht gespeichert werden.</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_open_settings_button">Einstellungen öffnen</string>
-    <string name="no_app_opens_notes">Keine App kann diese Notiz öffnen. Ist Obsidian installiert?</string>
+    <string name="no_app_opens_notes">Auf diesem Handy gibt es keine App, die Markdown-Notizen öffnet. Installiere einen Editor, zum Beispiel Markor oder Obsidian.</string>
     <string name="settings_title">Widget-Einstellungen</string>
     <string name="notes_folder_title">Notizordner</string>
     <string name="notes_folder_title_first">Hier starten — Notizordner</string>
@@ -267,9 +267,9 @@
     <string name="fast_note_create_quick">%1$s erstellen</string>
     <string name="fast_note_create_quick_failed">Die Datei konnte im Notizordner nicht erstellt werden.</string>
     <string name="fast_note_target_none">Keine, jedes Mal fragen</string>
-    <string name="fast_note_append_hint">Notizen werden ans Ende dieser Datei angehängt, nichts wird überschrieben.</string>
+    <string name="fast_note_append_hint">Neue Notizen kommen an den Anfang dieser Datei, unter die Überschrift. Nichts wird überschrieben.</string>
     <string name="fast_note_warn_title">Diese Datei verwenden?</string>
-    <string name="fast_note_warn_body">Neue Notizen werden ans Ende von %1$s angehängt. Trotzdem verwenden?</string>
+    <string name="fast_note_warn_body">Neue Notizen kommen an den Anfang von %1$s, unter die Überschrift. Trotzdem verwenden?</string>
     <string name="fast_note_warn_use">Verwenden</string>
     <string name="fast_note_warn_create">Stattdessen %1$s erstellen</string>
     <string name="whats_new_150_folder">Ein leeres Widget sagt jetzt, warum, und findet Notizen in Unterordnern</string>
@@ -282,4 +282,10 @@
     <string name="feature_interest_thanks">Danke, notiert!</string>
     <string name="feature_interest_close">Schließen</string>
     <string name="feature_interest_anonymous">Deine Antwort wird anonym gesendet.</string>
+    <string name="onboarding_starter_offer">Ich habe noch keine Notizen auf diesem Handy</string>
+    <string name="onboarding_starter_title">Starte mit einem Beispiel</string>
+    <string name="onboarding_starter_body">Kein Problem. Wir legen in Dokumente einen Ordner namens Notes mit einer Beispielnotiz an, damit du siehst, wie das Widget aussieht. Tippe auf dem nächsten Bildschirm auf „Diesen Ordner verwenden“ und dann auf „Zulassen“. Den Ordner kannst du jederzeit in den Einstellungen wechseln.</string>
+    <string name="onboarding_starter_create">Ordner erstellen</string>
+    <string name="onboarding_starter_failed">Der Ordner konnte nicht erstellt werden. Wähle stattdessen selbst einen aus.</string>
+    <string name="starter_note_text"># Willkommen bei Notes Widget\n\nDiese Notiz ist nur da, damit das Widget etwas zeigen kann. Bearbeite oder lösche sie, oder leg daneben eigene Notizen an.\n\n## Was das Widget zeigt\n- **Fetter** und *kursiver* Text\n- [Ein Link zum Projekt](https://github.com/marfolog/notes-widget-for-markdown)\n- Listen wie diese\n\n## Eine Checkliste\n- [x] Ordner wählen\n- [ ] Widget zum Startbildschirm hinzufügen\n- [ ] Erste Notiz schreiben\n\nJede Markdown-App, zum Beispiel Obsidian, kann diesen Ordner (Documents/Notes) öffnen.</string>
 </resources>

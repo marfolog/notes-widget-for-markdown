@@ -102,24 +102,49 @@ class NativeReview internal constructor(
     /**
      * Launches the card if Play handed it over within [waitMillis]; returns false when it did not.
      * That is no reason to ask again: the caller counts the attempt either way. [onFinished] runs
-     * right after the card, with how long it took.
+     * exactly once, however this ends, with the `duration` value for the analytics: how long the card
+     * took, or why it did not run (Play did not answer in time, errored, the screen was already
+     * closing, or this was cancelled on the way).
      */
     suspend fun launch(
         activity: Activity,
         waitMillis: Long,
-        onFinished: (durationMillis: Long) -> Unit
+        onFinished: (duration: String) -> Unit
     ): Boolean {
-        val reviewInfo = withTimeoutOrNull(waitMillis) { info.await() } ?: return false
-        if (activity.isFinishing || activity.isDestroyed) return false
-        val startedAt = SystemClock.elapsedRealtime()
-        try {
-            manager.launchReview(activity, reviewInfo)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            AppLog.d("Rating", "Review flow failed: ${e.javaClass.simpleName}")
+        var reported = false
+        fun report(duration: String) {
+            if (reported) return
+            reported = true
+            onFinished(duration)
         }
-        onFinished(SystemClock.elapsedRealtime() - startedAt)
-        return true
+        try {
+            val reviewInfo = withTimeoutOrNull(waitMillis) { info.await() }
+            if (reviewInfo == null) {
+                report(UsageEvent.nativeUnavailable(requestFinished = info.isCompleted))
+                return false
+            }
+            if (activity.isFinishing || activity.isDestroyed) {
+                report(UsageEvent.DURATION_GONE)
+                return false
+            }
+            val startedAt = SystemClock.elapsedRealtime()
+            var failed = false
+            try {
+                manager.launchReview(activity, reviewInfo)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failed = true
+                AppLog.d("Rating", "Review flow failed: ${e.javaClass.simpleName}")
+            }
+            report(
+                if (failed) UsageEvent.DURATION_ERROR
+                else UsageEvent.nativeDuration(SystemClock.elapsedRealtime() - startedAt)
+            )
+            return true
+        } finally {
+            // Only reached unreported when the coroutine was cancelled, e.g. the activity went away.
+            report(UsageEvent.DURATION_GONE)
+        }
     }
 }

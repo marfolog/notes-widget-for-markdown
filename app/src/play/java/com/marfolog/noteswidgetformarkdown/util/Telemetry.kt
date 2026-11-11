@@ -86,6 +86,10 @@ object Telemetry {
         val bundle = Bundle().apply {
             params.forEach { (key, value) -> putString(key, value) }
         }
+        // Debug builds never send events (collection stays off), so this is how a test run sees them.
+        // Names and values are the fixed words of UsageEvent, never note content.
+        val debuggable = appContext?.let { it.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0 }
+        if (debuggable == true) AppLog.d("Event", "$name ${params.joinToString(" ") { "${it.first}=${it.second}" }}")
         analytics?.logEvent(name, bundle)
     }
 

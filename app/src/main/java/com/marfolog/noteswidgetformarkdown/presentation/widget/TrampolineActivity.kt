@@ -31,14 +31,19 @@ class TrampolineActivity : ComponentActivity() {
             return
         }
         Telemetry.event(UsageEvent.NOTE_OPENED, noteOpenedEvent(OpenWith.current(this)))
-        // Without a handler for obsidian:// this throws and takes the app down with it.
-        try {
-            startActivity(noteOpenIntent(this, request.note, request.vaultName, request.noteFolderPath))
-            AppLog.d(AREA, "Opened ${AppLog.redactFileName(request.note.fileUri)}")
-        } catch (e: ActivityNotFoundException) {
-            AppLog.w(AREA, "No app handles this link — is Obsidian installed?", e)
-            Toast.makeText(this, R.string.no_app_opens_notes, Toast.LENGTH_LONG).show()
+        // Without a handler for obsidian:// startActivity throws and would take the app down with it.
+        var step: OpenStep? = openStepFor(OpenWith.current(this), request.note, request.noteFolderPath)
+        while (step != null) {
+            try {
+                startActivity(noteOpenIntent(this, step, request.note, request.vaultName, request.noteFolderPath))
+                AppLog.d(AREA, "Opened ${AppLog.redactFileName(request.note.fileUri)} as $step")
+                return
+            } catch (e: ActivityNotFoundException) {
+                AppLog.w(AREA, "No app handles $step", e)
+                step = nextOpenStep(step)
+            }
         }
+        Toast.makeText(this, R.string.no_app_opens_notes, Toast.LENGTH_LONG).show()
     }
 
     companion object {

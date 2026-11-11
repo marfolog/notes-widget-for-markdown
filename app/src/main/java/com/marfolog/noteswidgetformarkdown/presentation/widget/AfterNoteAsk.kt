@@ -62,17 +62,18 @@ internal class AfterNoteAsk(
 
     /**
      * One attempt at Google's card, and it counts however it goes: an error, no Play Store or no
-     * answer within the wait is an attempt made, and the app's own dialog follows in due time.
+     * answer within the wait is an attempt made, and the app's own dialog follows in due time. Every
+     * request ends with exactly one `rate_native_finished`, whose `duration` says how it went.
      */
     suspend fun launchNativeReview() {
         AfterNoteRating.recordNativeRequested(context, AppClock.now())
         Telemetry.event(UsageEvent.RATE_NATIVE_REQUESTED, UsageEvent.PARAM_FROM to from)
-        review?.launch(activity, NATIVE_REVIEW_WAIT_MILLIS) { durationMillis ->
-            Telemetry.event(
-                UsageEvent.RATE_NATIVE_FINISHED,
-                UsageEvent.PARAM_FROM to from,
-                UsageEvent.PARAM_DURATION to UsageEvent.nativeDuration(durationMillis)
-            )
-        }
+        fun finished(duration: String) = Telemetry.event(
+            UsageEvent.RATE_NATIVE_FINISHED,
+            UsageEvent.PARAM_FROM to from,
+            UsageEvent.PARAM_DURATION to duration
+        )
+        // Not prepared when the activity started: nothing was asked of Play, so nothing can show.
+        if (review == null) finished(UsageEvent.DURATION_ERROR) else review.launch(activity, NATIVE_REVIEW_WAIT_MILLIS, ::finished)
     }
 }

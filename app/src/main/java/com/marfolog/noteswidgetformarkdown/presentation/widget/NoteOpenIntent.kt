@@ -35,6 +35,29 @@ enum class OpenWith(val storageValue: String) {
     }
 }
 
+/** One way of opening a tapped note; [nextOpenStep] says what to try when it finds no app. */
+internal enum class OpenStep { ObsidianLink, File, FileChooser }
+
+/**
+ * The first way to try. An extra note outside the vault has no path Obsidian could resolve — a deep
+ * link would open whatever note Obsidian had up last. The file itself can still be opened, so do that.
+ */
+internal fun openStepFor(openWith: OpenWith, note: NoteSummary, noteFolderPath: String?): OpenStep = when (openWith) {
+    OpenWith.Obsidian -> if (note.isExtra && noteFolderPath == null) OpenStep.File else OpenStep.ObsidianLink
+    OpenWith.DefaultApp -> OpenStep.File
+    OpenWith.AskEveryTime -> OpenStep.FileChooser
+}
+
+/**
+ * What to try after [failed] found no app to start, or null when nothing is left. Without Obsidian
+ * the file itself goes to whatever opens Markdown; Android asks when there are several. The setting
+ * is never changed on the way: it says what the user wants, not what this phone could do today.
+ */
+internal fun nextOpenStep(failed: OpenStep): OpenStep? = when (failed) {
+    OpenStep.ObsidianLink -> OpenStep.File
+    OpenStep.File, OpenStep.FileChooser -> null
+}
+
 /**
  * The intent behind tapping a note.
  *
@@ -47,26 +70,29 @@ internal fun noteOpenIntent(
     note: NoteSummary,
     vaultName: String?,
     noteFolderPath: String?
-): Intent = when (OpenWith.current(context)) {
+): Intent = noteOpenIntent(
+    context, openStepFor(OpenWith.current(context), note, noteFolderPath), note, vaultName, noteFolderPath
+)
 
-    // An extra note outside the vault has no path Obsidian could resolve — a deep link would open
-    // whatever note Obsidian had up last. The file itself can still be opened, so do that.
-    //
+internal fun noteOpenIntent(
+    context: Context,
+    step: OpenStep,
+    note: NoteSummary,
+    vaultName: String?,
+    noteFolderPath: String?
+): Intent = when (step) {
+
     // CLEAR_TOP matters when Obsidian is already running: without it, some launches just bring
     // its existing window forward without delivering the new file — the app opens, but stays on
     // whatever note it already had up, which reads as "the wrong note opened".
-    OpenWith.Obsidian -> if (note.isExtra && noteFolderPath == null) {
-        fileIntent(note)
-    } else {
-        Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(obsidianDeepLink(vaultName, noteFolderPath, note.fileName))
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    }
+    OpenStep.ObsidianLink -> Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse(obsidianDeepLink(vaultName, noteFolderPath, note.fileName))
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
-    OpenWith.DefaultApp -> fileIntent(note)
+    OpenStep.File -> fileIntent(note)
 
-    OpenWith.AskEveryTime -> Intent.createChooser(
+    OpenStep.FileChooser -> Intent.createChooser(
         fileIntent(note),
         context.getString(R.string.open_note_with)
     ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

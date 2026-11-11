@@ -82,7 +82,7 @@ why: your notes are in subfolders (it lists them with how many each holds, and *
 opens the folder picker right there), the folder has no Markdown files, or it is empty. The same
 explanation shows in the first-launch guide, on the empty widget and in settings.
 
-**Fast Note Target** is optional. Fast notes are added at the end of the file, nothing is overwritten.
+**Fast Note Target** is optional. Fast notes are added at the top of the file, below the title, nothing is overwritten.
 You can choose **None, ask every time**, let the app create its own *Quick notes.md* in the notes
 folder, or pick one of your own files; the app warns once before it takes a file that already has
 content.

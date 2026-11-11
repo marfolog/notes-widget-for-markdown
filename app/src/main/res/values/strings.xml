@@ -49,7 +49,7 @@
 
     <string name="action_cancel">Cancel</string>
     <string name="action_open_settings_button">Open settings</string>
-    <string name="no_app_opens_notes">No app can open this note. Is Obsidian installed?</string>
+    <string name="no_app_opens_notes">No app on this phone opens Markdown notes. Install an editor such as Markor or Obsidian.</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Notes Widget Settings</string>
@@ -303,9 +303,9 @@
     <string name="fast_note_create_quick">Create %1$s</string>
     <string name="fast_note_create_quick_failed">Could not create the file in your notes folder.</string>
     <string name="fast_note_target_none">None, ask every time</string>
-    <string name="fast_note_append_hint">Notes are added at the end of this file, nothing is overwritten.</string>
+    <string name="fast_note_append_hint">New notes go to the top of this file, below the title. Nothing is overwritten.</string>
     <string name="fast_note_warn_title">Use this file?</string>
-    <string name="fast_note_warn_body">New notes will be added at the end of %1$s. Use it anyway?</string>
+    <string name="fast_note_warn_body">New notes will be added to the top of %1$s, below the title. Use it anyway?</string>
     <string name="fast_note_warn_use">Use it</string>
     <string name="fast_note_warn_create">Create %1$s instead</string>
     <string name="whats_new_150_folder">An empty widget now says why, and finds notes that sit in subfolders</string>
@@ -318,4 +318,10 @@
     <string name="feature_interest_thanks">Thanks, noted!</string>
     <string name="feature_interest_close">Close</string>
     <string name="feature_interest_anonymous">Your answer is sent anonymously.</string>
+    <string name="onboarding_starter_offer">I don\'t have notes on this phone yet</string>
+    <string name="onboarding_starter_title">Start with an example</string>
+    <string name="onboarding_starter_body">No problem. We\'ll create a folder called Notes in Documents with an example note, so you can see how the widget looks. On the next screen tap \"Use this folder\" and then \"Allow\". You can switch to another folder any time in Settings.</string>
+    <string name="onboarding_starter_create">Create folder</string>
+    <string name="onboarding_starter_failed">Couldn\'t create the folder. Choose one yourself instead.</string>
+    <string name="starter_note_text"># Welcome to Notes Widget\n\nThis note is here so the widget has something to show. Edit it, delete it, or add your own notes next to it.\n\n## What the widget shows\n- **Bold** and *italic* text\n- [A link to the project](https://github.com/marfolog/notes-widget-for-markdown)\n- Lists like this one\n\n## A checklist\n- [x] Choose a folder\n- [ ] Add the widget to your home screen\n- [ ] Write your first note\n\nAny Markdown app, for example Obsidian, can open this folder (Documents/Notes).</string>
 </resources>

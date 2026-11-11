@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Rychlou poznámku se nepodařilo uložit.</string>
     <string name="action_cancel">Zrušit</string>
     <string name="action_open_settings_button">Otevřít nastavení</string>
-    <string name="no_app_opens_notes">Poznámku nemá co otevřít. Je nainstalovaný Obsidian?</string>
+    <string name="no_app_opens_notes">V telefonu není aplikace, která otevře poznámky v Markdownu. Nainstalujte si editor, třeba Markor nebo Obsidian.</string>
     <string name="settings_title">Nastavení widgetu</string>
     <string name="notes_folder_title">Složka s poznámkami</string>
     <string name="notes_folder_title_first">Začněte tady — složka s poznámkami</string>
@@ -269,9 +269,9 @@
     <string name="fast_note_create_quick">Vytvořit %1$s</string>
     <string name="fast_note_create_quick_failed">Soubor se ve složce s poznámkami nepodařilo vytvořit.</string>
     <string name="fast_note_target_none">Žádný, vždy se zeptat</string>
-    <string name="fast_note_append_hint">Poznámky se přidávají na konec souboru, nic se nepřepisuje.</string>
+    <string name="fast_note_append_hint">Nové poznámky se přidávají na začátek souboru, pod nadpis. Nic se nepřepisuje.</string>
     <string name="fast_note_warn_title">Použít tento soubor?</string>
-    <string name="fast_note_warn_body">Nové poznámky se přidají na konec souboru %1$s. Přesto ho použít?</string>
+    <string name="fast_note_warn_body">Nové poznámky se přidají na začátek souboru %1$s, pod nadpis. Přesto ho použít?</string>
     <string name="fast_note_warn_use">Použít</string>
     <string name="fast_note_warn_create">Raději vytvořit %1$s</string>
     <string name="whats_new_150_folder">Prázdný widget teď řekne proč a najde poznámky ukryté v podsložkách</string>
@@ -284,4 +284,10 @@
     <string name="feature_interest_thanks">Díky, zapsáno!</string>
     <string name="feature_interest_close">Zavřít</string>
     <string name="feature_interest_anonymous">Odpověď se odešle anonymně.</string>
+    <string name="onboarding_starter_offer">Zatím nemám v telefonu žádné poznámky</string>
+    <string name="onboarding_starter_title">Začněte ukázkou</string>
+    <string name="onboarding_starter_body">V pořádku. Vytvoříme složku Notes v Dokumentech s ukázkovou poznámkou, abyste viděli, jak widget vypadá. Na další obrazovce klepněte na „Použít tuto složku“ a potom na „Povolit“. Jinou složku můžete kdykoli vybrat v Nastavení.</string>
+    <string name="onboarding_starter_create">Vytvořit složku</string>
+    <string name="onboarding_starter_failed">Složku se nepodařilo vytvořit. Vyberte ji raději sami.</string>
+    <string name="starter_note_text"># Vítejte v Notes Widgetu\n\nTahle poznámka tu je, aby widget měl co ukázat. Upravte ji, smažte ji, nebo vedle ní přidejte vlastní poznámky.\n\n## Co widget ukazuje\n- **Tučný** text a *kurzíva*\n- [Odkaz na projekt](https://github.com/marfolog/notes-widget-for-markdown)\n- Seznamy jako tento\n\n## Úkoly\n- [x] Vybrat složku\n- [ ] Přidat widget na plochu\n- [ ] Napsat první poznámku\n\nTuhle složku (Documents/Notes) otevře jakákoli aplikace pro Markdown, třeba Obsidian.</string>
 </resources>

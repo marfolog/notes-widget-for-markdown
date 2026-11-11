@@ -207,4 +207,46 @@ class UsageEventTest {
             )
         )
     }
+
+    @Test
+    fun `opening the folder picker from the guide's example offer is told by kind and place`() {
+        assertEquals(
+            listOf("kind" to "starter", "from" to "onboarding"),
+            UsageEvent.folderPickerOpened(UsageEvent.PICKER_KIND_STARTER, UsageEvent.FROM_ONBOARDING).toList()
+        )
+    }
+
+    @Test
+    fun `a picker closed with a folder is picked and without one is cancelled`() {
+        assertEquals(
+            listOf("kind" to "pick", "from" to "settings", "result" to "picked"),
+            UsageEvent.folderPickerClosed(UsageEvent.PICKER_KIND_PICK, UsageEvent.FROM_SETTINGS, picked = true).toList()
+        )
+        assertEquals(
+            listOf("kind" to "subfolder", "from" to "onboarding", "result" to "cancelled"),
+            UsageEvent.folderPickerClosed(UsageEvent.PICKER_KIND_SUBFOLDER, UsageEvent.FROM_ONBOARDING, picked = false).toList()
+        )
+    }
+
+    @Test
+    fun `the starter folder reports what became of it`() {
+        assertEquals(listOf("result" to "created"), UsageEvent.starterFolder(UsageEvent.STARTER_CREATED).toList())
+        assertEquals("existing", UsageEvent.STARTER_EXISTING)
+        assertEquals("failed", UsageEvent.STARTER_FAILED)
+    }
+
+    @Test
+    fun `new event names stay within firebase's forty characters`() {
+        listOf(
+            UsageEvent.FOLDER_PICKER_OPENED, UsageEvent.FOLDER_PICKER_CLOSED,
+            UsageEvent.STARTER_OFFER_TAPPED, UsageEvent.STARTER_FOLDER
+        ).forEach { assertTrue("$it is too long", it.length <= 40) }
+    }
+
+    @Test
+    fun `a review card play never answered is a timeout and one it refused is an error`() {
+        assertEquals("timeout", UsageEvent.nativeUnavailable(requestFinished = false))
+        assertEquals("error", UsageEvent.nativeUnavailable(requestFinished = true))
+        assertEquals("gone", UsageEvent.DURATION_GONE)
+    }
 }

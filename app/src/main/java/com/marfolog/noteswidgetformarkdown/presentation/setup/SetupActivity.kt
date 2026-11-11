@@ -497,13 +497,24 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    var notesPickerKind by rememberSaveable { mutableStateOf(UsageEvent.PICKER_KIND_PICK) }
     val notesPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
+        Telemetry.event(
+            UsageEvent.FOLDER_PICKER_CLOSED,
+            *UsageEvent.folderPickerClosed(notesPickerKind, UsageEvent.FROM_SETTINGS, picked = uri != null)
+        )
         if (uri != null) {
             NotesFolderSelection.select(context, uri, scope)?.let { derivedPath = it }
             notesUri = uri.toString()
         }
+    }
+
+    fun openNotesPicker(kind: String, startAt: Uri?) {
+        notesPickerKind = kind
+        Telemetry.event(UsageEvent.FOLDER_PICKER_OPENED, *UsageEvent.folderPickerOpened(kind, UsageEvent.FROM_SETTINGS))
+        notesPicker.launchSafely(startAt)
     }
 
     fun setFastTarget(note: NoteSummary, kind: String) {
@@ -731,7 +742,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
         onSelectVault = { vaultPicker.launch(null) },
         notesFolderName = notesDisplayName,
         notesFolderPath = notesUri?.let { humanFolderPath(it) },
-        onSelectNotesFolder = { notesPicker.launchSafely(null) },
+        onSelectNotesFolder = { openNotesPicker(UsageEvent.PICKER_KIND_PICK, null) },
         folderDiagnosis = folderDiagnosis,
         onPickSubfolder = { showSubfolders = true },
         extraNotes = extraNoteEntries,
@@ -926,7 +937,7 @@ private fun SetupScreen(modifier: Modifier = Modifier) {
             onPick = { subfolder ->
                 showSubfolders = false
                 // The same picker, opened inside the subfolder: confirming it makes it the notes folder.
-                notesPicker.launchSafely(subfolderPickerStart(notesUri, subfolder))
+                openNotesPicker(UsageEvent.PICKER_KIND_SUBFOLDER, subfolderPickerStart(notesUri, subfolder))
             },
             onDismiss = { showSubfolders = false }
         )

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -48,10 +49,13 @@ internal fun ColumnScope.FolderStep(
     folder: FolderSummary?,
     onPick: () -> Unit,
     onPickSubfolder: (SubfolderCount) -> Unit,
+    onStarterOffered: () -> Unit,
+    onCreateStarter: () -> Unit,
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
     var showSubfolders by rememberSaveable { mutableStateOf(false) }
+    var showStarter by rememberSaveable { mutableStateOf(false) }
     val diagnosis = folder?.diagnosis
     val primary = Onboarding.folderPrimary(diagnosis)
 
@@ -77,6 +81,15 @@ internal fun ColumnScope.FolderStep(
             if (folder == null) {
                 Button(onClick = onPick, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.onboarding_folder_pick))
+                }
+                TextButton(
+                    onClick = {
+                        onStarterOffered()
+                        showStarter = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.onboarding_starter_offer))
                 }
             } else {
                 when (primary) {
@@ -116,6 +129,23 @@ internal fun ColumnScope.FolderStep(
             }
         }
     )
+
+    if (showStarter) {
+        AlertDialog(
+            onDismissRequest = { showStarter = false },
+            title = { Text(stringResource(R.string.onboarding_starter_title)) },
+            text = { Text(stringResource(R.string.onboarding_starter_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showStarter = false
+                    onCreateStarter()
+                }) { Text(stringResource(R.string.onboarding_starter_create)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStarter = false }) { Text(stringResource(R.string.onboarding_back)) }
+            }
+        )
+    }
 
     if (showSubfolders && diagnosis is FolderDiagnosis.NotesInSubfolders) {
         SubfolderPickerDialog(

@@ -48,6 +48,9 @@ class NativeReview {
     suspend fun launch(
         activity: Activity,
         waitMillis: Long,
-        onFinished: (durationMillis: Long) -> Unit
-    ): Boolean = false
+        onFinished: (duration: String) -> Unit
+    ): Boolean {
+        onFinished(UsageEvent.DURATION_ERROR)
+        return false
+    }
 }

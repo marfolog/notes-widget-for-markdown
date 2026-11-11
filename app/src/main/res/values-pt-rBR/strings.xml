@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Não foi possível salvar a nota rápida.</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_open_settings_button">Abrir configurações</string>
-    <string name="no_app_opens_notes">Nenhum app consegue abrir esta nota. O Obsidian está instalado?</string>
+    <string name="no_app_opens_notes">Nenhum app neste celular abre notas em Markdown. Instale um editor, como o Markor ou o Obsidian.</string>
     <string name="settings_title">Configurações do Notes Widget</string>
     <string name="notes_folder_title">Pasta de notas</string>
     <string name="notes_folder_title_first">Comece aqui — pasta de notas</string>
@@ -268,9 +268,9 @@
     <string name="fast_note_create_quick">Criar %1$s</string>
     <string name="fast_note_create_quick_failed">Não foi possível criar o arquivo na pasta de notas.</string>
     <string name="fast_note_target_none">Nenhum, perguntar sempre</string>
-    <string name="fast_note_append_hint">As notas são adicionadas ao final deste arquivo, nada é sobrescrito.</string>
+    <string name="fast_note_append_hint">As novas notas vão para o início deste arquivo, abaixo do título. Nada é sobrescrito.</string>
     <string name="fast_note_warn_title">Usar este arquivo?</string>
-    <string name="fast_note_warn_body">As novas notas serão adicionadas ao final de %1$s. Usar mesmo assim?</string>
+    <string name="fast_note_warn_body">As novas notas serão adicionadas ao início de %1$s, abaixo do título. Usar mesmo assim?</string>
     <string name="fast_note_warn_use">Usar</string>
     <string name="fast_note_warn_create">Criar %1$s em vez disso</string>
     <string name="whats_new_150_folder">Um widget vazio agora diz o motivo e encontra notas em subpastas</string>
@@ -283,4 +283,10 @@
     <string name="feature_interest_thanks">Obrigado, anotado!</string>
     <string name="feature_interest_close">Fechar</string>
     <string name="feature_interest_anonymous">Sua resposta é enviada de forma anônima.</string>
+    <string name="onboarding_starter_offer">Ainda não tenho notas neste celular</string>
+    <string name="onboarding_starter_title">Comece com um exemplo</string>
+    <string name="onboarding_starter_body">Sem problema. Vamos criar uma pasta chamada Notes em Documentos com uma nota de exemplo, para você ver como o widget fica. Na próxima tela, toque em \"Usar esta pasta\" e depois em \"Permitir\". Você pode trocar de pasta a qualquer momento em Configurações.</string>
+    <string name="onboarding_starter_create">Criar pasta</string>
+    <string name="onboarding_starter_failed">Não foi possível criar a pasta. Escolha uma você mesmo.</string>
+    <string name="starter_note_text"># Boas-vindas ao Notes Widget\n\nEsta nota está aqui para o widget ter o que mostrar. Edite, apague ou adicione suas próprias notas ao lado.\n\n## O que o widget mostra\n- Texto em **negrito** e em *itálico*\n- [Um link para o projeto](https://github.com/marfolog/notes-widget-for-markdown)\n- Listas como esta\n\n## Uma lista de tarefas\n- [x] Escolher uma pasta\n- [ ] Adicionar o widget à tela inicial\n- [ ] Escrever sua primeira nota\n\nQualquer app de Markdown, como o Obsidian, pode abrir esta pasta (Documents/Notes).</string>
 </resources>

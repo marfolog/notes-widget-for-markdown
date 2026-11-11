@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Не вдалося зберегти швидку нотатку.</string>
     <string name="action_cancel">Скасувати</string>
     <string name="action_open_settings_button">Відкрити налаштування</string>
-    <string name="no_app_opens_notes">Жодна програма не може відкрити цю нотатку. Obsidian встановлено?</string>
+    <string name="no_app_opens_notes">На цьому телефоні немає застосунку, який відкриває нотатки Markdown. Встановіть редактор, наприклад Markor або Obsidian.</string>
     <string name="settings_title">Налаштування Notes Widget</string>
     <string name="notes_folder_title">Тека з нотатками</string>
     <string name="notes_folder_title_first">Почни тут — тека з нотатками</string>
@@ -269,9 +269,9 @@
     <string name="fast_note_create_quick">Створити %1$s</string>
     <string name="fast_note_create_quick_failed">Не вдалося створити файл у теці з нотатками.</string>
     <string name="fast_note_target_none">Жодного, питати щоразу</string>
-    <string name="fast_note_append_hint">Нотатки додаються в кінець цього файлу, нічого не перезаписується.</string>
+    <string name="fast_note_append_hint">Нові нотатки додаються на початок цього файлу, під заголовком. Нічого не перезаписується.</string>
     <string name="fast_note_warn_title">Використати цей файл?</string>
-    <string name="fast_note_warn_body">Нові нотатки додаватимуться в кінець файлу %1$s. Усе одно використати?</string>
+    <string name="fast_note_warn_body">Нові нотатки додаватимуться на початок файлу %1$s, під заголовком. Усе одно використати?</string>
     <string name="fast_note_warn_use">Використати</string>
     <string name="fast_note_warn_create">Краще створити %1$s</string>
     <string name="whats_new_150_folder">Порожній віджет тепер пояснює причину і знаходить нотатки в підтеках</string>
@@ -284,4 +284,10 @@
     <string name="feature_interest_thanks">Дякуємо, записали!</string>
     <string name="feature_interest_close">Закрити</string>
     <string name="feature_interest_anonymous">Відповідь надсилається анонімно.</string>
+    <string name="onboarding_starter_offer">У мене поки немає нотаток на цьому телефоні</string>
+    <string name="onboarding_starter_title">Почни з прикладу</string>
+    <string name="onboarding_starter_body">Нічого страшного. Ми створимо папку Notes у Документах із прикладом нотатки, щоб ти побачив, як виглядає віджет. На наступному екрані торкнися «Використовувати цю папку», а потім «Дозволити». Іншу папку можна вибрати будь-коли в налаштуваннях.</string>
+    <string name="onboarding_starter_create">Створити папку</string>
+    <string name="onboarding_starter_failed">Не вдалося створити папку. Виберіть її самі.</string>
+    <string name="starter_note_text"># Вітаємо в Notes Widget\n\nЦя нотатка тут, щоб віджету було що показати. Змініть її, видаліть або додайте поруч власні нотатки.\n\n## Що показує віджет\n- **Жирний** і *курсивний* текст\n- [Посилання на проєкт](https://github.com/marfolog/notes-widget-for-markdown)\n- Списки, як цей\n\n## Список завдань\n- [x] Вибрати папку\n- [ ] Додати віджет на головний екран\n- [ ] Написати першу нотатку\n\nБудь-який застосунок для Markdown, наприклад Obsidian, може відкрити цю папку (Documents/Notes).</string>
 </resources>

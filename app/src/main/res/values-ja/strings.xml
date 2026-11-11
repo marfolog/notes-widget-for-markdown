@@ -38,7 +38,7 @@
     <string name="fast_note_failed">クイックノートを保存できませんでした。</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_open_settings_button">設定を開く</string>
-    <string name="no_app_opens_notes">このノートを開けるアプリがありません。Obsidian はインストールされていますか？</string>
+    <string name="no_app_opens_notes">この端末には Markdown のノートを開けるアプリがありません。Markor や Obsidian などのエディタをインストールしてください。</string>
     <string name="settings_title">ウィジェットの設定</string>
     <string name="notes_folder_title">ノートのフォルダ</string>
     <string name="notes_folder_title_first">ここから始めます — ノートのフォルダ</string>
@@ -266,9 +266,9 @@
     <string name="fast_note_create_quick">%1$s を作成</string>
     <string name="fast_note_create_quick_failed">ノートのフォルダにファイルを作成できませんでした。</string>
     <string name="fast_note_target_none">なし（毎回確認する）</string>
-    <string name="fast_note_append_hint">ノートはこのファイルの末尾に追加され、上書きされることはありません。</string>
+    <string name="fast_note_append_hint">新しいノートはこのファイルの先頭、タイトルの下に追加されます。上書きされることはありません。</string>
     <string name="fast_note_warn_title">このファイルを使いますか？</string>
-    <string name="fast_note_warn_body">新しいノートは %1$s の末尾に追加されます。それでも使いますか？</string>
+    <string name="fast_note_warn_body">新しいノートは %1$s の先頭、タイトルの下に追加されます。それでも使いますか？</string>
     <string name="fast_note_warn_use">使う</string>
     <string name="fast_note_warn_create">代わりに %1$s を作成</string>
     <string name="whats_new_150_folder">空のウィジェットが理由を教え、サブフォルダにあるノートも見つけます</string>
@@ -281,4 +281,10 @@
     <string name="feature_interest_thanks">ありがとうございます！</string>
     <string name="feature_interest_close">閉じる</string>
     <string name="feature_interest_anonymous">回答は匿名で送信されます。</string>
+    <string name="onboarding_starter_offer">この端末にはまだノートがありません</string>
+    <string name="onboarding_starter_title">サンプルから始めましょう</string>
+    <string name="onboarding_starter_body">大丈夫です。ウィジェットの見た目を確認できるよう、ドキュメントに「Notes」というフォルダを作り、サンプルノートを入れます。次の画面で「このフォルダを使用」、続けて「許可」をタップしてください。フォルダは設定でいつでも変更できます。</string>
+    <string name="onboarding_starter_create">フォルダを作成</string>
+    <string name="onboarding_starter_failed">フォルダを作成できませんでした。代わりに自分で選んでください。</string>
+    <string name="starter_note_text"># Notes Widget へようこそ\n\nこのノートはウィジェットに表示するものがあるように置いてあります。編集しても削除しても、横に自分のノートを足しても構いません。\n\n## ウィジェットに表示されるもの\n- **太字**と*斜体*\n- [プロジェクトへのリンク](https://github.com/marfolog/notes-widget-for-markdown)\n- このような箇条書き\n\n## チェックリスト\n- [x] フォルダを選ぶ\n- [ ] ウィジェットをホーム画面に追加する\n- [ ] 最初のノートを書く\n\nObsidian など、Markdown に対応したアプリならこのフォルダ（Documents/Notes）を開けます。</string>
 </resources>

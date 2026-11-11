@@ -49,6 +49,11 @@ object UsageEvent {
     const val FEATURE_INTEREST_SHOWN = "feature_interest_shown"
     const val FEATURE_INTEREST = "feature_interest"
 
+    const val FOLDER_PICKER_OPENED = "folder_picker_opened"
+    const val FOLDER_PICKER_CLOSED = "folder_picker_closed"
+    const val STARTER_OFFER_TAPPED = "starter_offer_tapped"
+    const val STARTER_FOLDER = "starter_folder"
+
     const val SYNC_PROBLEM_SHOWN = "sync_problem_shown"
 
     const val WHATS_NEW_SHOWN = "whats_new_shown"
@@ -70,6 +75,21 @@ object UsageEvent {
     const val PARAM_KIND = "kind"
     const val PARAM_FEATURE = "feature"
     const val PARAM_ANSWER = "answer"
+
+    const val PICKER_KIND_PICK = "pick"
+    const val PICKER_KIND_SUBFOLDER = "subfolder"
+    const val PICKER_KIND_STARTER = "starter"
+    const val PICKER_RESULT_PICKED = "picked"
+    const val PICKER_RESULT_CANCELLED = "cancelled"
+
+    const val STARTER_CREATED = "created"
+    const val STARTER_EXISTING = "existing"
+    const val STARTER_FAILED = "failed"
+
+    /** `duration` of `rate_native_finished` when no card was shown, next to the buckets of [nativeDuration]. */
+    const val DURATION_TIMEOUT = "timeout"
+    const val DURATION_ERROR = "error"
+    const val DURATION_GONE = "gone"
 
     const val TARGET_KIND_EXISTING = "existing"
     const val TARGET_KIND_CREATED = "created"
@@ -176,6 +196,26 @@ object UsageEvent {
     /** `folder_selected`: what the new folder turned out to hold, as one of a few fixed words. */
     fun folderSelected(diagnosis: FolderDiagnosis): Array<Pair<String, String>> =
         arrayOf(PARAM_RESULT to diagnosis.eventValue)
+
+    /** `folder_picker_opened`: [kind] is one of the `PICKER_KIND_*` values, [from] where the picker was opened. */
+    fun folderPickerOpened(kind: String, from: String): Array<Pair<String, String>> =
+        arrayOf(PARAM_KIND to kind, PARAM_FROM to from)
+
+    /** `folder_picker_closed`: the same two as when it opened, and whether a folder came back. */
+    fun folderPickerClosed(kind: String, from: String, picked: Boolean): Array<Pair<String, String>> = arrayOf(
+        PARAM_KIND to kind,
+        PARAM_FROM to from,
+        PARAM_RESULT to if (picked) PICKER_RESULT_PICKED else PICKER_RESULT_CANCELLED
+    )
+
+    /** `starter_folder`: [result] is one of the `STARTER_*` values. */
+    fun starterFolder(result: String): Array<Pair<String, String>> = arrayOf(PARAM_RESULT to result)
+
+    /**
+     * Why Google's card did not run, for `duration` of `rate_native_finished`: Play answering with an
+     * error is told apart from Play not answering within the wait.
+     */
+    fun nativeUnavailable(requestFinished: Boolean): String = if (requestFinished) DURATION_ERROR else DURATION_TIMEOUT
 
     /** `fast_target_set`: [kind] is one of the `TARGET_KIND_*` values. */
     fun fastTargetSet(kind: String): Array<Pair<String, String>> = arrayOf(PARAM_KIND to kind)

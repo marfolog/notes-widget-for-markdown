@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Не удалось сохранить быструю заметку.</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_open_settings_button">Открыть настройки</string>
-    <string name="no_app_opens_notes">Нет приложения, которое может открыть эту заметку. Установлен ли Obsidian?</string>
+    <string name="no_app_opens_notes">На этом телефоне нет приложения, которое открывает заметки Markdown. Установи редактор, например Markor или Obsidian.</string>
     <string name="settings_title">Настройки Notes Widget</string>
     <string name="notes_folder_title">Папка с заметками</string>
     <string name="notes_folder_title_first">Начни здесь — папка с заметками</string>
@@ -269,9 +269,9 @@
     <string name="fast_note_create_quick">Создать %1$s</string>
     <string name="fast_note_create_quick_failed">Не удалось создать файл в папке с заметками.</string>
     <string name="fast_note_target_none">Нет, спрашивать каждый раз</string>
-    <string name="fast_note_append_hint">Заметки добавляются в конец этого файла, ничего не перезаписывается.</string>
+    <string name="fast_note_append_hint">Новые заметки добавляются в начало этого файла, под заголовком. Ничего не перезаписывается.</string>
     <string name="fast_note_warn_title">Использовать этот файл?</string>
-    <string name="fast_note_warn_body">Новые заметки будут добавляться в конец файла %1$s. Всё равно использовать?</string>
+    <string name="fast_note_warn_body">Новые заметки будут добавляться в начало файла %1$s, под заголовком. Всё равно использовать?</string>
     <string name="fast_note_warn_use">Использовать</string>
     <string name="fast_note_warn_create">Лучше создать %1$s</string>
     <string name="whats_new_150_folder">Пустой виджет теперь объясняет причину и находит заметки в подпапках</string>
@@ -284,4 +284,10 @@
     <string name="feature_interest_thanks">Спасибо, записали!</string>
     <string name="feature_interest_close">Закрыть</string>
     <string name="feature_interest_anonymous">Ответ отправляется анонимно.</string>
+    <string name="onboarding_starter_offer">У меня пока нет заметок на этом телефоне</string>
+    <string name="onboarding_starter_title">Начни с примера</string>
+    <string name="onboarding_starter_body">Не страшно. Мы создадим папку Notes в Документах с примером заметки, чтобы ты увидел, как выглядит виджет. На следующем экране нажми «Использовать эту папку», а затем «Разрешить». Другую папку можно выбрать в любой момент в настройках.</string>
+    <string name="onboarding_starter_create">Создать папку</string>
+    <string name="onboarding_starter_failed">Не удалось создать папку. Выбери её сам.</string>
+    <string name="starter_note_text"># Добро пожаловать в Notes Widget\n\nЭта заметка нужна, чтобы виджету было что показать. Измени её, удали или добавь рядом свои заметки.\n\n## Что показывает виджет\n- **Жирный** и *курсивный* текст\n- [Ссылка на проект](https://github.com/marfolog/notes-widget-for-markdown)\n- Списки, как этот\n\n## Список дел\n- [x] Выбрать папку\n- [ ] Добавить виджет на главный экран\n- [ ] Написать первую заметку\n\nЛюбое приложение для Markdown, например Obsidian, может открыть эту папку (Documents/Notes).</string>
 </resources>

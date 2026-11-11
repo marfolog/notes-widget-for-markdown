@@ -38,7 +38,7 @@
     <string name="fast_note_failed">Impossible d\'enregistrer la note rapide.</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_open_settings_button">Ouvrir les réglages</string>
-    <string name="no_app_opens_notes">Aucune application ne peut ouvrir cette note. Obsidian est-il installé ?</string>
+    <string name="no_app_opens_notes">Aucune application de ce téléphone n\'ouvre les notes Markdown. Installez un éditeur, par exemple Markor ou Obsidian.</string>
     <string name="settings_title">Réglages du widget</string>
     <string name="notes_folder_title">Dossier de notes</string>
     <string name="notes_folder_title_first">Commencez ici — dossier de notes</string>
@@ -268,9 +268,9 @@
     <string name="fast_note_create_quick">Créer %1$s</string>
     <string name="fast_note_create_quick_failed">Impossible de créer le fichier dans le dossier de notes.</string>
     <string name="fast_note_target_none">Aucun, toujours demander</string>
-    <string name="fast_note_append_hint">Les notes sont ajoutées à la fin de ce fichier, rien n\'est écrasé.</string>
+    <string name="fast_note_append_hint">Les nouvelles notes vont en haut de ce fichier, sous le titre. Rien n\'est écrasé.</string>
     <string name="fast_note_warn_title">Utiliser ce fichier ?</string>
-    <string name="fast_note_warn_body">Les nouvelles notes seront ajoutées à la fin de %1$s. L\'utiliser quand même ?</string>
+    <string name="fast_note_warn_body">Les nouvelles notes seront ajoutées en haut de %1$s, sous le titre. L\'utiliser quand même ?</string>
     <string name="fast_note_warn_use">L\'utiliser</string>
     <string name="fast_note_warn_create">Créer %1$s à la place</string>
     <string name="whats_new_150_folder">Un widget vide dit désormais pourquoi, et trouve les notes situées dans des sous-dossiers</string>
@@ -283,4 +283,10 @@
     <string name="feature_interest_thanks">Merci, c\'est noté !</string>
     <string name="feature_interest_close">Fermer</string>
     <string name="feature_interest_anonymous">Votre réponse est envoyée anonymement.</string>
+    <string name="onboarding_starter_offer">Je n\'ai pas encore de notes sur ce téléphone</string>
+    <string name="onboarding_starter_title">Commencez avec un exemple</string>
+    <string name="onboarding_starter_body">Pas de souci. Nous allons créer un dossier nommé Notes dans Documents, avec une note d\'exemple, pour que vous voyiez à quoi ressemble le widget. Sur l\'écran suivant, touchez « Utiliser ce dossier » puis « Autoriser ». Vous pourrez choisir un autre dossier à tout moment dans les Paramètres.</string>
+    <string name="onboarding_starter_create">Créer le dossier</string>
+    <string name="onboarding_starter_failed">Impossible de créer le dossier. Choisissez-en un vous-même.</string>
+    <string name="starter_note_text"># Bienvenue dans Notes Widget\n\nCette note est là pour que le widget ait quelque chose à afficher. Modifiez-la, supprimez-la, ou ajoutez vos propres notes à côté.\n\n## Ce que le widget affiche\n- Texte en **gras** et en *italique*\n- [Un lien vers le projet](https://github.com/marfolog/notes-widget-for-markdown)\n- Des listes comme celle-ci\n\n## Une liste de tâches\n- [x] Choisir un dossier\n- [ ] Ajouter le widget à l\'écran d\'accueil\n- [ ] Écrire votre première note\n\nN\'importe quelle appli Markdown, par exemple Obsidian, peut ouvrir ce dossier (Documents/Notes).</string>
 </resources>

@@ -38,7 +38,7 @@
     <string name="fast_note_failed">无法保存快速笔记。</string>
     <string name="action_cancel">取消</string>
     <string name="action_open_settings_button">打开设置</string>
-    <string name="no_app_opens_notes">没有应用可以打开这条笔记。是否已安装 Obsidian？</string>
+    <string name="no_app_opens_notes">这部手机上没有能打开 Markdown 笔记的应用。请安装一个编辑器，例如 Markor 或 Obsidian。</string>
     <string name="settings_title">小组件设置</string>
     <string name="notes_folder_title">笔记文件夹</string>
     <string name="notes_folder_title_first">从这里开始 — 笔记文件夹</string>
@@ -266,9 +266,9 @@
     <string name="fast_note_create_quick">创建 %1$s</string>
     <string name="fast_note_create_quick_failed">无法在笔记文件夹中创建文件。</string>
     <string name="fast_note_target_none">不设置，每次询问</string>
-    <string name="fast_note_append_hint">笔记会添加到此文件末尾，不会覆盖任何内容。</string>
+    <string name="fast_note_append_hint">新笔记会添加到此文件的开头、标题下方，不会覆盖任何内容。</string>
     <string name="fast_note_warn_title">使用这个文件？</string>
-    <string name="fast_note_warn_body">新笔记会添加到 %1$s 的末尾。仍要使用吗？</string>
+    <string name="fast_note_warn_body">新笔记会添加到 %1$s 的开头、标题下方。仍要使用吗？</string>
     <string name="fast_note_warn_use">使用</string>
     <string name="fast_note_warn_create">改为创建 %1$s</string>
     <string name="whats_new_150_folder">空的小部件现在会说明原因，并能找到子文件夹中的笔记</string>
@@ -281,4 +281,10 @@
     <string name="feature_interest_thanks">谢谢，已记下！</string>
     <string name="feature_interest_close">关闭</string>
     <string name="feature_interest_anonymous">你的回答将以匿名方式发送。</string>
+    <string name="onboarding_starter_offer">我的手机上还没有笔记</string>
+    <string name="onboarding_starter_title">从一个示例开始</string>
+    <string name="onboarding_starter_body">没关系。我们会在“文档”中创建一个名为 Notes 的文件夹，里面放一条示例笔记，让你看看小组件的样子。在下一个界面点按“使用此文件夹”，再点按“允许”。你可以随时在设置中换成其他文件夹。</string>
+    <string name="onboarding_starter_create">创建文件夹</string>
+    <string name="onboarding_starter_failed">无法创建文件夹。请自己选择一个。</string>
+    <string name="starter_note_text"># 欢迎使用 Notes Widget\n\n这条笔记是为了让小组件有内容可显示。你可以编辑、删除它，或在旁边添加自己的笔记。\n\n## 小组件会显示什么\n- **粗体**和*斜体*文字\n- [项目链接](https://github.com/marfolog/notes-widget-for-markdown)\n- 像这样的列表\n\n## 待办清单\n- [x] 选择文件夹\n- [ ] 把小组件添加到主屏幕\n- [ ] 写下第一条笔记\n\n任何 Markdown 应用（例如 Obsidian）都可以打开这个文件夹（Documents/Notes）。</string>
 </resources>
