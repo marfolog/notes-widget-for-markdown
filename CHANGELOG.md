@@ -2,6 +2,12 @@
 
 All notable public changes will be documented in this file.
 
+## v1.5.1 - 2026-11-11
+
+- The first-launch guide has a way out for people with no notes on the phone yet: **I don't have notes on this phone yet** creates a *Notes* folder in *Documents* with an example note (*Welcome to Notes Widget.md*) and opens the folder picker right in it, so the widget has something to show. Nothing is created when the folder already holds Markdown files, and an existing note is never overwritten. No storage permission is needed.
+- Play build: `folder_picker_opened` and `folder_picker_closed` (kind and place of the picker, picked or cancelled), `starter_offer_tapped` and `starter_folder` (created, existing or failed) show where people drop out of the folder step. Sent only with your consent.
+- Play build: every request for Google's review card now ends with one `rate_native_finished`, also when Play does not answer in time or errors (`duration` is `timeout`, `error` or `gone`). When or how often the card is requested is unchanged.
+
 ## v1.5.0 - 2026-11-05
 
 - An empty widget now says why. Looking into the folder (counting only, no note is read; at most four levels deep and about 2,000 items, hidden folders such as `.obsidian` skipped) tells apart notes that sit in subfolders, a folder without Markdown files, an empty folder and a folder the app can no longer read. The first-launch guide, the empty widget and settings show the matching sentence; for notes in subfolders the guide and settings offer **Pick a subfolder**, a list of the folders that hold notes of their own with their path and count, which opens the folder picker inside the one you tap.
